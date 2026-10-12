@@ -2413,8 +2413,8 @@
         ];
         const peerOptions = () => ({ config: { iceServers: [...DEFAULT_ICE_SERVERS, ...EXTRA_ICE_SERVERS] } });
         // What stage did a connection attempt reach? Shown in the error text so a failure says where it stopped.
-        const diag = { server: false, link: false, ice: '', seen: false };
-        function diagReset() { diag.server = diag.link = diag.seen = false; diag.ice = ''; }
+        const diag = { server: false, link: false, ice: '', seen: false, relay: 'no', relayLinks: 0 };
+        function diagReset() { diag.server = diag.link = diag.seen = false; diag.ice = ''; diag.relay = 'no'; diag.relayLinks = 0; }
         function watchConn(conn) {
             const read = () => { try { const pc = conn.peerConnection; if (pc) diag.ice = pc.iceConnectionState; } catch (e) {} };
             try { conn.on('iceStateChanged', st => { diag.ice = st; }); } catch (e) {}
@@ -2424,7 +2424,7 @@
         }
         function diagSummary(readFn) {
             if (readFn) readFn();
-            return '[server ' + (diag.server ? 'ok' : 'no') + ' / direct link ' + (diag.link ? 'ok' : 'no') + (diag.ice ? ' / ice ' + diag.ice : '') + ']';
+            return '[server ' + (diag.server ? 'ok' : 'no') + ' / direct link ' + (diag.link ? 'ok' : 'no') + (diag.ice ? ' / ice ' + diag.ice : '') + (diag.relay !== 'no' ? ' / relay ' + diag.relay + ' (' + diag.relayLinks + ' brokers)' : '') + ']';
         }
         function peerErrorText(err) {
             const t = (err && err.type) || 'error';
@@ -2496,11 +2496,167 @@
         }
         function cancelOnline() { teardownNet(); setOnlineView('choose'); onlineError(''); }
 
+        // ---------- relay fallback (used when two devices cannot open a direct WebRTC link) ----------
+        // Messages travel through a public MQTT-over-WebSocket broker instead: ordinary outbound HTTPS-style traffic that
+        // firewalls and VPNs let through. Several brokers are tried in parallel; the host picks one per guest session.
+        // Only used when the direct link fails. Anyone who knows the room code could join the topic, like the PeerJS id.
+        const RELAY_BROKERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt', 'wss://test.mosquitto.org:8081'];
+        const RELAY_FALLBACK_AFTER = 8000;        // ms of waiting for the direct link before the relay is tried
+        const relayTopic = code => 'bgmrelay1/' + code;
+        const relayId = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+
+        // A tiny MQTT 3.1.1 client (CONNECT / SUBSCRIBE / PUBLISH at QoS 0 / PING) - enough for one topic.
+        class MqttLink {
+            constructor(url, topic, onMessage, onState) {
+                this.url = url; this.topic = topic; this.onMessage = onMessage; this.onState = onState;
+                this.ready = false; this.closed = false; this.ws = null; this.buf = new Uint8Array(0); this.tries = 0;
+                this.enc = new TextEncoder(); this.dec = new TextDecoder();
+                this.connect();
+            }
+            static lenBytes(n) { const a = []; do { let b = n % 128; n = Math.floor(n / 128); if (n > 0) b |= 128; a.push(b); } while (n > 0); return a; }
+            str(s) { const u = this.enc.encode(s); return [u.length >> 8, u.length & 255, ...u]; }
+            packet(first, body) { return Uint8Array.from([first, ...MqttLink.lenBytes(body.length), ...body]); }
+            connect() {
+                if (this.closed) return;
+                let ws;
+                try { ws = new WebSocket(this.url, 'mqtt'); } catch (e) { this.retry(); return; }
+                ws.binaryType = 'arraybuffer';
+                this.ws = ws; this.buf = new Uint8Array(0);
+                ws.onopen = () => ws.send(this.packet(0x10, [...this.str('MQTT'), 4, 2, 0, 30, ...this.str('bgm' + relayId())]));
+                ws.onmessage = ev => { if (this.ws === ws) this.feed(new Uint8Array(ev.data)); };
+                ws.onclose = ws.onerror = () => { if (this.ws !== ws) return; this.ws = null; this.setReady(false); clearInterval(this.pinger); this.retry(); };
+            }
+            retry() { if (this.closed) return; this.tries++; clearTimeout(this.retryT); this.retryT = setTimeout(() => this.connect(), Math.min(10000, 1000 * this.tries)); }
+            setReady(v) { if (this.ready === v) return; this.ready = v; try { this.onState(v); } catch (e) {} }
+            feed(chunk) {
+                const m = new Uint8Array(this.buf.length + chunk.length); m.set(this.buf); m.set(chunk, this.buf.length); this.buf = m;
+                for (;;) {
+                    if (this.buf.length < 2) return;
+                    let rem = 0, mul = 1, i = 1, b;
+                    do { if (i >= this.buf.length) return; b = this.buf[i++]; rem += (b & 127) * mul; mul *= 128; } while ((b & 128) && i < 5);
+                    if (this.buf.length < i + rem) return;
+                    const first = this.buf[0], body = this.buf.slice(i, i + rem);
+                    this.buf = this.buf.slice(i + rem);
+                    this.handle(first, body);
+                }
+            }
+            handle(first, body) {
+                const type = first >> 4;
+                if (type === 2) {                       // CONNACK
+                    if (body[1] !== 0) { try { this.ws.close(); } catch (e) {} return; }
+                    this.tries = 0;
+                    this.ws.send(this.packet(0x82, [0, 1, ...this.str(this.topic), 0]));
+                    clearInterval(this.pinger);
+                    this.pinger = setInterval(() => { try { if (this.ws && this.ws.readyState === 1) this.ws.send(Uint8Array.from([0xC0, 0])); } catch (e) {} }, 20000);
+                } else if (type === 9) {                // SUBACK
+                    this.setReady(true);
+                } else if (type === 3) {                // PUBLISH
+                    const qos = (first >> 1) & 3, tl = (body[0] << 8) | body[1];
+                    const idx = 2 + tl + (qos > 0 ? 2 : 0);
+                    try { this.onMessage(this.dec.decode(body.slice(idx))); } catch (e) {}
+                }
+            }
+            publish(text) {
+                if (!this.ready || !this.ws || this.ws.readyState !== 1) return false;
+                try { this.ws.send(this.packet(0x30, [...this.str(this.topic), ...this.enc.encode(text)])); return true; } catch (e) { return false; }
+            }
+            close() {
+                this.closed = true; clearTimeout(this.retryT); clearInterval(this.pinger);
+                const ws = this.ws; this.ws = null; this.ready = false;
+                try { if (ws) { ws.onclose = ws.onerror = ws.onmessage = null; ws.close(); } } catch (e) {}
+            }
+        }
+
+        // The brokers for one room. Calls onMsg(envelope, linkIndex) for every message that is not ours.
+        class RelayChannel {
+            constructor(code, role, onMsg, onState) {
+                this.role = role; this.onMsg = onMsg;
+                this.links = RELAY_BROKERS.map((u, idx) => new MqttLink(u, relayTopic(code), text => {
+                    let m; try { m = JSON.parse(text); } catch (e) { return; }
+                    if (!m || typeof m !== 'object' || m.k === this.role) return;
+                    this.onMsg(m, idx);
+                }, () => { if (onState) onState(this.readyCount()); }));
+            }
+            readyCount() { return this.links.filter(l => l.ready).length; }
+            sendOn(idx, env) { env.k = this.role; return this.links[idx] ? this.links[idx].publish(JSON.stringify(env)) : false; }
+            sendAll(env) { env.k = this.role; const s = JSON.stringify(env); let n = 0; this.links.forEach(l => { if (l.publish(s)) n++; }); return n; }
+            close() { this.links.forEach(l => l.close()); }
+        }
+
+        // Looks like a PeerJS DataConnection to the rest of the game: on(), send(), close(), .open
+        class RelayConnBase {
+            constructor() { this.open = false; this.h = {}; this.gone = false; }
+            on(ev, fn) { (this.h[ev] = this.h[ev] || []).push(fn); return this; }
+            emit(ev, ...a) { (this.h[ev] || []).slice().forEach(fn => { try { fn(...a); } catch (e) { console.error(e); } }); }
+            goneRemote() { if (this.gone) return; this.gone = true; this.open = false; this.stop(); setTimeout(() => this.emit('close'), 0); }
+        }
+        // Guest side: dials the room by repeating "hi" until the host answers on one of the brokers
+        class RelayGuestConn extends RelayConnBase {
+            constructor(code) {
+                super();
+                this.cid = relayId(); this.link = -1; this.state = 'connecting';
+                this.chan = new RelayChannel(code, 'g', (m, idx) => this.onEnv(m, idx), n => { diag.relayLinks = n; });
+                this.hiT = setInterval(() => { if (!this.open) this.chan.sendAll({ c: this.cid, t: 'hi' }); }, 1500);
+                setTimeout(() => { if (!this.open) this.chan.sendAll({ c: this.cid, t: 'hi' }); }, 700);
+            }
+            onEnv(m, idx) {
+                if (m.c !== this.cid || this.gone) return;
+                if (m.t === 'ack' && !this.open) { this.link = idx; this.open = true; this.state = 'open'; diag.relay = 'ok'; this.emit('open'); }
+                else if (m.t === 'd' && this.open && idx === this.link) this.emit('data', m.d);
+                else if (m.t === 'bye' && idx === this.link) this.goneRemote();
+            }
+            send(obj) { if (this.open) this.chan.sendOn(this.link, { c: this.cid, t: 'd', d: obj }); }
+            stop() { clearInterval(this.hiT); this.chan.close(); }
+            close() {
+                if (this.gone) return;
+                if (this.open) this.chan.sendOn(this.link, { c: this.cid, t: 'bye' });
+                this.gone = true; this.open = false;
+                const chan = this.chan; clearInterval(this.hiT);
+                setTimeout(() => { chan.close(); this.emit('close'); }, 150);      // let the goodbye leave first
+            }
+        }
+        // Host side: one object per guest, created when its "hi" arrives
+        class RelayHostConn extends RelayConnBase {
+            constructor(host, cid, link) { super(); this.host = host; this.cid = cid; this.link = link; this.open = true; }
+            send(obj) { if (this.open) this.host.chan.sendOn(this.link, { c: this.cid, t: 'd', d: obj }); }
+            stop() { this.host.sessions.delete(this.cid); }
+            close() {
+                if (this.gone) return;
+                this.host.chan.sendOn(this.link, { c: this.cid, t: 'bye' });
+                this.gone = true; this.open = false; this.stop();
+                setTimeout(() => this.emit('close'), 0);
+            }
+        }
+        class RelayHost {
+            constructor(code, onIncoming) {
+                this.code = code; this.onIncoming = onIncoming; this.sessions = new Map();
+                this.chan = new RelayChannel(code, 'h', (m, idx) => this.onEnv(m, idx));
+            }
+            onEnv(m, idx) {
+                if (typeof m.c !== 'string' || m.c.length > 40) return;
+                let s = this.sessions.get(m.c);
+                if (m.t === 'hi') {
+                    if (s) { this.chan.sendOn(s.link, { c: m.c, t: 'ack' }); return; }      // the guest repeated itself
+                    s = new RelayHostConn(this, m.c, idx);
+                    this.sessions.set(m.c, s);
+                    this.chan.sendOn(idx, { c: m.c, t: 'ack' });
+                    this.onIncoming(s);
+                } else if (s && idx === s.link) {
+                    if (m.t === 'd') s.emit('data', m.d);
+                    else if (m.t === 'bye') s.goneRemote();
+                }
+            }
+            destroy() { this.sessions.forEach(s => { s.open = false; s.gone = true; }); this.sessions.clear(); this.chan.close(); }
+        }
+
         // ---------- transport (the only code that touches PeerJS) ----------
         function teardownNet() {
             clearTimeout(online.lobbyTimer);
             try { if (online.conn) online.conn.close(); } catch (e) {}
             try { if (online.peer) online.peer.destroy(); } catch (e) {}
+            try { if (online.relayHost) online.relayHost.destroy(); } catch (e) {}
+            try { if (online.relayConn) online.relayConn.close(); } catch (e) {}
+            online.relayHost = null; online.relayConn = null; online.viaRelay = false;
             online.conn = null; online.peer = null; online.code = null;
             if (!online.active) online.role = null;
         }
@@ -2553,19 +2709,9 @@
                 document.getElementById('online-share').classList.remove('hidden');
                 document.getElementById('online-wait-msg').innerText = 'Waiting for your friend to join...';
             });
-            peer.on('connection', conn => {
-                if (online.peer !== peer) { try { conn.close(); } catch (e) {} return; }
-                if (online.active) { attachConn(conn, true); return; }        // maybe the guest coming back
-                if (online.conn) { conn.on('open', () => { try { conn.close(); } catch (e) {} }); return; }   // already have an opponent
-                diag.seen = true;
-                const read = watchConn(conn);
-                const wm = document.getElementById('online-wait-msg');
-                if (wm && mode === 'new') {
-                    wm.innerText = 'Your friend is connecting...';
-                    setTimeout(() => { if (online.peer === peer && !online.active && online.conn === conn && !diag.link) wm.innerText = "A friend found your game but the direct link isn't opening " + diagSummary(read) + ". Their network or a firewall/VPN may be blocking peer-to-peer connections."; }, 15000);
-                }
-                attachConn(conn, false);
-            });
+            peer.on('connection', conn => onIncomingConn(peer, mode, conn));
+            if (mode === 'resume') startRelayHost(peer, mode);
+            peer.on('open', () => { if (mode === 'new' && online.peer === peer) startRelayHost(peer, mode); });
             peer.on('disconnected', () => { try { if (online.peer === peer && !peer.destroyed) peer.reconnect(); } catch (e) {} });
             peer.on('error', err => {
                 if (online.peer !== peer) return;
@@ -2581,6 +2727,30 @@
                 }
                 onlineFail(peerErrorText(err));
             });
+        }
+        // The relay listens from the moment the room exists, so a guest that cannot connect directly can still find it
+        function startRelayHost(peer, mode) {
+            if (online.relayHost && online.relayHost.code === online.code) return;
+            try { if (online.relayHost) online.relayHost.destroy(); } catch (e) {}
+            online.relayHost = new RelayHost(online.code, conn => onIncomingConn(online.peer, mode, conn));
+        }
+        // A guest connected (directly or through the relay)
+        function onIncomingConn(peer, mode, conn) {
+            if (online.peer !== peer) { try { conn.close(); } catch (e) {} return; }
+            if (online.active) { attachConn(conn, true); return; }        // maybe the guest coming back
+            if (online.conn && online.conn.open) {                        // already have an opponent
+                if (conn.open) { try { conn.close(); } catch (e) {} } else conn.on('open', () => { try { conn.close(); } catch (e) {} });
+                return;
+            }
+            if (online.conn) { const stale = online.conn; online.conn = conn; try { stale.close(); } catch (e) {} }   // an earlier attempt that never opened
+            diag.seen = true;
+            const read = watchConn(conn);
+            const wm = document.getElementById('online-wait-msg');
+            if (wm && mode === 'new') {
+                wm.innerText = 'Your friend is connecting...';
+                setTimeout(() => { if (online.peer === peer && !online.active && online.conn === conn && !conn.open) wm.innerText = "A friend found your game but the direct link isn't opening " + diagSummary(read) + ". Still trying the relay..."; }, 12000);
+            }
+            attachConn(conn, false);
         }
 
         // Guest: join a game by code (or by pasted link)
@@ -2600,23 +2770,46 @@
             if (!peer) return;
             online.code = code;
             let readIce = null;
+            online.viaRelay = false; online.relayConn = null;
             online.lobbyTimer = setTimeout(() => {
                 if (online.peer !== peer || online.active) return;
                 const d = diagSummary(readIce);
-                if (!diag.server) onlineFail("Couldn't reach the PeerJS matchmaking server, so the game can't be found. A firewall, VPN or ad-blocker may be blocking it, or the server is down. " + d);
-                else if (!diag.link) onlineFail("Found the game, but the direct link to your friend wouldn't open. A firewall, VPN, or a network that blocks peer-to-peer traffic is the usual cause - try another network or turn off the VPN. " + d);
-                else onlineFail("Connected, but the game didn't start. Ask your friend to start a new game and try again. " + d);
-            }, 25000);
+                if (diag.relay === 'ok' || diag.link) onlineFail("Connected, but the game didn't start. Ask your friend to start a new game and try again. " + d);
+                else if (!diag.server && !diag.relayLinks) onlineFail("Couldn't reach the matchmaking or relay servers, so the game can't be found. A firewall, VPN or ad-blocker may be blocking them. " + d);
+                else onlineFail("Couldn't connect to your friend, neither directly nor through the relay. Check the code and that your friend is still on the waiting screen, then try another network or turn off the VPN. " + d);
+            }, 45000);
+            // Direct link first; if it hasn't opened after a few seconds (or the browser gives up on it), use the relay
+            const fallback = () => { if (online.peer === peer && !online.active && !diag.link) startGuestRelay(peer, code); };
+            setTimeout(fallback, RELAY_FALLBACK_AFTER);
             peer.on('open', () => {
                 if (online.peer !== peer || online.active) return;
                 diag.server = true;
                 const conn = peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' });
                 readIce = watchConn(conn);
+                try { conn.on('iceStateChanged', st => { if (st === 'failed') fallback(); }); } catch (e) {}
                 attachConn(conn, false);
             });
             peer.on('error', err => {
                 if (online.peer !== peer || online.active) return;
-                onlineFail(peerErrorText(err));
+                if (err && err.type === 'peer-unavailable') { onlineFail(peerErrorText(err)); return; }
+                // matchmaking/WebRTC trouble: the relay does not depend on PeerJS, so let it have its chance
+                startGuestRelay(peer, code);
+            });
+        }
+        // Guest: try the relay. Whichever of the two (direct, relay) opens first wins.
+        function startGuestRelay(peer, code) {
+            if (online.relayConn || online.peer !== peer || online.active) return;
+            const rc = new RelayGuestConn(code);
+            online.relayConn = rc; diag.relay = 'connecting';
+            const setWait = t => { const w = document.getElementById('online-wait-msg'); if (w && !online.active) w.innerText = t; };
+            setWait('Direct link is slow - trying the relay...');
+            rc.on('open', () => {
+                if (online.peer !== peer || online.active) { rc.close(); return; }
+                if (online.conn && online.conn !== rc && online.conn.open) { rc.close(); return; }     // the direct link won the race
+                online.viaRelay = true;
+                const old = online.conn;
+                attachConn(rc, false);                                       // online.conn = rc, and the hello goes out
+                if (old && old !== rc) { try { old.close(); } catch (e) {} }
             });
         }
         function newGuestPeer() {
@@ -2638,6 +2831,7 @@
             conn.on('data', data => { if (online.conn === conn || candidate) onNetData(data, conn); });
             conn.on('close', () => { if (online.conn === conn) onNetClose(); });
             conn.on('error', () => {});
+            if (conn.open && !candidate && online.role === 'guest') netSend({ t: 'hello', name: online.myName, token: online.token, resume: online.active });   // a relay connection is already open
         }
 
         // ---------- starting a match ----------
@@ -3014,6 +3208,19 @@
                 if (!p || p.destroyed) openHostPeer(online.code, 'resume', 0);
                 else if (p.disconnected) { try { p.reconnect(); } catch (e) {} }
             } else {
+                // direct reconnecting hasn't worked for a while -> the relay (the host listens on it all the time)
+                if (!online.viaRelay && Date.now() - online.pausedAt > 12000) online.viaRelay = true;
+                if (online.viaRelay) {
+                    const rc = online.conn;
+                    if (rc && rc.open) return;
+                    if (rc && !rc.open && Date.now() - online.lastAttempt < online.cfg.attemptAge) return;
+                    try { if (rc) rc.close(); } catch (e) {}
+                    online.lastAttempt = Date.now();
+                    const nrc = new RelayGuestConn(online.code);
+                    online.relayConn = nrc;
+                    attachConn(nrc, false);
+                    return;
+                }
                 if (!p || p.destroyed) { newGuestPeer(); return; }
                 if (p.disconnected) { try { p.reconnect(); } catch (e) {} return; }
                 if (!p.open) return;
