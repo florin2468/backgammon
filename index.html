@@ -2403,7 +2403,36 @@
         // Left empty, PeerJS uses its own defaults. When you add entries, they replace PeerJS's default server list,
         // so a STUN server is included below.
         const EXTRA_ICE_SERVERS = [];
-        const peerOptions = () => EXTRA_ICE_SERVERS.length ? { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, ...EXTRA_ICE_SERVERS] } } : {};
+        // STUN finds your public address; TURN relays the traffic when two networks cannot reach each other directly
+        // (phone on mobile data, strict firewalls, some VPNs). The browser tries a direct path first and only relays if it must.
+        // The relays are free community servers (PeerJS's own, and the Open Relay project) - best effort, no guarantee.
+        const DEFAULT_ICE_SERVERS = [
+            { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
+            { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+            { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }
+        ];
+        const peerOptions = () => ({ config: { iceServers: [...DEFAULT_ICE_SERVERS, ...EXTRA_ICE_SERVERS] } });
+        // What stage did a connection attempt reach? Shown in the error text so a failure says where it stopped.
+        const diag = { server: false, link: false, ice: '', seen: false };
+        function diagReset() { diag.server = diag.link = diag.seen = false; diag.ice = ''; }
+        function watchConn(conn) {
+            const read = () => { try { const pc = conn.peerConnection; if (pc) diag.ice = pc.iceConnectionState; } catch (e) {} };
+            try { conn.on('iceStateChanged', st => { diag.ice = st; }); } catch (e) {}
+            setTimeout(read, 500);
+            conn.on('open', () => { diag.link = true; });
+            return read;
+        }
+        function diagSummary(readFn) {
+            if (readFn) readFn();
+            return '[server ' + (diag.server ? 'ok' : 'no') + ' / direct link ' + (diag.link ? 'ok' : 'no') + (diag.ice ? ' / ice ' + diag.ice : '') + ']';
+        }
+        function peerErrorText(err) {
+            const t = (err && err.type) || 'error';
+            if (t === 'peer-unavailable') return 'No waiting game found with that code. Check the code, and that your friend is still on the waiting screen.';
+            if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return 'Could not reach the PeerJS matchmaking server (' + t + '). A firewall, VPN or ad-blocker may be blocking it.';
+            if (t === 'webrtc') return 'Your browser could not set up the peer-to-peer connection (webrtc error).';
+            return 'Online connection failed (' + t + ').';
+        }
         const inputBlocked = () => online.active && online.paused;
 
         function cleanName(v) {
@@ -2507,11 +2536,13 @@
             try { peer = new Peer(PEER_PREFIX + code, peerOptions()); } catch (e) { if (mode === 'new') onlineFail('Could not start an online game.'); return; }
             online.peer = peer; online.code = code;
             if (mode === 'new') {
+                diagReset();
                 clearTimeout(online.lobbyTimer);
                 online.lobbyTimer = setTimeout(() => { if (online.peer === peer && !online.conn) onlineFail("Couldn't reach the PeerJS server. Check your connection and try again."); }, 15000);
             }
             peer.on('open', () => {
                 if (online.peer !== peer || mode !== 'new') return;
+                diag.server = true;
                 clearTimeout(online.lobbyTimer);
                 const link = location.href.split('#')[0] + '#room=' + code;
                 document.getElementById('online-code-display').innerText = code;
@@ -2526,6 +2557,13 @@
                 if (online.peer !== peer) { try { conn.close(); } catch (e) {} return; }
                 if (online.active) { attachConn(conn, true); return; }        // maybe the guest coming back
                 if (online.conn) { conn.on('open', () => { try { conn.close(); } catch (e) {} }); return; }   // already have an opponent
+                diag.seen = true;
+                const read = watchConn(conn);
+                const wm = document.getElementById('online-wait-msg');
+                if (wm && mode === 'new') {
+                    wm.innerText = 'Your friend is connecting...';
+                    setTimeout(() => { if (online.peer === peer && !online.active && online.conn === conn && !diag.link) wm.innerText = "A friend found your game but the direct link isn't opening " + diagSummary(read) + ". Their network or a firewall/VPN may be blocking peer-to-peer connections."; }, 15000);
+                }
                 attachConn(conn, false);
             });
             peer.on('disconnected', () => { try { if (online.peer === peer && !peer.destroyed) peer.reconnect(); } catch (e) {} });
@@ -2541,7 +2579,7 @@
                     if (type === 'unavailable-id' || peer.destroyed) { try { peer.destroy(); } catch (e) {} online.peer = null; }
                     return;
                 }
-                onlineFail('Online connection failed (' + (type || 'error') + ').');
+                onlineFail(peerErrorText(err));
             });
         }
 
@@ -2557,18 +2595,28 @@
             document.getElementById('online-share').classList.add('hidden');
             document.getElementById('online-wait-msg').innerText = 'Connecting to game ' + code + '...';
             setOnlineView('wait');
+            diagReset();
             const peer = newGuestPeer();
             if (!peer) return;
             online.code = code;
-            online.lobbyTimer = setTimeout(() => { if (online.peer === peer && !online.active) onlineFail("Couldn't connect. Check the code and that your friend is still waiting, then try again."); }, 20000);
+            let readIce = null;
+            online.lobbyTimer = setTimeout(() => {
+                if (online.peer !== peer || online.active) return;
+                const d = diagSummary(readIce);
+                if (!diag.server) onlineFail("Couldn't reach the PeerJS matchmaking server, so the game can't be found. A firewall, VPN or ad-blocker may be blocking it, or the server is down. " + d);
+                else if (!diag.link) onlineFail("Found the game, but the direct link to your friend wouldn't open. A firewall, VPN, or a network that blocks peer-to-peer traffic is the usual cause - try another network or turn off the VPN. " + d);
+                else onlineFail("Connected, but the game didn't start. Ask your friend to start a new game and try again. " + d);
+            }, 25000);
             peer.on('open', () => {
                 if (online.peer !== peer || online.active) return;
-                attachConn(peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' }), false);
+                diag.server = true;
+                const conn = peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' });
+                readIce = watchConn(conn);
+                attachConn(conn, false);
             });
             peer.on('error', err => {
                 if (online.peer !== peer || online.active) return;
-                if (err && err.type === 'peer-unavailable') onlineFail('No waiting game found with that code.');
-                else onlineFail('Online connection failed (' + ((err && err.type) || 'error') + ').');
+                onlineFail(peerErrorText(err));
             });
         }
         function newGuestPeer() {
