@@ -1,0 +1,272 @@
+// Unit tests for the rules + AI engine inside backgammon_game.html.
+// Usage:   node backgammon_tests.js [path/to/backgammon_game.html]
+// No dependencies: it pulls the <script id="bg-engine"> block out of the game file and runs it in Node.
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+const vm = require('vm');
+
+const _def = ['index.html','backgammon_game.html'].map(n => path.join(__dirname, '..', n)).find(p => fs.existsSync(p));
+const file = process.argv[2] || _def;
+const html = fs.readFileSync(file, 'utf8');
+const m = html.match(/<script id="bg-engine">([\s\S]*?)<\/script>/);
+if (!m) { console.error('No <script id="bg-engine"> block found in ' + file); process.exit(2); }
+const sandbox = { module: { exports: {} }, console, setTimeout };
+vm.createContext(sandbox);
+vm.runInContext(m[1] + '\n;this.__E = BGEngine;', sandbox);
+const E = sandbox.__E;
+const { W, R } = E;
+
+// ---------- tiny test runner ----------
+let passed = 0, failed = 0;
+const queue = [];   // [name | section heading, fn | null]
+function test(name, fn) { queue.push([name, fn]); }
+const section = title => queue.push([title, null]);
+
+// ---------- helpers ----------
+let seed = 20260101;
+const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+const rollDice = () => { const a = 1 + Math.floor(rnd() * 6), b = 1 + Math.floor(rnd() * 6); return a === b ? [a, a, a, a] : [a, b]; };
+
+// Build a position from { w: {23: 2, ...}, r: {...}, barW, barR, offW, offR } with fresh unique ids
+function pos(spec) {
+    const st = { board: Array.from({ length: 24 }, () => []), bar: { w: [], r: [] }, off: { w: [], r: [] } };
+    const next = { w: 0, r: 0 };
+    const add = (arr, c, n) => { for (let i = 0; i < n; i++) arr.push(`c_${c}_${next[c]++}`); };
+    for (const c of ['w', 'r']) for (const [p, n] of Object.entries(spec[c] || {})) add(st.board[+p], c, n);
+    add(st.bar.w, 'w', spec.barW || 0); add(st.bar.r, 'r', spec.barR || 0);
+    add(st.off.w, 'w', spec.offW || 0); add(st.off.r, 'r', spec.offR || 0);
+    return st;
+}
+const moves = (st, p, d) => Array.from(E.getAllMoves(st, p, d), x => `${x.from}>${x.target}:${x.diceUsed}`).sort();
+function checkInvariants(st, label) {
+    const ids = new Set(); let w = 0, r = 0;
+    const take = (a, where) => a.forEach(id => {
+        assert(!ids.has(id), `${label}: duplicate checker ${id} (${where})`); ids.add(id);
+        if (id.startsWith('c_w_')) w++; else r++;
+    });
+    st.board.forEach((a, i) => { take(a, 'point ' + i); if (a.length) assert(a.every(id => id[2] === a[0][2]), `${label}: mixed colours on point ${i}`); });
+    take(st.bar.w, 'bar'); take(st.bar.r, 'bar'); take(st.off.w, 'off'); take(st.off.r, 'off');
+    assert.strictEqual(w, 15, `${label}: white checkers = ${w}`); assert.strictEqual(r, 15, `${label}: red checkers = ${r}`);
+}
+// Mirror a position (swap colours, point i <-> 23-i): the game is perfectly symmetric
+function mirror(st) {
+    const out = { board: Array.from({ length: 24 }, () => []), bar: { w: [], r: [] }, off: { w: [], r: [] } };
+    const sw = id => id.replace(/^c_([wr])_/, (_, c) => 'c_' + (c === 'w' ? 'r' : 'w') + '_');
+    for (let i = 0; i < 24; i++) out.board[23 - i] = st.board[i].map(sw);
+    out.bar.w = st.bar.r.map(sw); out.bar.r = st.bar.w.map(sw);
+    out.off.w = st.off.r.map(sw); out.off.r = st.off.w.map(sw);
+    return out;
+}
+const mirrorMove = x => `${x.from === 'bar' ? 'bar' : 23 - x.from}>${x.target === 'off' ? 'off' : 23 - x.target}:${x.diceUsed}`;
+
+section('Starting position');
+test('15 checkers each, standard layout, pip count 167', () => {
+    const st = E.createInitialState();
+    checkInvariants(st, 'start');
+    assert.deepStrictEqual([23, 12, 7, 5].map(i => st.board[i].length), [2, 5, 3, 5]);
+    assert.deepStrictEqual([0, 11, 16, 18].map(i => st.board[i].length), [2, 5, 3, 5]);
+    assert.strictEqual(E.calcPIP(st, W), 167); assert.strictEqual(E.calcPIP(st, R), 167);
+});
+test('opening 3-1 for White has the expected moves', () => {
+    const st = E.createInitialState();
+    const got = moves(st, W, [3, 1]);
+    assert(got.includes('23>22:1') && got.includes('23>20:3') && got.includes('7>4:3') && got.includes('5>2:3'));
+    assert(got.includes('12>9:3'), 'point 9 is empty');
+    assert(!got.some(x => x.startsWith('12>11')), 'point 11 is Red\'s and made, so 12>11 is blocked');
+});
+test('a blocked point cannot be landed on, a blot can be hit', () => {
+    const st = pos({ w: { 10: 1, 3: 2 }, r: { 8: 2, 7: 1 }, offW: 12, offR: 12 });
+    assert(!moves(st, W, [2, 6]).includes('10>8:2'), '2 checkers block');
+    const u = E.applyRaw(st, W, { from: 10, target: 7, diceUsed: 3 });
+    assert.strictEqual(st.bar.r.length, 1); assert(u.hit);
+    u(); assert.strictEqual(st.bar.r.length, 0); assert.strictEqual(st.board[7].length, 1);
+});
+
+section('Bar, bearing off and the dice rules');
+test('a checker on the bar must enter before anything else moves', () => {
+    const st = pos({ w: { 12: 5, 5: 3 }, barW: 1, r: { 0: 2 }, offW: 6, offR: 13 });
+    assert(moves(st, W, [3, 4]).every(x => x.startsWith('bar>')));
+});
+test('entering is blocked by made points; all blocked = no moves', () => {
+    const st = pos({ w: { 12: 1 }, barW: 1, r: { 18: 2, 19: 2, 20: 2, 21: 2, 22: 2, 23: 2 }, offW: 13, offR: 3 });
+    assert.strictEqual(moves(st, W, [1, 6]).length, 0);
+});
+test('bearing off: exact, and larger die only from the highest point', () => {
+    const st = pos({ w: { 2: 1, 0: 1 }, offW: 13, r: { 12: 15 } });
+    assert(moves(st, W, [3, 1]).includes('2>off:3'), 'a 3 bears off from the 3-point (index 2)');
+    const st2 = pos({ w: { 1: 1, 0: 1 }, offW: 13, r: { 12: 15 } });
+    assert(moves(st2, W, [6, 5]).includes('1>off:6'), 'higher die bears off the highest checker');
+    assert(!moves(st2, W, [6, 5]).includes('0>off:6'), '...but not a lower one while a higher one remains');
+});
+test('cannot bear off while a checker is outside the home board', () => {
+    const st = pos({ w: { 6: 1, 0: 14 }, r: { 20: 15 } });
+    assert(!moves(st, W, [6, 6]).some(x => x.endsWith('off:6')));
+});
+test('must play both dice if possible (no move that wastes a die)', () => {
+    // White blot on 23; 6 would land on a Red made point, so playing the 5 first would block the 6: only orders that use both survive
+    const st = pos({ w: { 6: 1, 5: 1 }, offW: 13, r: { 0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 12: 5 } });
+    const turns = E.enumerateTurns(st, W, [2, 1]);
+    assert(turns.length > 0 && turns.every(t => t.moves.length === Math.max(...turns.map(x => x.moves.length))));
+});
+test('only one die playable -> it must be the larger one', () => {
+    // White's lone checker on 10. A 4 lands on 6 and a 3 on 7, but from either spot the other die is blocked (Red holds 3)
+    const st = pos({ w: { 10: 1 }, offW: 14, r: { 3: 2, 20: 13 } });
+    assert.deepStrictEqual(moves(st, W, [4, 3]), ['10>6:4']);
+    assert.deepStrictEqual(moves(st, W, [3, 4]), ['10>6:4']);
+    const turns = E.enumerateTurns(st, W, [4, 3]);
+    assert.strictEqual(turns.length, 1); assert.strictEqual(turns[0].moves[0].diceUsed, 4);
+});
+test('doubles give four moves; combined moves list the far target with its path', () => {
+    const st = E.createInitialState();
+    const sel = E.getSelectableMoves(st, W, 23, [3, 3, 3, 3]);
+    const far = sel.find(x => x.target === 14);
+    assert(far && far.path && far.path.length === 3, 'three 3s from point 23 reach 14');
+    assert(!sel.some(x => x.target === 11 || x.path && x.path.some(s => s.target === 11)), 'cannot pass through / land on Red\'s point 11');
+});
+test('combined move never offers a route through a blocked point', () => {
+    const st = pos({ w: { 20: 1 }, offW: 14, r: { 17: 2, 14: 1, 0: 13 } });
+    const sel = E.getSelectableMoves(st, W, 20, [3, 3]);          // 20 -> 17 is blocked, so 20 -> 14 must not be offered
+    assert(!sel.some(x => x.target === 14));
+});
+
+section('Scoring');
+test('win / gammon / backgammon', () => {
+    const win = pos({ offW: 15, w: {}, r: { 20: 14 }, offR: 1 });
+    assert.strictEqual(E.scoreGame(win, W).points, 1);
+    const gammon = pos({ offW: 15, r: { 12: 15 } });
+    assert.strictEqual(E.scoreGame(gammon, W).points, 2);
+    const bg1 = pos({ offW: 15, r: { 3: 1, 12: 14 } });            // Red checker in White's home board
+    assert.strictEqual(E.scoreGame(bg1, W).points, 3);
+    const bg2 = pos({ offW: 15, r: { 12: 14 }, barR: 1 });         // Red checker on the bar
+    assert.strictEqual(E.scoreGame(bg2, W).points, 3);
+    const bgR = pos({ offR: 15, w: { 20: 1, 12: 14 } });           // mirrored: White checker in Red's home
+    assert.strictEqual(E.scoreGame(bgR, R).points, 3);
+});
+
+section('Colour symmetry');
+test('Red\'s moves are the mirror image of White\'s (200 random positions)', () => {
+    for (let i = 0; i < 200; i++) {
+        const st = E.createInitialState(); let p = W;
+        for (let t = 0; t < rnd() * 80; t++) {
+            const turns = E.enumerateTurns(st, p, rollDice());
+            if (turns.length) turns[Math.floor(rnd() * turns.length)].moves.forEach(mv => E.applyRaw(st, p, mv));
+            p = E.other(p);
+        }
+        const d = rollDice(), ms = mirror(st);
+        const a = Array.from(E.getAllMoves(st, W, d), mirrorMove).sort();
+        const b = moves(ms, R, d);
+        assert.deepStrictEqual(a, b);
+        assert(Math.abs(E.evaluatePosition(st, W) + E.evaluatePosition(ms, R)) < 1e-9, 'evaluation is antisymmetric');
+    }
+});
+
+section('Random games');
+test('300 random games finish with every invariant intact; undo restores positions', () => {
+    let finished = 0;
+    for (let g = 0; g < 300; g++) {
+        const st = E.createInitialState(); let p = g % 2 ? W : R;
+        for (let t = 0; t < 600; t++) {
+            const d = rollDice(), turns = E.enumerateTurns(st, p, d);
+            if (turns.length) {
+                const before = E.fastSig(st), sigPip = [E.calcPIP(st, W), E.calcPIP(st, R)];
+                const undo = E.applySequence(st, p, turns[0].moves); undo();
+                assert.strictEqual(E.fastSig(st), before, 'undo restores the position');
+                assert.deepStrictEqual([E.calcPIP(st, W), E.calcPIP(st, R)], sigPip);
+                // every enumerated turn must be playable move by move through getAllMoves (rules agree with the generator)
+                const t0 = turns[Math.floor(rnd() * turns.length)];
+                let rem = d.slice();
+                for (const mv of t0.moves) {
+                    assert(E.getAllMoves(st, p, rem).some(x => x.from === mv.from && x.target === mv.target && x.diceUsed === mv.diceUsed), 'planned move is legal');
+                    E.applyRaw(st, p, mv); rem.splice(rem.indexOf(mv.diceUsed), 1);
+                }
+            }
+            if (st.off[p].length === 15) { finished++; checkInvariants(st, 'end of game ' + g); break; }
+            if (t % 50 === 0) checkInvariants(st, `game ${g} turn ${t}`);
+            p = E.other(p);
+        }
+    }
+    assert(finished >= 290, 'almost all random games end (' + finished + ')');
+});
+
+section('AI');
+test('every AI level returns a legal, complete plan (both colours)', () => {
+    for (const level of ['easy', 'medium', 'hard', 'expert']) {
+        for (let g = 0; g < 6; g++) {
+            const st = E.createInitialState(); let p = g % 2 ? W : R;
+            for (let t = 0; t < 40; t++) {
+                const d = rollDice(), turns = E.enumerateTurns(st, p, d);
+                const plan = E.aiPickPlan(st, p, d, level, rnd);
+                if (!turns.length) { assert.strictEqual(plan, null); }
+                else {
+                    assert(plan && plan.length === turns[0].moves.length, `${level}: plays as many dice as possible`);
+                    const key = ms => ms.map(y => `${y.from}>${y.target}:${y.diceUsed}`).join();
+                    assert(turns.some(x => key(x.moves) === key(plan)), `${level}: plan is one of the legal turns`);
+                    plan.forEach(mv => E.applyRaw(st, p, mv));
+                }
+                p = E.other(p);
+            }
+            checkInvariants(st, level + ' playout');
+        }
+    }
+});
+test('Expert is deterministic and never uses the random generator', () => {
+    const st = E.createInitialState();
+    const a = E.expertPickPlan(st, W, [4, 2]), b = E.expertPickPlan(st, W, [4, 2]);
+    assert.deepStrictEqual(a, b);
+});
+test('Expert async search gives the same answer as the synchronous one', () => {
+    const st = E.createInitialState();
+    const sync = E.expertPickPlan(st, R, [5, 3]);
+    return E.expertPickPlanAsync(st, R, [5, 3]).then(r => assert.deepStrictEqual(r, sync));
+});
+test('the AI takes an obvious hit-and-escape / bears off when it can', () => {
+    const st = pos({ r: { 18: 1, 19: 1 }, offR: 13, w: { 2: 15 } });   // pure bear-off race: Expert must bear checkers off
+    const plan = E.expertPickPlan(st, R, [6, 5]);
+    assert(plan.length === 2 && plan.every(x => x.target === 'off'));
+});
+test('stronger levels beat weaker ones head to head (40 games)', () => {
+    const play = (lw, lr) => {
+        const st = E.createInitialState(); let p = rnd() < 0.5 ? W : R;
+        for (let t = 0; t < 500; t++) {
+            const d = rollDice(), plan = E.aiPickPlan(st, p, d, p === W ? lw : lr, rnd);
+            if (plan) plan.forEach(mv => E.applyRaw(st, p, mv));
+            if (st.off[p].length === 15) return p;
+            p = E.other(p);
+        }
+        return null;
+    };
+    let hardWins = 0, n = 0;
+    for (let i = 0; i < 40; i++) { const w = play(i % 2 ? 'hard' : 'easy', i % 2 ? 'easy' : 'hard'); if (w) { n++; if ((w === W) === (i % 2 === 1)) hardWins++; } }
+    assert(hardWins / n > 0.8, `Hard beat Easy in ${hardWins}/${n}`);
+});
+
+
+section('Position validation (used on saved and received games)');
+test('isValidState accepts real positions and rejects damaged ones', () => {
+    const good = E.createInitialState();
+    assert.strictEqual(E.isValidState(good), true);
+    const clone = () => E.cloneState(good);
+    let x = clone(); x.board[0].push('c_r_0');                         assert.strictEqual(E.isValidState(x), false, 'duplicate checker');
+    x = clone(); x.board[23].pop();                                    assert.strictEqual(E.isValidState(x), false, 'missing checker');
+    x = clone(); x.board[5].push(x.board[0].pop());                    assert.strictEqual(E.isValidState(x), false, 'mixed colours on a point');
+    x = clone(); x.bar.w.push(x.board[0].pop());                       assert.strictEqual(E.isValidState(x), false, 'red checker on white bar');
+    x = clone(); x.board[3].push('c_w_99');                            assert.strictEqual(E.isValidState(x), false, 'unknown id');
+    x = clone(); x.board[3].push('hello');                             assert.strictEqual(E.isValidState(x), false, 'garbage id');
+    x = clone(); x.board.pop();                                        assert.strictEqual(E.isValidState(x), false, 'wrong number of points');
+    x = clone(); x.off = null;                                         assert.strictEqual(E.isValidState(x), false, 'missing off');
+    assert.strictEqual(E.isValidState(null), false); assert.strictEqual(E.isValidState({}), false);
+    // positions reached by real play stay valid
+    const st = E.createInitialState(); let p = W;
+    for (let i = 0; i < 60; i++) { const t = E.enumerateTurns(st, p, rollDice()); if (t.length) t[0].moves.forEach(m => E.applyRaw(st, p, m)); p = E.other(p); assert(E.isValidState(st)); }
+});
+
+(async () => {
+    for (const [name, fn] of queue) {
+        if (!fn) { console.log(name); continue; }
+        try { await fn(); passed++; console.log('  ok   ' + name); }
+        catch (e) { failed++; console.log('  FAIL ' + name + '\n       ' + (e && e.message || e)); }
+    }
+    console.log(`\n${passed} passed, ${failed} failed`);
+    process.exit(failed ? 1 : 0);
+})();
