@@ -567,7 +567,7 @@
             </div>
 
             <p id="online-error" class="hidden mt-3 text-sm text-red-400 text-center"></p>
-            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-15e (blue roll button)</p>
+            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-15g (colour change keeps positions)</p>
         </div>
     </div>
 
@@ -602,7 +602,7 @@
                         <button id="play-white-btn" onclick="setMyColor('w')" class="py-2 bg-amber-600 text-white font-bold rounded-lg border border-amber-500 cursor-pointer">WHITE</button>
                         <button id="play-red-btn" onclick="setMyColor('r')" class="py-2 bg-slate-800 text-slate-300 hover:text-white font-bold rounded-lg border border-slate-700 cursor-pointer">RED</button>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1">Your home board is always drawn at the bottom. Switching colour during a match swaps sides with your opponent: the position stays, the board turns over, and the computer plays the colour you left. Online, your friend has to agree first.</p>
+                    <p class="text-xs text-slate-400 mt-1">Your home board is always drawn at the bottom. Switching colour during a match keeps every checker where it is: your checkers take the new colour and the computer's take the one you left. Online, your friend has to agree first.</p>
                 </div>
                 <div>
                     <label class="block font-semibold mb-1 text-slate-300">Board on phones (portrait)</label>
@@ -1847,7 +1847,7 @@
                     const ptEl = pointElements[idx];
                     const tri = ptEl.querySelector('.point-triangle');
                     
-                    const isEven = idx % 2 === 0;   // the colour belongs to the point, so it turns with the checkers when you play Red
+                    const isEven = vi(idx) % 2 === 0;   // the colour belongs to the spot on your screen, so nothing moves or changes when you switch colour
                     const triClass = isTop
                         ? (isEven ? 'point-down-dark' : 'point-down-light')
                         : (isEven ? 'point-up-dark' : 'point-up-light');
@@ -2369,6 +2369,7 @@
         function handleRollDice() {
             if (!gameActive || diceValues.length > 0 || isAnimating || isRolling || inputBlocked()) return;
             if (currentPlayer !== myColor && opponentKind !== 'ai') return;   // a remote opponent rolls on their own screen
+            if (!openingRoll && isEntryBlocked(currentPlayer)) return;       // nothing can be played: no roll, the turn passes
             if (online.active) { onlineRoll(); return; }
             if (openingRoll) { doOpeningRoll(); return; }
             const [d1, d2] = rollDiceValues();
@@ -2405,6 +2406,34 @@
             });
         }
 
+        // A player on the bar whose entry points (the opponent's six home points) are all held by 2+ opposing checkers cannot
+        // move whatever they roll, so they do not roll at all: the turn passes after a short message.
+        function isEntryBlocked(p) {
+            if (!state.bar[p].length) return false;
+            const o = other(p), from = p === 'w' ? 18 : 0;
+            for (let i = from; i < from + 6; i++) {
+                const pt = state.board[i];
+                if (!(pt.length >= 2 && pt[0].charAt(2) === o)) return false;
+            }
+            return true;
+        }
+        let blockedSkipKey = null;
+        function checkBlockedTurn() {
+            if (!gameActive || openingRoll || isRolling || isAnimating || rolledThisTurn || diceValues.length > 0) return;
+            const p = currentPlayer;
+            if (!isEntryBlocked(p)) return;
+            const key = gameGen + ':' + turnSerial + ':' + p;
+            if (blockedSkipKey === key) return;
+            blockedSkipKey = key;
+            const me = p === myColor;
+            setStatus(me ? `You are on the bar and ${opponentName}'s home board is closed: no move is possible. Your turn passes.`
+                         : `${opponentName} is on the bar and your home board is closed: no move is possible. ${opponentName}'s turn passes.`);
+            clearTimeout(endTurnTimer);
+            endTurnTimer = setTimeout(() => {
+                if (gameActive && !openingRoll && diceValues.length === 0 && !rolledThisTurn && currentPlayer === p && isEntryBlocked(p)) endTurn();
+            }, 2000);
+        }
+
         function checkTurnState() {
             if (diceValues.length === 0) {
                 endTurn();
@@ -2437,7 +2466,9 @@
             turnSerial++;
             updateUI();
 
-            if (currentPlayer === myColor) {
+            if (isEntryBlocked(currentPlayer)) {
+                // on the bar behind a closed board: no roll, say so and pass again
+            } else if (currentPlayer === myColor) {
                 setStatus("Your turn. Click 'Roll Dice'.");
                 document.getElementById('roll-btn').disabled = false;
             } else if (opponentKind === 'ai') {
@@ -2446,6 +2477,7 @@
             } else {
                 setStatus(`Waiting for ${opponentName} to roll...`);
             }
+            blockedSkipKey = null; checkBlockedTurn();   // the new player is on the bar behind a closed board: say so and pass again
         }
 
         // The AI itself (Expert and Easy/Medium/Hard) is in the BGEngine block above.
@@ -2591,6 +2623,7 @@
             updateRollButton();
             refreshKeyboardTargets();
             persistAIMatch();
+            checkBlockedTurn();
         }
 
         // Roll Dice button states:
@@ -2603,7 +2636,7 @@
             const btn = document.getElementById('roll-btn');
             const canRoll = (online.active && openingRoll)
                 ? (gameActive && !openRolls[myColor] && !isRolling && !online.rollPending && !inputBlocked())     // each player rolls their own opening dice
-                : (currentPlayer === myColor && !rolledThisTurn && diceValues.length === 0 && gameActive && !isRolling && !online.rollPending && !inputBlocked());
+                : (currentPlayer === myColor && !rolledThisTurn && diceValues.length === 0 && gameActive && !isRolling && !online.rollPending && !inputBlocked() && !isEntryBlocked(myColor));
             btn.disabled = !canRoll;
 
             const oppRoll = (online.active && openingRoll) ? (!!openRolls[myColor] && !openRolls[oppColor()]) : (currentPlayer !== myColor);
@@ -2707,9 +2740,21 @@
             showStartScreen();    // ...and keep the Start Match button state
         }
 
-        // Switch colour in the middle of a match against the computer: you and the computer swap seats. The position, the
-        // dice and whose colour is to move stay exactly as they are; the board turns over to your new side (checkers keep
-        // their triangles' colours) and the computer carries on with the colour you just left. The match score stays with you.
+        // Changing colour keeps every checker where it is on your screen: each player's checkers just take the other colour.
+        // In the game's own numbering that means recolouring every checker and mirroring the points (point i becomes 23-i), because
+        // White always moves 23->0 and Red 0->23. The dice stay the same and the player to move stays the same player.
+        function flipSeats(st) {
+            const sw = id => 'c_' + (id.charAt(2) === 'w' ? 'r' : 'w') + id.slice(3);
+            const out = { board: Array.from({ length: 24 }, () => []), bar: { w: [], r: [] }, off: { w: [], r: [] } };
+            for (let i = 0; i < 24; i++) out.board[23 - i] = st.board[i].map(sw);
+            out.bar.w = st.bar.r.map(sw); out.bar.r = st.bar.w.map(sw);
+            out.off.w = st.off.r.map(sw); out.off.r = st.off.w.map(sw);
+            return out;
+        }
+
+        // Switch colour in the middle of a match against the computer: your checkers stay exactly where they are and take the
+        // new colour; the computer's checkers take the colour you left. The dice and whose turn it is stay as they are, and the
+        // match score stays with you.
         let seatSwapTimer = null;
         function switchColourInGame(color) {
             clearTimeout(seatSwapTimer);
@@ -2722,14 +2767,14 @@
             if (!matchActive || matchOver || online.active || opponentKind !== 'ai' || color === myColor) return;
             const faces = ['die-1', 'die-2'].map(id => { const m = /(\d)$/.exec(document.getElementById(id).getAttribute('aria-label') || ''); return m ? +m[1] : 0; });
             myColor = color;
-            if (!gameActive) starterFlip = !starterFlip;   // between games: the winner stays the same player
+            if (lastWinner) lastWinner = other(lastWinner);   // the winner stays the same player, now in the other colour
             const snapshot = {
                 v: 1, flip: starterFlip, lw: lastWinner, myColor: color, difficulty: aiDifficulty, matchLength: matchLength,
                 matchScore: { w: matchScore.r, r: matchScore.w },       // the score goes with the player, not the colour
                 gamesPlayed: gamesPlayed, faces: faces,
                 diceHidden: document.getElementById('dice-wrapper').classList.contains('invisible'),
                 snap: {
-                    state: JSON.parse(JSON.stringify(state)), currentPlayer: openingRoll ? color : currentPlayer, diceValues: diceValues.slice(),
+                    state: flipSeats(state), currentPlayer: openingRoll ? color : other(currentPlayer), diceValues: diceValues.slice(),
                     openingRoll: openingRoll, gameActive: gameActive, rolledThisTurn: rolledThisTurn, isRolling: false, history: []
                 }
             };
@@ -3621,8 +3666,8 @@
 
         // ---------- swapping colours in the middle of an online game ----------
         // One player asks, the other agrees, then the HOST (who owns the dice and the position) swaps the colours on both
-        // screens in one step with a snapshot. The position, the dice and whose colour is to move stay as they are; each
-        // player keeps their own match score. Input is frozen briefly while this happens so no move can get lost.
+        // screens in one step with a snapshot. Every checker stays where it is on both screens (only the colours change), the dice
+        // and the player to move stay as they are; each player keeps their own match score. Input is frozen briefly while this happens so no move can get lost.
         const SWAP_ASK_TIMEOUT = 45000;
         function swapAbort(silent) {
             clearTimeout(online.swapTimer); online.swapTimer = null;
@@ -3650,7 +3695,7 @@
                     if (online.swapPhase) return;
                     online.swapPhase = 'asked-me';
                     document.getElementById('swap-modal-text').innerText =
-                        `${opponentName} would like to swap colours. You would play ${oppColor() === W ? 'White' : 'Red'}. The position stays exactly as it is; the board just turns over.`;
+                        `${opponentName} would like to swap colours. You would play ${oppColor() === W ? 'White' : 'Red'}. Every checker stays where it is; only the colours change.`;
                     document.getElementById('swap-modal').classList.remove('hidden');
                     clearTimeout(online.swapTimer);
                     online.swapTimer = setTimeout(() => { if (online.swapPhase === 'asked-me') { swapAbort(); netSend({ t: 'swapNo' }); } }, SWAP_ASK_TIMEOUT);
@@ -3707,6 +3752,9 @@
             online.hostColor = other(online.hostColor);
             myColor = online.hostColor;
             matchScore = { w: matchScore.r, r: matchScore.w };         // each player keeps their own points
+            state = flipSeats(state);                                  // every checker stays where it is on both screens; only the colours change
+            if (!openingRoll) currentPlayer = other(currentPlayer);    // the same player is still to move
+            if (lastWinner) lastWinner = other(lastWinner);
             turnHistory = [];
             if (openingRoll) { openRolls = { w: null, r: null }; currentPlayer = myColor; }
             online.queue = [];
