@@ -415,6 +415,16 @@
             <!-- PLAY NEXT GAME / NEW MATCH button (centered on the board, above the checkers) -->
             <div id="next-game-wrap" class="absolute inset-0 hidden flex items-center justify-center pointer-events-none z-40">
                 <div class="flex flex-col items-center gap-3">
+                    <div id="after-panel" style="max-width: min(24rem, 88vw)" class="hidden pointer-events-auto w-full bg-slate-900/95 border-2 border-sky-400 rounded-2xl shadow-2xl p-4 text-center">
+                        <p id="after-text" class="text-sm text-slate-100 font-semibold mb-3"></p>
+                        <div id="after-choices" class="grid grid-cols-3 gap-2">
+                            <button id="after-keep" onclick="afterChoose('keep')" class="py-2 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-extrabold text-sm rounded-xl border border-amber-300 transition cursor-pointer">Keep playing</button>
+                            <button id="after-watch" onclick="afterChoose('watch')" class="py-2 bg-sky-700 hover:bg-sky-600 active:scale-95 text-white font-extrabold text-sm rounded-xl border border-sky-400 transition cursor-pointer">Watch</button>
+                            <button id="after-quit" onclick="afterChoose('quit')" class="py-2 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white font-extrabold text-sm rounded-xl border border-slate-500 transition cursor-pointer">Quit</button>
+                        </div>
+                        <button id="after-leave" onclick="afterLeaveNow()" class="hidden mt-3 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-lg border border-slate-600 transition cursor-pointer">Leave now</button>
+                    </div>
+                    <button id="seat-btn" onclick="takeSeat()" class="hidden pointer-events-auto px-6 py-3 sm:px-8 sm:py-4 bg-sky-700 hover:bg-sky-600 disabled:opacity-70 active:scale-95 text-white font-extrabold text-base sm:text-2xl rounded-2xl border-2 border-sky-300 shadow-2xl transition cursor-pointer">Take the free seat</button>
                     <button id="rematch-btn" onclick="onRematchClick()" class="hidden pointer-events-auto px-6 py-3 sm:px-8 sm:py-4 bg-sky-700 hover:bg-sky-600 disabled:opacity-70 active:scale-95 text-white font-extrabold text-base sm:text-2xl rounded-2xl border-2 border-sky-300 shadow-2xl transition cursor-pointer">Rematch</button>
                     <button id="next-game-btn" onclick="onNextGameClick()" class="pointer-events-auto px-6 py-3 sm:px-8 sm:py-4 bg-amber-600 hover:bg-amber-500 disabled:opacity-70 active:scale-95 text-white font-extrabold text-base sm:text-2xl rounded-2xl border-2 border-amber-300 shadow-2xl transition cursor-pointer">Play Next Game</button>
                 </div>
@@ -439,6 +449,7 @@
         <div id="status-banner" role="status" aria-live="polite" class="mt-2 text-xs sm:text-sm font-semibold text-amber-200 bg-slate-900/80 px-4 py-1 rounded-lg border border-slate-800 text-center z-30">
             Initializing Game...
         </div>
+        <div id="spec-info" class="hidden mt-1 text-[10px] sm:text-xs font-semibold text-sky-300 text-center z-30"></div>
     </main>
 
     <div id="net-banner" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-[45] max-w-[92vw] px-4 py-2 bg-slate-900/95 border border-red-400/70 rounded-xl shadow-2xl text-center">
@@ -524,11 +535,13 @@
                 <p class="text-sm text-slate-300 mb-3 text-center">Create a game and send the code or link to your friend. You both choose the game settings once you are connected.</p>
                 <button id="online-create-btn" onclick="createOnline()" class="w-full mb-4 py-3 bg-sky-700 hover:bg-sky-600 active:scale-95 text-white font-extrabold rounded-xl border border-sky-400 transition cursor-pointer">Get a game code</button>
 
-                <div class="flex items-center gap-2 text-xs text-slate-500 mb-3"><div class="flex-1 border-t border-slate-700"></div>or join a friend's game<div class="flex-1 border-t border-slate-700"></div></div>
+                <div class="flex items-center gap-2 text-xs text-slate-500 mb-3"><div class="flex-1 border-t border-slate-700"></div>or join or watch a game<div class="flex-1 border-t border-slate-700"></div></div>
                 <div class="flex gap-2">
                     <input id="online-code" type="text" maxlength="80" placeholder="Game code or link" autocomplete="off" class="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-lg p-2 text-amber-300 font-mono uppercase outline-none focus:border-sky-500" onkeydown="if (event.key === 'Enter') joinOnline()">
                     <button id="online-join-btn" onclick="joinOnline()" class="px-4 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-extrabold rounded-lg border border-amber-400 transition cursor-pointer">Join</button>
+                    <button id="online-watch-btn" onclick="watchOnline()" title="Watch a game that two other players have started" class="px-3 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white font-extrabold rounded-lg border border-slate-500 transition cursor-pointer">Watch</button>
                 </div>
+                <p id="online-watch-hint" class="text-xs text-slate-400 mt-2">Join to play. Watch to follow a game that two other players have started, without playing.</p>
             </div>
 
             <div id="online-view-settings" class="hidden text-center">
@@ -567,7 +580,7 @@
             </div>
 
             <p id="online-error" class="hidden mt-3 text-sm text-red-400 text-center"></p>
-            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-15g (colour change keeps positions)</p>
+            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-19b (spectators take free seats)</p>
         </div>
     </div>
 
@@ -597,12 +610,20 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block font-semibold mb-1 text-slate-300">Play As</label>
+                    <label id="play-as-label" class="block font-semibold mb-1 text-slate-300">Play As</label>
                     <div class="grid grid-cols-2 gap-2">
                         <button id="play-white-btn" onclick="setMyColor('w')" class="py-2 bg-amber-600 text-white font-bold rounded-lg border border-amber-500 cursor-pointer">WHITE</button>
                         <button id="play-red-btn" onclick="setMyColor('r')" class="py-2 bg-slate-800 text-slate-300 hover:text-white font-bold rounded-lg border border-slate-700 cursor-pointer">RED</button>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1">Your home board is always drawn at the bottom. Switching colour during a match keeps every checker where it is: your checkers take the new colour and the computer's take the one you left. Online, your friend has to agree first.</p>
+                    <p id="play-as-note" class="text-xs text-slate-400 mt-1">Your home board is always drawn at the bottom. Switching colour during a match keeps every checker where it is: your checkers take the new colour and the computer's take the one you left. Online, your friend has to agree first.</p>
+                </div>
+                <div id="spec-settings" class="hidden">
+                    <label class="block font-semibold mb-1 text-slate-300">Spectators</label>
+                    <div id="spec-link-row" class="flex gap-2">
+                        <input id="spec-link" type="text" readonly class="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-300 outline-none" onfocus="this.select()">
+                        <button id="spec-copy-btn" onclick="copySpecLink()" class="px-3 bg-sky-700 hover:bg-sky-600 active:scale-95 text-white font-bold text-sm rounded-lg border border-sky-400 transition cursor-pointer">Copy</button>
+                    </div>
+                    <p id="spec-settings-note" class="text-xs text-slate-400 mt-1"></p>
                 </div>
                 <div>
                     <label class="block font-semibold mb-1 text-slate-300">Board on phones (portrait)</label>
@@ -647,6 +668,8 @@
                 <p>• <strong>Animation:</strong> Checkers glide smoothly from point to point.</p>
                 <p>• <strong>Rules:</strong> Full rules apply including doubles (4 moves), hitting blots, and mandatory bar re-entry.</p>
                 <p>• <strong>Online:</strong> Press Play Online, create a game and send the link (or the 6-character code) to a friend. Once you are connected you both choose the match length and turn timer, and the game starts when you confirm the same settings; colours are drawn at random. Dice are thrown by the host's browser. If the connection drops, the game pauses and reconnects by itself (you can even reload the page and resume). An optional turn timer skips the turn of a player who runs out of time, and when a match ends either player can ask for a rematch.</p>
+                <p>• <strong>Watching:</strong> Once both players have started an online game, anyone with the game code, or the spectator link from Settings, can press Watch and follow it live: the board, the dice and the score. Spectators can join at any time but can't play, and the players see how many people are watching. In Settings a spectator can choose whose side of the board is drawn at the bottom.</p>
+                <p>• <strong>After a match with spectators:</strong> Each player chooses Keep playing, Watch or Quit. If both keep playing, it's a rematch. If a player stops, the spectators can take the free seat; the new pair then chooses the settings for their match, and everyone else watches it. The player who created the game should stay on the page until the next game is set up, because the game room runs on that page.</p>
                 <p>• <strong>Scoring:</strong> A win scores 1 point. A gammon (the loser has borne off no checkers) scores 2. A backgammon (a gammon where the loser still has a checker on the bar or in your home board) scores 3. The first player to reach the match target wins the match.</p>
             </div>
         </div>
@@ -1499,6 +1522,7 @@
         // (starterFlip: the sides were swapped with the computer after that game, so the winning colour is now the other player's)
         let starterFlip = false;
         let lastWinner = null;     // the colour that won the game just finished (also when the other side gave up)
+        let lastEnd = null;        // how the last game ended {w, label, pts, conceded} (shown to spectators)
         function lastGameWinner() {
             const w = lastWinner || (state.off.w.length === 15 ? W : (state.off.r.length === 15 ? R : null));
             return w && starterFlip ? other(w) : w;
@@ -1559,6 +1583,7 @@
         }
 
         function resetGame() {
+            if (watch.on) { if (watch.ended || confirm("Stop watching this game?")) stopWatching(); return; }
             if (online.active) {
                 if (confirm("Leave this online game? Your opponent will be told you left.")) leaveOnline(true);
                 return;
@@ -1604,7 +1629,7 @@
         }
 
         function startMatch(games) {
-            matchLength = games; lastWinner = null;
+            matchLength = games; lastWinner = null; lastEnd = null;
             matchScore = { w: 0, r: 0 };
             gamesPlayed = 0;
             matchOver = false;
@@ -1623,6 +1648,7 @@
             gamesPlayed++;
             // Points beyond the match target don't count (a gammon in a 1-point match is still just 1 point)
             const awarded = Math.min(result.points, Math.max(0, matchLength - matchScore[winner]));
+            lastEnd = { w: winner, label: result.label, pts: awarded, conceded: !!conceded };
             matchScore[winner] += awarded;
             matchOver = matchScore[winner] >= matchLength;   // the match is played to N points
             updateUI();
@@ -1660,6 +1686,7 @@
         }
         function evalConcession() {
             // judged at the start of a turn (nothing rolled yet), when the numbers are exact
+            if (watch.on) return;
             if (!matchActive || !gameActive || openingRoll || isRolling || isAnimating || diceValues.length > 0 || rolledThisTurn) return;
             if (online.active && (online.paused || online.opponentGone)) return;
             const info = E.concessionInfo(state, myColor, currentPlayer);
@@ -1862,9 +1889,9 @@
             const trayRightLabel = document.getElementById('tray-right-label');
             if (homeOrientation === 'RIGHT') {
                 trayLeftLabel.innerText = opponentName;
-                trayRightLabel.innerText = 'YOU';
+                trayRightLabel.innerText = meLabel();
             } else {
-                trayLeftLabel.innerText = 'YOU';
+                trayLeftLabel.innerText = meLabel();
                 trayRightLabel.innerText = opponentName;
             }
         }
@@ -2230,6 +2257,7 @@
             const die1 = document.getElementById('die-1');
             const die2 = document.getElementById('die-2');
             document.getElementById('dice-wrapper').classList.remove('invisible');
+            if (online.active && online.role === 'host') specRolled(v1, v2);   // spectators throw the same dice
             die1.classList.add('rolling');
             die2.classList.add('rolling');
             const shuffleFaces = () => {
@@ -2419,6 +2447,7 @@
         }
         let blockedSkipKey = null;
         function checkBlockedTurn() {
+            if (watch.on) return;                     // a spectator only shows what the host sends
             if (!gameActive || openingRoll || isRolling || isAnimating || rolledThisTurn || diceValues.length > 0) return;
             const p = currentPlayer;
             if (!isEntryBlocked(p)) return;
@@ -2617,13 +2646,14 @@
             const turnOn = matchActive && gameActive && !openingRoll;
             document.getElementById('me-badge').classList.toggle('turn-active', turnOn && currentPlayer === me);
             document.getElementById('opp-badge').classList.toggle('turn-active', turnOn && currentPlayer === opp);
-            document.getElementById('me-name').innerText = 'YOU';
+            document.getElementById('me-name').innerText = meLabel();
             document.getElementById('opp-name').innerText = opponentName;
 
             updateRollButton();
             refreshKeyboardTargets();
             persistAIMatch();
             checkBlockedTurn();
+            if (online.active && online.role === 'host') specPush();
         }
 
         // Roll Dice button states:
@@ -2641,6 +2671,7 @@
 
             const oppRoll = (online.active && openingRoll) ? (!!openRolls[myColor] && !openRolls[oppColor()]) : (currentPlayer !== myColor);
             const base = "w-full font-bold rounded-lg border border-solid shadow-2xl transition ";
+            if (watch.on) { btn.disabled = true; btn.className = base + "invisible pointer-events-none"; return; }   // spectators don't roll
             if (canRoll) {
                 btn.className = base + "pointer-events-auto bg-green-600 hover:bg-green-500 active:scale-95 border-green-400 cursor-pointer";
             } else if (matchActive && gameActive && oppRoll) {
@@ -2657,9 +2688,10 @@
 
         function setStatus(msg) {
             document.getElementById('status-banner').innerText = msg;
+            if (online.active && online.role === 'host' && specHost.list.length) specPush();
         }
 
-        function toggleSettingsModal() { document.getElementById('settings-modal').classList.toggle('hidden'); }
+        function toggleSettingsModal() { updateSpecChrome(); document.getElementById('settings-modal').classList.toggle('hidden'); }
         function toggleHelpModal() { document.getElementById('help-modal').classList.toggle('hidden'); }
 
         // ---------- Saved settings (localStorage) ----------
@@ -2728,6 +2760,7 @@
         }
 
         function setMyColor(color) {
+            if (watch.on) { specSetView(color); return; }      // a spectator only chooses whose side is drawn at the bottom
             if (color === myColor) return;
             if (online.active) { requestOnlineSwap(); return; }
             if (matchActive && !matchOver && opponentKind === 'ai') { switchColourInGame(color); return; }   // mid-match: swap seats with the computer
@@ -2821,7 +2854,7 @@
         //    sessionStorage, so a reload of the page can resume it.
         //  - Optional turn timer (host decides when time is up), rematch at the end of a match.
         // =====================================================================
-        const PROTOCOL = 5;
+        const PROTOCOL = 7;
         const PEER_PREFIX = 'bgm-';
         const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // no 0/O/1/I
         const SESSION_KEY = 'bg_online_session';
@@ -2842,6 +2875,15 @@
             matchLength: 1, pendingTimer: 0, myName: 'Player', lobbyTimer: null, lastResync: 0,
             cfg: { hbEvery: 4000, hbTimeout: 12000, recoverEvery: 3000, attemptAge: 10000, grace: 90000 }
         };
+        // Spectating (see SPECTATORS below). watch: this screen is watching someone else's game. specHost: the host's list of
+        // spectators. specSeen: what the players know about who is watching.
+        const watch = { on: false, ended: false, code: null, viewHost: true, last: null, roll: -1, animating: false, meName: '',
+                        lastRx: 0, lastOk: 0, lastPing: 0, lastAttempt: 0, startedAt: 0, viaRelay: false, tick: null, prevColor: W };
+        const specHost = { list: [], pushT: null, keepT: null, last: '', lastAt: 0, rollSeq: 0, rollVals: null };
+        const specSeen = { n: 0, names: [] };
+        // After a match with spectators: what each player chose and who takes the free seats (see AFTER A MATCH below)
+        const after = { on: false, phase: null, mine: null, theirs: null, takers: [], guestGone: false, v: null };
+        let relocTok = 0;
         let applyingRemote = false;   // true while a move received from the opponent is being applied
 
         const peerAvailable = () => typeof window.Peer === 'function';
@@ -2880,7 +2922,7 @@
             if (t === 'webrtc') return 'Your browser could not set up the peer-to-peer connection (webrtc error).';
             return 'Online connection failed (' + t + ').';
         }
-        const inputBlocked = () => online.active && (online.paused || online.swapFreeze);
+        const inputBlocked = () => watch.on || (online.active && (online.paused || online.swapFreeze));
 
         function cleanName(v) {
             const n = String(v || '').replace(/[^\p{L}\p{N} _.\-]/gu, '').trim().slice(0, 12);
@@ -2900,7 +2942,7 @@
         // Accepts a bare code or a pasted link containing #room=CODE
         function parseCode(v) {
             let t = String(v || '').trim();
-            const m = t.match(/room=([A-Za-z0-9]+)/);
+            const m = t.match(/(?:room|watch)=([A-Za-z0-9]+)/);
             if (m) t = m[1];
             t = t.toUpperCase();
             return /^[A-HJ-NP-Z2-9]{6}$/.test(t) ? t : null;
@@ -2908,16 +2950,21 @@
         const validTimer = n => Number.isInteger(n) && n >= 0 && n <= 600;
 
         // ---------- lobby UI ----------
-        function showOnlineModal(code) {
-            if (online.active || matchActive) return;
+        function showOnlineModal(code, toWatch) {
+            if (online.active || matchActive || watch.on) return;
             try { document.getElementById('online-name').value = localStorage.getItem('bg_name') || ''; } catch (e) {}
             setOnlineView('choose');
             onlineError('');
             if (typeof code === 'string') document.getElementById('online-code').value = code;
+            const hint = document.getElementById('online-watch-hint');
+            hint.innerText = toWatch === true ? "You've been invited to watch a game. Type your name if you like, then press Watch."
+                                              : 'Join to play. Watch to follow a game that two other players have started, without playing.';
+            hint.className = toWatch === true ? 'text-sm font-semibold text-sky-300 mt-2' : 'text-xs text-slate-400 mt-2';
             if (!peerAvailable()) onlineError("Online play needs the PeerJS library, which couldn't be loaded. Check your internet connection and reload the page.");
             document.getElementById('online-modal').classList.remove('hidden');
         }
         function closeOnlineModal() {
+            relocTok++;
             document.getElementById('online-modal').classList.add('hidden');
             if (!online.active) teardownNet();   // closing the lobby cancels a game that is still waiting
         }
@@ -2942,7 +2989,7 @@
             if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(input.value).then(done, () => { try { document.execCommand('copy'); done(); } catch (e) {} });
             else { try { document.execCommand('copy'); done(); } catch (e) {} }
         }
-        function cancelOnline() { teardownNet(); setOnlineView('choose'); onlineError(''); }
+        function cancelOnline() { relocTok++; teardownNet(); setOnlineView('choose'); onlineError(''); }
 
         // ---------- game settings, chosen together once both players are connected ----------
         // Each player picks the match length and turn timer and presses Confirm. When both have confirmed the SAME settings
@@ -3148,12 +3195,13 @@
         }
         // Guest side: dials the room by repeating "hi" until the host answers on one of the brokers
         class RelayGuestConn extends RelayConnBase {
-            constructor(code) {
+            constructor(code, spectator) {
                 super();
                 this.cid = relayId(); this.link = -1; this.state = 'connecting';
+                const hi = spectator ? { t: 'hi', s: 1 } : { t: 'hi' };      // s: only wants to watch
                 this.chan = new RelayChannel(code, 'g', (m, idx) => this.onEnv(m, idx), n => { diag.relayLinks = n; });
-                this.hiT = setInterval(() => { if (!this.open) this.chan.sendAll({ c: this.cid, t: 'hi' }); }, 1500);
-                setTimeout(() => { if (!this.open) this.chan.sendAll({ c: this.cid, t: 'hi' }); }, 700);
+                this.hiT = setInterval(() => { if (!this.open) this.chan.sendAll(Object.assign({ c: this.cid }, hi)); }, 1500);
+                setTimeout(() => { if (!this.open) this.chan.sendAll(Object.assign({ c: this.cid }, hi)); }, 700);
             }
             onEnv(m, idx) {
                 if (m.c !== this.cid || this.gone) return;
@@ -3194,6 +3242,7 @@
                 if (m.t === 'hi') {
                     if (s) { this.chan.sendOn(s.link, { c: m.c, t: 'ack' }); return; }      // the guest repeated itself
                     s = new RelayHostConn(this, m.c, idx);
+                    if (m.s) s.metadata = { spec: 1 };
                     this.sessions.set(m.c, s);
                     this.chan.sendOn(idx, { c: m.c, t: 'ack' });
                     this.onIncoming(s);
@@ -3208,6 +3257,7 @@
         // ---------- transport (the only code that touches PeerJS) ----------
         function teardownNet() {
             clearTimeout(online.lobbyTimer); lobbyEnd();
+            specHost.list = []; specHost.last = ''; clearInterval(specHost.keepT); specHost.keepT = null; clearTimeout(specHost.pushT); specHost.pushT = null;
             try { if (online.conn) online.conn.close(); } catch (e) {}
             try { if (online.peer) online.peer.destroy(); } catch (e) {}
             try { if (online.relayHost) online.relayHost.destroy(); } catch (e) {}
@@ -3228,16 +3278,17 @@
         }
 
         // Host: create a game under a fresh 6-character code
-        function createOnline() {
+        function createOnline(code, waitFor) {      // (code, waitFor: when the next match moves to a new room)
             onlineError('');
             if (!peerAvailable()) { onlineError("Online play needs the PeerJS library, which couldn't be loaded."); return; }
             saveName();
             teardownNet();
             online.role = 'host';
+            online.waitFor = typeof waitFor === 'string' ? waitFor : '';
             document.getElementById('online-share').classList.add('hidden');
             document.getElementById('online-wait-msg').innerText = 'Creating game...';
             setOnlineView('wait');
-            openHostPeer(makeCode(), 'new', 0);
+            openHostPeer(parseCode(typeof code === 'string' ? code : '') || makeCode(), 'new', 0);
         }
 
         // Registers the host under PEER_PREFIX+code. mode 'new' = lobby, 'resume' = re-opening after a drop/reload
@@ -3261,7 +3312,7 @@
                 document.getElementById('online-link-row').classList.toggle('hidden', fromFile);
                 document.getElementById('online-file-note').classList.toggle('hidden', !fromFile);
                 document.getElementById('online-share').classList.remove('hidden');
-                document.getElementById('online-wait-msg').innerText = 'Waiting for your friend to join...';
+                document.getElementById('online-wait-msg').innerText = online.waitFor ? `Setting up the next match. Waiting for ${online.waitFor} to join...` : 'Waiting for your friend to join...';
                 startRelayHost(peer, mode);
             });
             peer.on('connection', conn => onIncomingConn(peer, mode, conn));
@@ -3291,9 +3342,11 @@
         // A guest connected (directly or through the relay)
         function onIncomingConn(peer, mode, conn) {
             if (online.peer !== peer) { try { conn.close(); } catch (e) {} return; }
+            if (conn.metadata && conn.metadata.spec) { specAccept(conn); return; }   // someone who only wants to watch
             if (online.active) { attachConn(conn, true); return; }        // maybe the guest coming back
-            if (online.conn && online.conn.open) {                        // already have an opponent
-                if (conn.open) { try { conn.close(); } catch (e) {} } else conn.on('open', () => { try { conn.close(); } catch (e) {} });
+            if (online.conn && online.conn.open) {                        // already have an opponent: tell the newcomer, then hang up
+                const refuse = () => { try { conn.send({ v: PROTOCOL, t: 'full', started: false }); } catch (e) {} setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); };
+                if (conn.open) refuse(); else conn.on('open', refuse);
                 return;
             }
             if (online.conn) { const stale = online.conn; online.conn = conn; try { stale.close(); } catch (e) {} }   // an earlier attempt that never opened
@@ -3308,14 +3361,14 @@
         }
 
         // Guest: join a game by code (or by pasted link)
-        function joinOnline() {
+        function joinOnline(retries) {                // retries: the room may still be opening (moving on to the next match)
             onlineError('');
             if (!peerAvailable()) { onlineError("Online play needs the PeerJS library, which couldn't be loaded."); return; }
             const code = parseCode(document.getElementById('online-code').value);
             if (!code) { onlineError('Enter the 6-character game code (or paste the link) your friend sent you.'); return; }
             saveName();
             teardownNet();
-            online.role = 'guest'; online.token = makeToken();
+            online.role = 'guest'; online.token = makeToken(); online.joinRetries = Number.isInteger(retries) ? retries : 0;
             document.getElementById('online-share').classList.add('hidden');
             document.getElementById('online-wait-msg').innerText = 'Connecting to game ' + code + '...';
             setOnlineView('wait');
@@ -3335,17 +3388,24 @@
             // Direct link first; if it hasn't opened after a few seconds (or the browser gives up on it), use the relay
             const fallback = () => { if (online.peer === peer && !online.active && !diag.link) startGuestRelay(peer, code); };
             setTimeout(fallback, RELAY_FALLBACK_AFTER);
-            peer.on('open', () => {
-                if (online.peer !== peer || online.active) return;
-                diag.server = true;
+            const dial = () => {
+                if (online.peer !== peer || online.active || (online.conn && online.conn.open)) return;
                 const conn = peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' });
                 readIce = watchConn(conn);
                 try { conn.on('iceStateChanged', st => { if (st === 'failed') fallback(); }); } catch (e) {}
                 attachConn(conn, false);
+            };
+            peer.on('open', () => {
+                if (online.peer !== peer || online.active) return;
+                diag.server = true;
+                dial();
             });
             peer.on('error', err => {
                 if (online.peer !== peer || online.active) return;
-                if (err && err.type === 'peer-unavailable') { onlineFail(peerErrorText(err)); return; }
+                if (err && err.type === 'peer-unavailable') {
+                    if (online.joinRetries > 0) { online.joinRetries--; setTimeout(dial, 1500); return; }   // the room is still opening
+                    onlineFail(peerErrorText(err)); return;
+                }
                 // matchmaking/WebRTC trouble: the relay does not depend on PeerJS, so let it have its chance
                 startGuestRelay(peer, code);
             });
@@ -3388,6 +3448,537 @@
             if (conn.open && !candidate && online.role === 'guest') netSend({ t: 'hello', name: online.myName, token: online.token, resume: online.active });   // a relay connection is already open
         }
 
+        // =====================================================================
+        //  SPECTATORS
+        // Once both players have started an online game, anyone with the code can watch it. A spectator connects to the HOST
+        // like the guest does (directly, or through the relay) but says it only wants to watch. The host then sends it a
+        // picture of the game (position, dice, score, names) whenever something changes, and every few seconds as a
+        // keep-alive. Spectators never send moves or rolls, so they cannot affect the game. A spectator that connects before
+        // the game has started is told to wait and is shown the game the moment it starts.
+        const SPEC_MAX = 16;
+        function meLabel() { return watch.on ? (watch.meName || 'Player') : 'YOU'; }
+        function specViewers() { return specHost.list.filter(s => s.ok); }
+        function specTo(s, obj) { try { if (s.conn && s.conn.open) s.conn.send(Object.assign({ v: PROTOCOL }, obj)); } catch (e) {} }
+
+        // ----- host side -----
+        function specAccept(conn) {
+            const s = { conn: conn, name: '', ok: false, lastRx: Date.now() };
+            specHost.list.push(s);
+            conn.on('data', m => specFromViewer(s, m));
+            conn.on('close', () => specDrop(s));
+            conn.on('error', () => {});
+            if (!specHost.keepT) specHost.keepT = setInterval(specKeepAlive, 2500);
+        }
+        function specFromViewer(s, m) {
+            if (!m || typeof m !== 'object' || typeof m.t !== 'string' || specHost.list.indexOf(s) < 0) return;
+            s.lastRx = Date.now();
+            if (m.v !== PROTOCOL) { specTo(s, { t: 'specOld' }); return; }
+            if (m.t === 'hello' && m.spectate) {
+                if (!s.ok && specViewers().length >= SPEC_MAX) {
+                    specTo(s, { t: 'specFull' }); const c = s.conn; specDrop(s);
+                    setTimeout(() => { try { c.close(); } catch (e) {} }, 300);
+                    return;
+                }
+                const isNew = !s.ok;
+                s.name = cleanName(m.name); s.ok = true;
+                if (online.active) specTo(s, specSnapshot()); else specTo(s, { t: 'specWait' });
+                if (isNew) specCountChanged();
+            } else if (m.t === 'ping' && s.ok && !online.active) {
+                specTo(s, { t: 'specWait' });
+            } else if (m.t === 'seat' && s.ok) {
+                afterSeatRequest(s);
+            }
+        }
+        function specDrop(s) {
+            const i = specHost.list.indexOf(s);
+            if (i < 0) return;
+            specHost.list.splice(i, 1);
+            const t = after.takers.indexOf(s);
+            if (t >= 0 && after.phase === 'seats') { after.takers.splice(t, 1); afterSync(); }   // a spectator who had taken a seat left
+            if (s.ok) specCountChanged();
+        }
+        function specKeepAlive() {
+            const now = Date.now();
+            specHost.list.slice().forEach(s => { if (now - s.lastRx > 20000) { try { s.conn.close(); } catch (e) {} specDrop(s); } });
+            if (!specHost.list.length) { clearInterval(specHost.keepT); specHost.keepT = null; return; }
+            if (online.active) specSendNow(false);
+        }
+        function specCloseAll() {
+            specHost.list.forEach(s => { specTo(s, { t: 'specEnd' }); const c = s.conn; setTimeout(() => { try { c.close(); } catch (e) {} }, 300); });
+            specHost.list = []; specHost.last = ''; clearInterval(specHost.keepT); specHost.keepT = null;
+        }
+        function specCountChanged() {
+            if (online.role !== 'host') return;
+            const v = specViewers();
+            specSeen.n = v.length; specSeen.names = v.map(s => s.name);
+            if (online.active) netSend({ t: 'specCount', n: specSeen.n, names: specSeen.names.slice(0, SPEC_MAX) });
+            renderSpecInfo();
+            if (after.on) afterSync(); else specPush(true);
+        }
+        // Sends the latest picture of the game (bundled: at most one message every ~80 ms, and only when it changed)
+        function specPush(now) {
+            if (online.role !== 'host' || !online.active || !specHost.list.some(s => s.ok)) return;
+            if (now) { clearTimeout(specHost.pushT); specHost.pushT = null; specSendNow(true); return; }
+            if (specHost.pushT) return;
+            specHost.pushT = setTimeout(() => { specHost.pushT = null; specSendNow(false); }, 80);
+        }
+        function specSendNow(force) {
+            if (online.role !== 'host' || !online.active) return;
+            const snap = specSnapshot(), key = JSON.stringify(snap), t = Date.now();
+            if (!force && key === specHost.last && t - specHost.lastAt < 2000) return;
+            specHost.last = key; specHost.lastAt = t;
+            specHost.list.forEach(s => { if (s.ok) specTo(s, snap); });
+        }
+        function specSnapshot() {
+            const faces = ['die-1', 'die-2'].map(id => { const m = /(\d)$/.exec(document.getElementById(id).getAttribute('aria-label') || ''); return m ? +m[1] : 0; });
+            const hc = online.hostColor === R ? R : W, names = {};
+            names[hc] = online.myName; names[other(hc)] = opponentName;
+            return { t: 'spec', names: names, host: hc, state: state, cp: currentPlayer, dice: diceValues, faces: isRolling ? null : faces,
+                     hid: document.getElementById('dice-wrapper').classList.contains('invisible'), rolling: isRolling,
+                     roll: specHost.rollSeq, rv: specHost.rollVals, open: openingRoll, or: openRolls, score: matchScore, len: matchLength,
+                     ga: gameActive, mo: matchOver, gp: gamesPlayed, paused: online.paused, gone: online.opponentGone, end: lastEnd,
+                     n: specViewers().length, after: after.on ? afterView() : null };
+        }
+        function specRolled(v1, v2) {          // a roll is being thrown on the host's screen
+            specHost.rollSeq++; specHost.rollVals = [v1, v2];
+            specPush(true);
+        }
+
+        // ----- spectator side -----
+        function watchOnline() {
+            onlineError('');
+            if (!peerAvailable()) { onlineError("Online play needs the PeerJS library, which couldn't be loaded."); return; }
+            const code = parseCode(document.getElementById('online-code').value);
+            if (!code) { onlineError('Enter the 6-character code (or paste the link) of the game you want to watch.'); return; }
+            saveName();
+            teardownNet();
+            online.role = 'spec'; online.code = code;
+            const now = Date.now();
+            Object.assign(watch, { on: false, ended: false, code: code, viewHost: true, last: null, roll: -1, animating: false, meName: '',
+                                   lastRx: now, lastOk: now, lastPing: 0, lastAttempt: 0, startedAt: now, viaRelay: false, forceRelay: false, lostAt: now, attempts: 0, seat: null,
+                                   prevColor: watch.on ? watch.prevColor : myColor });
+            document.getElementById('online-share').classList.add('hidden');
+            document.getElementById('online-wait-msg').innerText = 'Connecting to game ' + code + ' as a spectator...';
+            setOnlineView('wait');
+            diagReset();
+            specNewPeer();
+            clearInterval(watch.tick);
+            watch.tick = setInterval(specTick, 1000);
+        }
+        function specNewPeer() {
+            let peer;
+            try { peer = new Peer(undefined, peerOptions()); } catch (e) { watch.forceRelay = true; return null; }
+            online.peer = peer;
+            peer.on('open', () => { if (online.peer === peer && online.role === 'spec' && !watch.forceRelay && !(online.conn && online.conn.open)) { watch.viaRelay = false; watch.attempts++; specDial(); } });
+            peer.on('disconnected', () => { try { if (online.peer === peer && !peer.destroyed) peer.reconnect(); } catch (e) {} });
+            peer.on('error', err => {
+                if (online.peer !== peer || online.role !== 'spec') return;
+                if (err && err.type === 'peer-unavailable') return;     // the host isn't there (yet, or for a moment): the tick tries again
+                watch.forceRelay = true;                                // PeerJS / WebRTC trouble: the relay does not depend on it
+            });
+            return peer;
+        }
+        function specDial() {
+            if (online.role !== 'spec' || watch.ended) return;
+            let conn;
+            if (watch.viaRelay) conn = new RelayGuestConn(watch.code, true);
+            else {
+                const p = online.peer;
+                if (!p || p.destroyed || !p.open) return;
+                try { conn = p.connect(PEER_PREFIX + watch.code, { reliable: true, serialization: 'json', metadata: { spec: 1 } }); } catch (e) { return; }
+            }
+            watch.lastAttempt = Date.now();
+            const old = online.conn;
+            online.conn = conn;
+            if (old && old !== conn) { try { old.close(); } catch (e) {} }
+            conn.on('open', () => { if (online.conn === conn) specHello(); });
+            conn.on('data', d => { if (online.conn === conn) specOnData(d); });
+            conn.on('close', () => { if (online.conn === conn) online.conn = null; });
+            conn.on('error', () => {});
+            if (conn.open) specHello();
+        }
+        function specHello() { watch.lastRx = Date.now(); netSend({ t: 'hello', spectate: true, name: online.myName }); }
+        function specTick() {
+            if (online.role !== 'spec' || watch.ended) { clearInterval(watch.tick); watch.tick = null; return; }
+            const now = Date.now(), c = online.conn;
+            if (c && c.open && now - watch.lastRx < 9000) {
+                if (now - watch.lastPing > 2500) { watch.lastPing = now; netSend({ t: 'ping' }); }
+                if (watch.on) hideNetBanner();
+                return;
+            }
+            if (c && c.open) { try { c.close(); } catch (e) {} online.conn = null; }     // open but silent: start again
+            if (!watch.lostAt) watch.lostAt = now;
+            if (watch.on) showNetBanner('Lost the connection to the game. Reconnecting...', false);
+            if (!watch.on && now - watch.lastOk > 45000) { onlineFail("Couldn't reach that game. Check the code, and that the players are still online."); return; }
+            if (watch.on && now - watch.lastOk > 180000) { specEnded('The connection to the game was lost.'); return; }
+            if (online.conn && !online.conn.open && now - watch.lastAttempt < 4000) return;   // an attempt is still under way
+            // The direct link first. If it hasn't worked for a few seconds, alternate between the relay and the direct link
+            // (after a reload of the host either one may be the first to come back).
+            const relayNext = watch.forceRelay || (now - watch.lostAt > RELAY_FALLBACK_AFTER && !watch.viaRelay);
+            if (!relayNext) {
+                const p = online.peer;
+                if (!p || p.destroyed) { specNewPeer(); return; }
+                if (p.disconnected) { try { p.reconnect(); } catch (e) {} return; }
+                if (!p.open) { if (now - watch.lostAt > RELAY_FALLBACK_AFTER) watch.viaRelay = false; return; }   // PeerJS slow: the relay gets the next turn
+            }
+            watch.viaRelay = relayNext;
+            watch.attempts++;
+            specDial();
+        }
+        function specOnData(m) {
+            if (!m || typeof m !== 'object' || typeof m.t !== 'string') return;
+            watch.lastRx = watch.lastOk = Date.now(); watch.lostAt = 0; watch.attempts = 0;
+            if (m.v !== PROTOCOL) { specGiveUp('That game is running a different version of the page. Reload this page and try again.'); return; }
+            switch (m.t) {
+                case 'specWait':
+                    if (!watch.on) document.getElementById('online-wait-msg').innerText = "Connected. The two players haven't started their game yet; you'll be watching as soon as they do.";
+                    return;
+                case 'specFull': specGiveUp('That game already has as many spectators as it can take.'); return;
+                case 'specEnd': specEnded('The players have left; the game is over.'); return;
+                case 'spec': specApply(m); return;
+                case 'seatOk': watch.seat = 'ok'; if (watch.last) specApply(watch.last, true); return;
+                case 'seatNo': watch.seat = 'no'; if (watch.last) specApply(watch.last, true); return;
+                case 'goto': if (parseCode(m.code)) relocateSelf(parseCode(m.code), m.role, m.other); return;
+            }
+        }
+        function specGiveUp(msg) { if (watch.on) specEnded(msg); else onlineFail(msg); }
+        function specEnter() {
+            watch.on = true; watch.ended = false;
+            document.getElementById('online-modal').classList.add('hidden');
+            gameGen++; clearInterval(rollInterval); clearTimeout(rollTimeout); clearTimeout(endTurnTimer);
+            aiPlan = null; aiThinking = false; isRolling = false; isAnimating = false;
+            clearHint(); hideConcede(); stopWinAnimation(true);
+            opponentKind = 'remote'; matchActive = true;
+            turnHistory = []; selectedSource = null; validTargets = [];
+            ['start-match-btn', 'online-btn', 'next-game-wrap', 'me-timer', 'opp-timer'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('undo-btn').disabled = true;
+            updateSpecChrome();
+        }
+        // Draws the picture the host sent
+        function specApply(m, quiet) {        // quiet: only redraw (no new roll, no celebration)
+            const okC = c => c === W || c === R;
+            if (!m.state || !E.isValidState(m.state) || !okC(m.cp) || !okC(m.host) || !Array.isArray(m.dice) || m.dice.length > 4 || !m.dice.every(validDie)) return;
+            const first = !watch.on;
+            if (first) specEnter();
+            const prev = quiet ? m : watch.last;
+            watch.last = m;
+            const names = m.names || {};
+            const view = watch.viewHost ? m.host : other(m.host);
+            const turned = view !== myColor;
+            myColor = view;
+            opponentName = cleanName(names[other(view)]); watch.meName = cleanName(names[view]);
+            state = m.state; currentPlayer = m.cp; diceValues = m.dice.slice();
+            openingRoll = !!m.open; rolledThisTurn = diceValues.length > 0;
+            openRolls = { w: null, r: null };
+            if (m.or) [W, R].forEach(c => { if (validDice(m.or[c])) openRolls[c] = m.or[c].slice(); });
+            if (m.score && Number.isInteger(m.score.w) && Number.isInteger(m.score.r)) matchScore = { w: m.score.w, r: m.score.r };
+            if ([1, 3, 5].includes(m.len)) matchLength = m.len;
+            gameActive = !!m.ga; matchOver = !!m.mo; gamesPlayed = m.gp | 0; matchActive = true;
+            if (first || turned) { updatePlayAsButtons(); updateBoardLayout(); }
+            renderCheckers(); updateUI();
+            specRenderSeat(m);
+            // dice: a new roll is thrown here too; otherwise just show what the host shows
+            if (!first && !quiet && m.roll !== watch.roll && validDice(m.rv)) {
+                watch.roll = m.roll; watch.animating = true;
+                clearInterval(rollInterval); clearTimeout(rollTimeout);
+                playSound('roll');
+                animateDice(m.rv[0], m.rv[1], () => { watch.animating = false; specDiceShow(watch.last); if (watch.last) setStatus(specStatus(watch.last)); });
+            } else {
+                watch.roll = m.roll;
+                if (!watch.animating) specDiceShow(m);
+            }
+            setStatus(watch.animating ? 'The dice are rolling...' : specStatus(m));
+            if (!first && m.mo && !(prev && prev.mo)) startWinAnimation(m.score.w >= m.len ? W : R);
+            if (!m.mo && prev && prev.mo) stopWinAnimation();
+            renderSpecInfo();
+        }
+        function specDiceShow(m) {
+            const wrap = document.getElementById('dice-wrapper');
+            if (!m || m.hid) { wrap.classList.add('invisible'); return; }
+            if (!Array.isArray(m.faces) || !m.faces.every(validDie)) return;
+            renderDie(document.getElementById('die-1'), m.faces[0]); renderDie(document.getElementById('die-2'), m.faces[1]);
+            wrap.classList.remove('invisible');
+        }
+        function specStatus(m) {
+            const names = m.names || {}, N = c => cleanName(names[c]);
+            const guest = N(other(m.host));
+            const score = `${N(W)} ${matchScore.w} - ${N(R)} ${matchScore.r} (to ${matchLength})`;
+            if (m.after && m.mo) return afterSpecText(m);
+            if (m.gone) return `${guest} left the game.`;
+            if (m.paused) return `${guest}'s connection dropped. Waiting for them to reconnect...`;
+            if (!m.ga) {
+                const e = m.end;
+                if (e && (e.w === W || e.w === R)) {
+                    const head = e.conceded ? `${N(other(e.w))} gave up. ` : '';
+                    const pts = `+${e.pts | 0} point${(e.pts | 0) === 1 ? '' : 's'}`;
+                    if (m.mo) return `${head}Match over! ${N(e.w)} wins the match ${Math.max(matchScore.w, matchScore.r)}-${Math.min(matchScore.w, matchScore.r)} (${e.label}, ${pts}).`;
+                    return `${head}${N(e.w)} scored ${e.label} (${pts}). Match score: ${score}. Waiting for the next game...`;
+                }
+                return 'Waiting for the next game...';
+            }
+            if (m.open) {
+                const done = [W, R].filter(c => openRolls[c]);
+                if (!done.length) return 'Opening roll: each player rolls both dice; a double wins, otherwise the higher total plays first.';
+                if (done.length === 1) return `Opening roll: ${N(done[0])} rolled ${openRolls[done[0]].join('-')}. Waiting for ${N(other(done[0]))}...`;
+                return `Opening roll: ${N(W)} ${openRolls.w.join('-')}, ${N(R)} ${openRolls.r.join('-')}.`;
+            }
+            const who = N(m.cp);
+            if (diceValues.length) {
+                const f = Array.isArray(m.faces) && m.faces.every(validDie) ? m.faces.join(' and ') : diceValues.join(', ');
+                if (getAllMoves(m.cp, diceValues).length === 0) return `${who} rolled ${f} and can't move.`;
+                return `${who} rolled ${f} and is moving.`;
+            }
+            if (m.rolling) return `${who} is rolling...`;
+            if (isEntryBlocked(m.cp)) return `${who} is on the bar and the home board is closed: no move is possible.`;
+            return `${who} to roll.`;
+        }
+        // Settings -> View From: choose whose side of the board is drawn at the bottom
+        function specSetView(color) {
+            const m = watch.last;
+            if (!m) return;
+            watch.viewHost = color === m.host;
+            specApply(m, true);
+        }
+        // The game is over for this spectator (the players left, or the connection is gone for good)
+        function specEnded(msg) {
+            watch.ended = true;
+            clearInterval(watch.tick); watch.tick = null;
+            teardownNet();
+            hideNetBanner();
+            setStatus(msg + ' Press the home button to go back.');
+            renderSpecInfo();
+        }
+        function stopWatching() {
+            const was = watch.on;
+            watch.on = false; watch.ended = true; watch.last = null; watch.animating = false;
+            clearInterval(watch.tick); watch.tick = null;
+            teardownNet(); online.role = null;
+            hideNetBanner(); stopWinAnimation(true);
+            clearInterval(rollInterval); clearTimeout(rollTimeout);
+            opponentKind = 'ai'; opponentName = 'AI'; myColor = watch.prevColor || W;
+            watch.seat = null;
+            document.getElementById('seat-btn').classList.add('hidden');
+            document.getElementById('next-game-btn').classList.remove('hidden');
+            updatePlayAsButtons();
+            if (was) enterStartScreen();
+            updateSpecChrome();
+        }
+
+        // ----- what everybody sees about spectators -----
+        function renderSpecInfo() {
+            const el = document.getElementById('spec-info');
+            let t = '';
+            if (watch.on) {
+                const m = watch.last;
+                if (watch.ended) t = 'You were watching this game.';
+                else if (m) {
+                    const n = Math.max(1, m.n | 0), nm = m.names || {};
+                    t = `\u{1F441} You are watching ${cleanName(nm[m.host])} vs ${cleanName(nm[other(m.host)])}` + (n > 1 ? ` with ${n - 1} other${n > 2 ? 's' : ''}` : '') + '. Spectators can only watch.';
+                }
+            } else if (online.active && specSeen.n > 0) {
+                t = `\u{1F441} ${specSeen.n} watching` + (specSeen.names.length ? ': ' + specSeen.names.join(', ') : '');
+            }
+            el.innerText = t; el.classList.toggle('hidden', !t);
+        }
+        function updateSpecChrome() {
+            const w = watch.on;
+            document.getElementById('hint-btn').classList.toggle('hidden', w);
+            document.getElementById('undo-btn').classList.toggle('hidden', w);
+            const note = document.getElementById('play-as-note');
+            if (!note.dataset.orig) note.dataset.orig = note.innerText;
+            document.getElementById('play-as-label').innerText = w ? 'View From' : 'Play As';
+            note.innerText = w ? "As a spectator you choose whose side of the board is drawn at the bottom. It doesn't change the game." : note.dataset.orig;
+            const showLink = online.active && !!online.code && !w;
+            document.getElementById('spec-settings').classList.toggle('hidden', !showLink);
+            if (showLink) {
+                const fromFile = location.protocol === 'file:';
+                document.getElementById('spec-link-row').classList.toggle('hidden', fromFile);
+                document.getElementById('spec-link').value = location.href.split('#')[0] + '#watch=' + online.code;
+                document.getElementById('spec-settings-note').innerText =
+                    (fromFile ? `Others can watch with the code ${online.code}: they open the same game file, press Play Online, type the code and press Watch.`
+                              : `Send this link, or the code ${online.code}, to anyone who wants to watch. They can join at any time and see the game live, but can't play.`) +
+                    (specSeen.n ? ` Watching now: ${specSeen.names.length ? specSeen.names.join(', ') : specSeen.n}.` : '');
+            }
+            renderSpecInfo();
+        }
+        function copySpecLink() {
+            const input = document.getElementById('spec-link');
+            input.select();
+            const done = () => { const b = document.getElementById('spec-copy-btn'); b.innerText = 'Copied!'; setTimeout(() => b.innerText = 'Copy', 1500); };
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(input.value).then(done, () => { try { document.execCommand('copy'); done(); } catch (e) {} });
+            else { try { document.execCommand('copy'); done(); } catch (e) {} }
+        }
+
+        // =====================================================================
+        //  AFTER A MATCH (with spectators)
+        // Each player chooses: Keep playing, Watch or Quit. Both keep playing -> an ordinary rematch. Otherwise the spectators
+        // may take the free seat(s); the host gives seats first come, first served. Once both seats are filled, everyone moves
+        // to a NEW room together: the host of the new room is the player who stays on (or the first spectator who took a seat),
+        // the other new player joins it, everyone else watches it, and whoever quit goes back to the menu. The new pair choose
+        // their settings as usual. The host keeps the old room running until then (the guest may leave at once when quitting).
+        const AFTER_LABEL = { keep: 'keep playing', watch: 'watch the next match', quit: 'quit' };
+        function afterReset() { Object.assign(after, { on: false, phase: null, mine: null, theirs: null, takers: [], guestGone: false, v: null, mineSent: null }); }
+        function afterFree() { return (after.mine === 'keep' ? 0 : 1) + (after.theirs === 'keep' ? 0 : 1); }
+        function afterView() {       // host: the state of the choosing, as the guest and the spectators see it
+            return { ph: after.phase, hc: after.mine || (online.rematchMine ? 'keep' : null), gc: after.theirs || (online.rematchTheirs ? 'keep' : null),
+                     gone: after.guestGone, free: after.phase === 'seats' ? afterFree() : 0, taken: after.takers.map(s => s.name),
+                     n: specViewers().length, hn: online.myName, gn: opponentName };
+        }
+        function afterSync() {
+            if (online.role !== 'host') return;
+            if (!after.guestGone) netSend({ t: 'afterState', st: afterView() });     // ('v' is the protocol version)
+            afterRender();
+            specPush(true);
+        }
+        // A player's choice (from the panel)
+        function afterChoose(c) {
+            if (!online.active || !matchOver || !after.on || !['keep', 'watch', 'quit'].includes(c)) return;
+            if (online.role === 'host') {
+                if (after.mine) return;
+                after.mine = c;
+                if (c === 'keep') onRematchClick();                 // if the guest also keeps playing, this is the rematch
+                afterDecide();
+            } else {
+                if (after.mineSent) return;
+                after.mineSent = c;
+                if (c === 'keep') onRematchClick();
+                netSend({ t: 'after', c: c });
+                if (c === 'quit') {                                  // the guest isn't needed for the hand-over: leave now
+                    setTimeout(() => { if (online.active) { leaveOnline(false); setStatus('You left the game. Thanks for playing!'); } }, 300);
+                    return;
+                }
+                afterRender();
+            }
+        }
+        // Host: both have chosen?
+        function afterDecide() {
+            if (online.role !== 'host' || !after.on) return;
+            const v = afterView();
+            if (after.phase === 'choose' && v.hc && v.gc) {
+                if (v.hc === 'keep' && v.gc === 'keep') { afterSync(); return; }   // the rematch starts (checkRematch)
+                after.mine = v.hc; after.theirs = v.gc;
+                after.phase = 'seats'; after.takers = [];
+            }
+            afterSync();
+            afterMaybeMove();
+        }
+        function afterGuestLeft() {       // host: the guest went away during the choosing
+            after.guestGone = true; after.theirs = 'quit';
+            online.opponentGone = true; online.paused = false; clearInterval(online.recover); hideNetBanner();
+            afterDecide();
+        }
+        // Host: a spectator asks for a free seat
+        function afterSeatRequest(s) {
+            if (after.phase !== 'seats') { specTo(s, { t: 'seatNo' }); return; }
+            if (after.takers.indexOf(s) >= 0) { specTo(s, { t: 'seatOk' }); return; }
+            if (after.takers.length >= afterFree()) { specTo(s, { t: 'seatNo' }); return; }
+            after.takers.push(s);
+            specTo(s, { t: 'seatOk' });
+            afterSync();
+            afterMaybeMove();
+        }
+        function afterMaybeMove() {
+            if (online.role !== 'host' || after.phase !== 'seats' || after.takers.length < afterFree()) return;
+            after.phase = 'moving';
+            afterSync();
+            const code = makeCode();
+            const seats = [];                                       // [host of the new room, its guest]
+            if (after.mine === 'keep') seats.push('h');
+            if (after.theirs === 'keep' && !after.guestGone) seats.push('g');
+            after.takers.forEach(s => seats.push(s));
+            const [nh, ng] = seats;
+            const nameOf = x => x === 'h' ? online.myName : x === 'g' ? opponentName : x.name;
+            const roleOf = (x, fallback) => x === nh ? 'host' : x === ng ? 'guest' : fallback;
+            const otherFor = x => x === nh ? nameOf(ng) : x === ng ? nameOf(nh) : `${nameOf(nh)} vs ${nameOf(ng)}`;
+            if (!after.guestGone) netSend({ t: 'goto', code: code, role: roleOf('g', after.theirs === 'watch' ? 'spec' : 'quit'), other: otherFor('g') });
+            specHost.list.forEach(s => { if (s.ok) specTo(s, { t: 'goto', code: code, role: roleOf(s, 'spec'), other: otherFor(s) }); });
+            const mine = roleOf('h', after.mine === 'watch' ? 'spec' : 'quit');
+            setTimeout(() => relocateSelf(code, mine, otherFor('h')), 1200);    // let the messages leave before this room closes
+        }
+        // Everyone: leave this room quietly and go to the new one in the given role
+        function relocateSelf(code, role, other) {
+            other = typeof other === 'string' ? other.slice(0, 40) : '';
+            if (watch.on || online.role === 'spec') stopWatching();
+            else if (online.active || online.role) { online.moving = true; leaveOnline(false); online.moving = false; }
+            if (!['host', 'guest', 'spec'].includes(role)) { setStatus('You left the game. Thanks for playing!'); return; }
+            const tok = ++relocTok;
+            showOnlineModal(code, role === 'spec');
+            document.getElementById('online-code').value = code;
+            if (role === 'host') { createOnline(code, cleanName(other)); return; }
+            setOnlineView('wait');
+            document.getElementById('online-share').classList.add('hidden');
+            document.getElementById('online-wait-msg').innerText = role === 'guest' ? `Joining the next match with ${cleanName(other)}...` : `Moving to the next match: ${other}...`;
+            setTimeout(() => {
+                if (tok !== relocTok || online.role) return;              // cancelled meanwhile
+                document.getElementById('online-code').value = code;
+                if (role === 'guest') joinOnline(14); else watchOnline();
+            }, role === 'guest' ? 1200 : 1500);
+        }
+        function afterLeaveNow() { if (online.active) leaveOnline(true); }
+        // The players' panel
+        function afterRender() {
+            const panel = document.getElementById('after-panel');
+            if (!panel || !after.on || !online.active) return;
+            const host = online.role === 'host';
+            const v = host ? afterView() : (after.v || {});
+            const mine = host ? (v.hc || null) : (after.mineSent || (online.rematchMine ? 'keep' : null));
+            const theirs = host ? (v.gone ? 'quit' : v.gc) : v.hc;
+            const opp = opponentName, ph = v.ph || after.phase || 'choose';
+            const word = { keep: 'plays on', watch: 'will watch', quit: 'is leaving' };
+            let t = '', choices = false, leave = false, leaveLabel = 'Leave now';
+            if (ph === 'moving') t = 'Setting up the next match...';
+            else if (ph === 'seats') {
+                const free = v.free | 0, taken = Array.isArray(v.taken) ? v.taken : [], need = Math.max(0, free - taken.length);
+                t = (mine === 'keep' ? 'You play on. ' : `You'll ${AFTER_LABEL[mine] || 'leave'}. `) + `${opp} ${word[theirs] || 'is leaving'}. `;
+                if (need === 0) t += 'Setting up the next match...';
+                else if ((v.n | 0) - taken.length > 0) t += (need === 1 ? 'Waiting for a spectator to take the free seat' : 'Waiting for spectators to take the 2 free seats') + (taken.length ? ` (${taken.join(', ')} took one)` : '') + '...';
+                else t += 'Nobody is watching any more, so no one can take the free seat.';
+                leave = true;
+                if (mine === 'keep') leaveLabel = 'Back to Menu';
+                else if (host && need > 0) t += ' Stay on this page until the next match is set up: the game room runs here.';
+            } else {
+                if (!mine) { t = `${specSeen.n || v.n || 0} watching. What next? If a player stops, a spectator can take the seat.`; choices = true; }
+                else t = `You chose to ${AFTER_LABEL[mine]}. Waiting for ${opp} to choose...`;
+                leave = !!mine; if (mine === 'keep') leaveLabel = 'Back to Menu';
+            }
+            document.getElementById('after-text').innerText = t;
+            document.getElementById('after-choices').classList.toggle('hidden', !choices);
+            const lb = document.getElementById('after-leave');
+            lb.classList.toggle('hidden', !leave); lb.innerText = leaveLabel;
+        }
+        // The spectators' view of the choosing
+        function afterSpecText(m) {
+            const a = m.after, names = m.names || {}, N = c => cleanName(names[c]);
+            const hn = cleanName(a.hn), gn = cleanName(a.gn);
+            const e = m.end, head = e && (e.w === W || e.w === R) ? `Match over: ${N(e.w)} won ${Math.max(matchScore.w, matchScore.r)}-${Math.min(matchScore.w, matchScore.r)}. ` : 'Match over. ';
+            if (a.ph === 'moving') return head + 'Moving to the next match...';
+            if (a.ph !== 'seats') return head + 'The players are deciding whether to play on...';
+            const stay = [a.hc === 'keep' ? hn : null, a.gc === 'keep' && !a.gone ? gn : null].filter(Boolean);
+            const taken = Array.isArray(a.taken) ? a.taken : [], need = Math.max(0, (a.free | 0) - taken.length);
+            let t = head + (stay.length ? `${stay.join(' and ')} will play on. ` : 'Both players are stopping. ');
+            if (watch.seat === 'ok') return t + "You've got a seat! Setting up the next match...";
+            if (need === 0) return t + 'Setting up the next match...';
+            return t + `${need === 1 ? 'A seat is' : '2 seats are'} free` + (taken.length ? ` (${taken.join(', ')} took one)` : '') + ': press "Take the free seat" to play.';
+        }
+        function specRenderSeat(m) {
+            const wrap = document.getElementById('next-game-wrap'), btn = document.getElementById('seat-btn');
+            const a = m && m.mo ? m.after : null;
+            const need = a && a.ph === 'seats' ? Math.max(0, (a.free | 0) - (Array.isArray(a.taken) ? a.taken.length : 0)) : 0;
+            const show = !!a && a.ph === 'seats' && (need > 0 || watch.seat === 'ok');
+            ['rematch-btn', 'next-game-btn', 'after-panel'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            btn.classList.toggle('hidden', !show);
+            wrap.classList.toggle('hidden', !show);
+            if (!show) { if (!a) watch.seat = null; return; }
+            btn.disabled = watch.seat === 'asked' || watch.seat === 'ok';
+            btn.innerText = watch.seat === 'ok' ? "You're in! Setting up..." : watch.seat === 'asked' ? 'Asking...' : watch.seat === 'no' ? 'Seat taken - try again' : 'Take the free seat';
+        }
+        function takeSeat() {
+            if (!watch.on || watch.seat === 'asked' || watch.seat === 'ok') return;
+            watch.seat = 'asked';
+            netSend({ t: 'seat' });
+            if (watch.last) specRenderSeat(watch.last);
+        }
+
         // ---------- starting a match ----------
         function startOnlineMatch(len, hostColor, oppName, timer) {
             clearTimeout(online.lobbyTimer); lobbyEnd();
@@ -3399,6 +3990,7 @@
             online.rematchMine = online.rematchTheirs = false; online.opponentGone = false;
             online.timerSerial = -1; online.lastRx = Date.now();
             swapAbort(true);
+            afterReset();
             myColor = online.role === 'host' ? hostColor : other(hostColor);
             opponentKind = 'remote';
             opponentName = cleanName(oppName);
@@ -3408,6 +4000,7 @@
             setStatus(`Online match vs ${opponentName}. You play ${myColor === W ? 'White' : 'Red'}. Click Roll Dice for the opening roll.`);
             startOnlineLoops();
             persistSession();
+            if (online.role === 'host') specCountChanged();     // spectators who were waiting now see the game; the guest learns the count
         }
 
         function startOnlineLoops() {
@@ -3420,6 +4013,9 @@
 
         function leaveOnline(notify) {
             if (notify) netSend({ t: 'leave' });
+            if (online.role === 'host' && !online.moving) specCloseAll();      // (when moving on, the spectators were told where to go)
+            specSeen.n = 0; specSeen.names = [];
+            afterReset();
             online.active = false;          // first, so closing the connection below isn't mistaken for a drop
             clearInterval(online.pump); clearInterval(online.hb); clearInterval(online.ticker); clearInterval(online.recover);
             clearTimeout(online.rollPendingTimer);
@@ -3434,8 +4030,11 @@
             myColor = online.prevColor || W;
             document.getElementById('next-game-btn').disabled = false;
             ['me-timer', 'opp-timer'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('after-panel').classList.add('hidden');
+            document.getElementById('next-game-btn').classList.remove('hidden');
             updatePlayAsButtons();
             enterStartScreen();
+            updateSpecChrome();
         }
 
         // ---------- incoming messages ----------
@@ -3462,9 +4061,40 @@
                         if (!lobby.phase) enterLobby(online.guestName);
                     } else if (m.resume && validToken(m.token) && m.token === online.token) {
                         adoptConn(conn);              // the guest is back
-                    } else {
-                        try { conn.close(); } catch (e) {}
+                    } else {                          // a third person with the players' link: the game is under way; they can watch it
+                        try { conn.send({ v: PROTOCOL, t: 'full', started: true }); } catch (e) {}
+                        setTimeout(() => { try { conn.close(); } catch (e) {} }, 400);
                     }
+                    return;
+                case 'full':                        // guest only: that game already has two players
+                    if (online.role !== 'guest' || online.active) return;
+                    { const code = online.code;
+                      onlineFail(m.started ? 'That game has already started between two other players. Press Watch to follow it as a spectator.'
+                                           : 'That game already has two players, who are choosing their settings. Once they start, you can press Watch to follow it.');
+                      if (code) document.getElementById('online-code').value = code; }
+                    return;
+                case 'specCount':                   // guest: how many people are watching (the host keeps the list)
+                    if (online.role !== 'guest' || !online.active) return;
+                    specSeen.n = Math.max(0, Math.min(99, m.n | 0));
+                    specSeen.names = Array.isArray(m.names) ? m.names.slice(0, 16).map(cleanName) : [];
+                    renderSpecInfo();
+                    if (matchOver) refreshEndButtons();
+                    return;
+                case 'after':                       // host: the guest's choice after the match
+                    if (online.role !== 'host' || !online.active || !matchOver || !['keep', 'watch', 'quit'].includes(m.c) || after.theirs) return;
+                    after.on = true; if (!after.phase) after.phase = 'choose';
+                    after.theirs = m.c;
+                    if (m.c === 'quit') { after.guestGone = true; online.opponentGone = true; }   // the guest leaves straight away
+                    afterDecide();
+                    return;
+                case 'afterState':                  // guest: where the choosing stands
+                    if (online.role !== 'guest' || !online.active || !matchOver || !m.st || typeof m.st !== 'object') return;
+                    after.on = true; after.v = m.st; after.phase = m.st.ph || after.phase || 'choose';
+                    refreshEndButtons();
+                    return;
+                case 'goto':                        // guest: the next match is set up in a new room
+                    if (online.role !== 'guest' || !online.active || !parseCode(m.code)) return;
+                    relocateSelf(parseCode(m.code), m.role, m.other);
                     return;
                 case 'lobby':                       // guest only: the host has seen us; settings are chosen next
                     if (online.role !== 'guest' || online.active || conn !== online.conn) return;
@@ -3495,6 +4125,7 @@
                     if (matchOver) { refreshEndButtons(); checkRematch(); }
                     return;
                 case 'leave':
+                    if (online.active && online.role === 'host' && after.on) { afterGuestLeft(); return; }
                     if (online.active) onOpponentGone(opponentName + ' left the game.');
                     return;
                 case 'resyncReq':
@@ -3643,6 +4274,15 @@
 
         function refreshEndButtons() {
             const rb = document.getElementById('rematch-btn');
+            // with spectators about, the players choose Keep playing / Watch / Quit instead (see AFTER A MATCH)
+            if (online.active && matchOver && !after.on && specSeen.n > 0 && !online.opponentGone) {
+                after.on = true; after.phase = 'choose';
+                if (online.role === 'host') afterSync();
+            }
+            const panel = after.on && online.active && matchOver && !(online.role === 'guest' && online.opponentGone);
+            document.getElementById('after-panel').classList.toggle('hidden', !panel);
+            document.getElementById('next-game-btn').classList.toggle('hidden', panel);
+            if (panel) { rb.classList.add('hidden'); afterRender(); return; }
             const show = online.active && matchOver && !online.opponentGone;
             rb.classList.toggle('hidden', !show);
             if (!show) return;
@@ -3850,6 +4490,7 @@
         }
         function connectionLost() {
             if (!online.active || online.paused || online.opponentGone) return;
+            if (online.role === 'host' && after.on) { afterGuestLeft(); return; }   // after the match: the seat is simply free
             try { if (online.conn) online.conn.close(); } catch (e) {}
             enterPause();
         }
@@ -3873,6 +4514,7 @@
             swapAbort(true);
             showNetBanner(`Connection to ${opponentName} lost. Reconnecting...`, false);
             updateRollButton();
+            specPush();
             clearInterval(online.recover);
             online.recover = setInterval(recoverTick, online.cfg.recoverEvery);
             recoverTick();
@@ -3884,6 +4526,7 @@
             hideNetBanner();
             online.lastRx = Date.now();
             updateRollButton();
+            specPush();
         }
         function recoverTick() {
             if (!online.paused || !online.active) return;
@@ -3930,6 +4573,7 @@
             exitPause();
             sendSnapshotWhenIdle(true);
             setStatus(opponentName + ' reconnected.');
+            specCountChanged();                // the guest's watcher count starts again from the host's list
         }
 
         function onOpponentGone(msg) {
@@ -3944,12 +4588,13 @@
             clearInterval(rollInterval); clearTimeout(rollTimeout); clearTimeout(endTurnTimer);
             isRolling = false;
             document.querySelectorAll('.die').forEach(d => d.classList.remove('rolling'));
-            if (!matchOver) setStatus(msg);   // keep the final match result visible if the match had just ended
+            if (!matchOver || after.on) setStatus(msg);   // keep the final match result visible if the match had just ended
             const btn = document.getElementById('next-game-btn');
             btn.innerText = 'Back to Menu'; btn.disabled = false;
             document.getElementById('next-game-wrap').classList.remove('hidden');
             refreshEndButtons();
             updateRollButton();
+            specPush();
         }
 
         // ---------- turn timer (the host decides when time is up) ----------
@@ -4183,7 +4828,7 @@
             if (saved) offerResume(saved);               // a reload during an online game: offer to carry on
             else {
                 const room = parseCode(location.hash);
-                if (room) showOnlineModal(room);
+                if (room) showOnlineModal(room, /watch=/.test(location.hash));
                 else if (savedAI) offerAIResume(savedAI);  // an unfinished match against the computer
             }
         };

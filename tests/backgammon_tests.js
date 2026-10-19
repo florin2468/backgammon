@@ -6,8 +6,7 @@ const path = require('path');
 const assert = require('assert');
 const vm = require('vm');
 
-const _def = ['index.html','backgammon_game.html'].map(n => path.join(__dirname, '..', n)).find(p => fs.existsSync(p));
-const file = process.argv[2] || _def;
+const file = process.argv[2] || ['index.html', 'backgammon_game.html'].map(f => path.join(__dirname, '..', f)).find(f => fs.existsSync(f));
 const html = fs.readFileSync(file, 'utf8');
 const m = html.match(/<script id="bg-engine">([\s\S]*?)<\/script>/);
 if (!m) { console.error('No <script id="bg-engine"> block found in ' + file); process.exit(2); }
@@ -259,6 +258,132 @@ test('isValidState accepts real positions and rejects damaged ones', () => {
     // positions reached by real play stay valid
     const st = E.createInitialState(); let p = W;
     for (let i = 0; i < 60; i++) { const t = E.enumerateTurns(st, p, rollDice()); if (t.length) t[0].moves.forEach(m => E.applyRaw(st, p, m)); p = E.other(p); assert(E.isValidState(st)); }
+});
+
+section('Giving up a lost race');
+// Winner = White with all its checkers home; Red (the loser) is on its way round. White's checkers sit on low points, so no contact.
+test('no giving up while the checkers can still hit each other', () => {
+    assert.strictEqual(E.concessionInfo(E.createInitialState(), R, W), null);
+    assert.strictEqual(E.concessionInfo(pos({ w: { 3: 2 }, r: { 2: 1, 20: 14 }, offW: 13 }), R, W), null, 'red checker below white one: contact');
+    assert.strictEqual(E.concessionInfo(pos({ w: { 3: 2 }, barR: 1, r: { 20: 14 }, offW: 13 }), R, W), null, 'red on the bar: contact');
+});
+test('a single game: the loser has borne off a checker', () => {
+    const st = pos({ w: { 0: 2 }, offW: 13, r: { 19: 5, 20: 5, 21: 4 }, offR: 1 });
+    const info = E.concessionInfo(st, R, W);
+    assert(info, 'lost'); assert.strictEqual(info.points, 1); assert.strictEqual(info.kind, 'game');
+});
+test('a gammon: the loser has not borne off, and can not any more', () => {
+    const st = pos({ w: { 0: 2 }, offW: 13, r: { 18: 5, 19: 5, 22: 5 } });
+    const info = E.concessionInfo(st, R, W);
+    assert(info); assert.strictEqual(info.points, 2); assert.strictEqual(info.kind, 'gammon');
+    assert.strictEqual(info.canSaveGammon, false, 'white bears off both checkers on its next turn');
+});
+test('a backgammon: the loser still has a checker in the winner\'s home board', () => {
+    const st = pos({ w: { 0: 2 }, offW: 13, r: { 4: 1, 20: 14 } });
+    const info = E.concessionInfo(st, R, W);
+    assert(info); assert.strictEqual(info.points, 3); assert.strictEqual(info.kind, 'backgammon');
+    assert.strictEqual(info.canSaveBackgammon, false);
+});
+test('a gammon or backgammon that could still be avoided is reported as avoidable', () => {
+    // white has six checkers to bear off (several turns); red, far back, still cannot win, but may save the backgammon
+    const st = pos({ w: { 3: 6 }, offW: 9, r: { 4: 1, 8: 14 } });
+    const info = E.concessionInfo(st, R, R);       // red to move
+    assert(info, 'lost'); assert.strictEqual(info.points, 3);
+    assert.strictEqual(info.canSaveBackgammon, true, 'one die takes the checker out of the home board');
+});
+test('not provably lost: a lucky run of doubles could still win', () => {
+    // equal races, loser to move
+    assert.strictEqual(E.concessionInfo(pos({ w: { 2: 4 }, offW: 11, r: { 21: 4 }, offR: 11 }), R, R), null);
+    // loser one checker behind but on roll with enough doubles possible
+    assert.strictEqual(E.concessionInfo(pos({ w: { 5: 8 }, offW: 7, r: { 18: 8 }, offR: 7 }), R, R), null);
+});
+test('whose turn it is matters at the border', () => {
+    // white needs exactly one turn (2 checkers on the 1 point); red needs exactly one turn (2 checkers on the 1 point)
+    const st = pos({ w: { 0: 2 }, offW: 13, r: { 23: 2 }, offR: 13 });
+    assert.strictEqual(E.concessionInfo(st, R, R), null, 'red to move bears off both: red wins');
+    assert(E.concessionInfo(st, R, W), 'white to move bears off both: red has lost');
+});
+test('both colours are treated the same (mirrored positions give the same answer)', () => {
+    const base = [pos({ w: { 0: 2 }, offW: 13, r: { 18: 5, 19: 5, 22: 5 } }), pos({ w: { 0: 2 }, offW: 13, r: { 4: 1, 20: 14 } }), pos({ w: { 3: 6 }, offW: 9, r: { 4: 1, 8: 14 } })];
+    for (const st of base) for (const toMove of [W, R]) {
+        const a = E.concessionInfo(st, R, toMove), b = E.concessionInfo(mirror(st), W, E.other(toMove));
+        assert.deepStrictEqual(a && [a.points, a.canSaveGammon, a.canSaveBackgammon], b && [b.points, b.canSaveGammon, b.canSaveBackgammon]);
+    }
+});
+test('worst-case bear-off turns agree with an independent slow solver', () => {
+    // independent implementation on lists of pips
+    const memo = new Map();
+    const outcomes = (pips, dice) => {
+        let layer = new Map([[pips.join(), pips]]);
+        for (const d of dice) {
+            const nxt = new Map();
+            for (const a of layer.values()) {
+                if (a.length === 0) { nxt.set('', a); continue; }
+                const hi = Math.max(...a);
+                for (let i = 0; i < a.length; i++) {
+                    if (i > 0 && a[i] === a[i - 1]) continue;
+                    const p = a[i]; let b = null;
+                    if (p > d) { b = a.slice(); b[i] = p - d; }
+                    else if (p === d || p === hi) { b = a.slice(); b.splice(i, 1); }
+                    if (b) { b.sort((x, y) => x - y); nxt.set(b.join(), b); }
+                }
+            }
+            layer = nxt;
+        }
+        return [...layer.values()];
+    };
+    const worst = pips => {
+        if (pips.length === 0) return 0;
+        const k = pips.join(); if (memo.has(k)) return memo.get(k);
+        let w = 0;
+        for (let a = 1; a <= 6; a++) for (let b = a; b <= 6; b++) {
+            const orders = a === b ? [[a, a, a, a]] : [[a, b], [b, a]];
+            let best = Infinity;
+            for (const o of orders) for (const r of outcomes(pips, o)) best = Math.min(best, worst(r));
+            w = Math.max(w, best);
+        }
+        memo.set(k, 1 + w); return 1 + w;
+    };
+    let checked = 0;
+    for (let t = 0; t < 40; t++) {
+        const n = 1 + Math.floor(rnd() * 6), pips = [], counts = [0, 0, 0, 0, 0, 0, 0];
+        for (let i = 0; i < n; i++) { const p = 1 + Math.floor(rnd() * 6); pips.push(p); counts[p]++; }
+        pips.sort((x, y) => x - y);
+        assert.strictEqual(E.worstCaseTurns(counts), worst(pips), 'pips ' + pips.join());
+        checked++;
+    }
+    assert(checked === 40);
+    // a few known values
+    assert.strictEqual(E.worstCaseTurns([0, 0, 0, 0, 0, 0, 1]), 2, 'a lone checker on the six point: 2-1 only brings it to the three point');
+    assert.strictEqual(E.worstCaseTurns([0, 1, 0, 0, 0, 0, 0]), 1);
+    assert.strictEqual(E.worstCaseTurns([0, 2, 0, 0, 0, 0, 0]), 1, 'two checkers on the ace point: any roll takes both');
+    assert.strictEqual(E.worstCaseTurns([0, 3, 0, 0, 0, 0, 0]), 2, 'three checkers need two turns on a non-double');
+});
+test('whenever the game is called lost, no random continuation lets the loser win', () => {
+    let called = 0, loserWins = 0;
+    for (let t = 0; t < 300 && called < 60; t++) {
+        // random race: white (winner side) bears off, red somewhere behind
+        const wn = 1 + Math.floor(rnd() * 5), spec = { w: {}, r: {}, offW: 15 - wn };
+        for (let i = 0; i < wn; i++) { const pt = Math.floor(rnd() * 6); spec.w[pt] = (spec.w[pt] || 0) + 1; }
+        const rn = 4 + Math.floor(rnd() * 12); spec.offR = 15 - rn;
+        for (let i = 0; i < rn; i++) { const pt = 7 + Math.floor(rnd() * 17); spec.r[pt] = (spec.r[pt] || 0) + 1; }
+        const st = pos(spec), toMove = rnd() < 0.5 ? W : R;
+        if (E.hasContact(st)) continue;
+        if (!E.concessionInfo(st, R, toMove)) continue;
+        called++;
+        for (let sim = 0; sim < 25; sim++) {
+            const g = E.cloneState(st); let p = toMove, guard = 0, winner = null;
+            while (!winner && guard++ < 200) {
+                const dice = rollDice(), turns = E.enumerateTurns(g, p, dice);
+                if (turns.length) { const best = turns[Math.floor(rnd() * turns.length)]; best.moves.forEach(m => E.applyRaw(g, p, m)); }
+                if (g.off[p].length === 15) winner = p;
+                p = E.other(p);
+            }
+            if (winner === R) loserWins++;
+        }
+    }
+    assert(called >= 20, 'enough lost positions were found to test: ' + called);
+    assert.strictEqual(loserWins, 0, 'the loser won ' + loserWins + ' simulated games from positions called lost');
 });
 
 (async () => {

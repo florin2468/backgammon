@@ -21,5 +21,15 @@ Online play has only been tested with a simulated PeerJS. Before relying on it, 
 4. Turn off Wi-Fi on one device for ~10 s, then back on: the game should pause, then resume by itself.
 5. Reload one device mid-game and press Resume.
 6. Finish a 1-point match and press Rematch on both devices.
+7. On a third device, open the spectator link (Settings, during the game) or enter the code and press Watch: it should show the
+   game live, follow both players' moves, and keep up after a player reloads. The players should see "1 watching".
+8. With that spectator still watching, finish the match. Both players get Keep playing / Watch / Quit. Have one player press
+   Watch: the spectator gets "Take the free seat"; after pressing it, the new pair land on the settings screen of a new game
+   and the player who chose Watch is watching it.
 
 To pin the PeerJS library, see the comment above its `<script>` tag in the HTML file.
+
+## Relay fallback
+If two devices cannot open a direct WebRTC link, the guest switches (after ~8 s) to a message relay: public MQTT-over-WebSocket
+brokers (`RELAY_BROKERS` in `index.html`). In the manual test, a phone on mobile data joining a PC should work either way;
+the error text ends with a code such as `[server ok / direct link no / ice failed / relay ok (3 brokers)]` that shows which path was used.
