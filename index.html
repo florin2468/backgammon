@@ -580,7 +580,7 @@
             </div>
 
             <p id="online-error" class="hidden mt-3 text-sm text-red-400 text-center"></p>
-            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-21a (point colours follow your side)</p>
+            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-21b (give-up offered again when cheaper)</p>
         </div>
     </div>
 
@@ -670,6 +670,7 @@
                 <p>• <strong>Online:</strong> Press Play Online, create a game and send the link (or the 6-character code) to a friend. Once you are connected you both choose the match length and turn timer, and the game starts when you confirm the same settings; colours are drawn at random. Dice are thrown by the host's browser. If the connection drops, the game pauses and reconnects by itself (you can even reload the page and resume). An optional turn timer skips the turn of a player who runs out of time, and when a match ends either player can ask for a rematch.</p>
                 <p>• <strong>Watching:</strong> Once both players have started an online game, anyone with the game code, or the spectator link from Settings, can press Watch and follow it live: the board, the dice and the score. Spectators can join at any time but can't play, and the players see how many people are watching. In Settings a spectator can choose whose side of the board is drawn at the bottom.</p>
                 <p>• <strong>After a match with spectators:</strong> Each player chooses Keep playing, Watch or Quit. If both keep playing, it's a rematch. If a player stops, the spectators can take the free seat; the new pair then chooses the settings for their match, and everyone else watches it. The player who created the game should stay on the page until the next game is set up, because the game room runs on that page.</p>
+                <p>• <strong>Giving up:</strong> Once no contact is left and your opponent will finish first whatever the dice show, you're offered to give the game up: it counts as a single game (1 point), a gammon (2) or a backgammon (3), whatever it is worth at that moment. If you play on, the offer comes back each time giving up gets cheaper (after your last checker leaves your opponent's home board, and after you bear off your first checker), and the flag button lets you give up at any time.</p>
                 <p>• <strong>Scoring:</strong> A win scores 1 point. A gammon (the loser has borne off no checkers) scores 2. A backgammon (a gammon where the loser still has a checker on the bar or in your home board) scores 3. The first player to reach the match target wins the match.</p>
             </div>
         </div>
@@ -1547,7 +1548,7 @@
             diceValues = [];
             turnHistory = [];
             starterFlip = false;
-            concedeAsked = false; hideConcede();
+            concedeAskedAt = 0; hideConcede();
             const fixedStarter = (starter === W || starter === R);
             currentPlayer = fixedStarter ? starter : myColor;   // (during the opening roll the Roll Dice button belongs to the player)
             openingRoll = !fixedStarter; openRolls = { w: null, r: null };
@@ -1643,7 +1644,7 @@
         // Called when a player has borne off all 15 checkers
         function handleGameEnd(winner, conceded) {
             lastWinner = winner;
-            concedeAsked = true; hideConcede();
+            concedeAskedAt = 99; hideConcede();
             const result = scoreGame(winner);
             gamesPlayed++;
             // Points beyond the match target don't count (a gammon in a 1-point match is still just 1 point)
@@ -1677,7 +1678,11 @@
         // Once no contact is left and the opponent will finish first whatever the dice show (see BGEngine.concessionInfo),
         // the losing player is offered to give the game up. Giving up scores what the game is worth at that moment:
         // 1 point for a game, 2 for a gammon, 3 for a backgammon.
-        let concedeAsked = false, concedeInfo = null;
+        // concedeAskedAt: what giving up cost (in points) when it was last offered this game; 0 = not offered yet. The offer
+        // comes back each time it gets cheaper: a backgammon (3) becomes a gammon (2) once the loser's last checker is out of
+        // the winner's home board, and a single game (1) once the loser has borne a checker off.
+        let concedeAskedAt = 0, concedeInfo = null;
+        const concedeWorth = info => Math.min(info.points, Math.max(1, matchLength - matchScore[oppColor()]));
         function hideConcede() {
             concedeInfo = null;
             const m = document.getElementById('concede-modal'), b = document.getElementById('concede-btn');
@@ -1692,16 +1697,20 @@
             const info = E.concessionInfo(state, myColor, currentPlayer);
             concedeInfo = info;
             document.getElementById('concede-btn').classList.toggle('hidden', !info);
-            if (info && !concedeAsked) { concedeAsked = true; showConcedeModal(info); }
+            if (info) {
+                const w = concedeWorth(info);
+                if (!concedeAskedAt || w < concedeAskedAt) { const prev = concedeAskedAt; concedeAskedAt = w; showConcedeModal(info, prev); }
+            }
         }
-        function showConcedeModal(info) {
+        function showConcedeModal(info, prevWorth) {
             const opp = opponentName, winner = oppColor();
             const needed = Math.max(0, matchLength - matchScore[winner]);
-            const worth = Math.min(info.points, needed);
+            const worth = concedeWorth(info);
             const kind = info.kind === 'game' ? 'a single game' : (info.kind === 'gammon' ? 'a gammon' : 'a backgammon');
-            let t = `You can't win this game any more: ${opp} finishes first whatever the dice show.`;
-            if (info.kind === 'gammon') t += info.canSaveGammon ? ` You haven't borne off a checker yet, so giving up now is a gammon. You could still avoid it by bearing one off before ${opp} finishes.` : ` You can't bear a checker off in time, so the gammon can't be avoided.`;
-            if (info.kind === 'backgammon') t += info.canSaveBackgammon ? ` You still have a checker in ${opp}'s home board, so giving up now is a backgammon. You could still get it out in time.` : ` You can't get your checker out of ${opp}'s home board in time, so the backgammon can't be avoided.`;
+            let t = prevWorth ? `Giving up is cheaper now: ${worth} point${worth === 1 ? '' : 's'} instead of ${prevWorth}. You still can't win: ${opp} finishes first whatever the dice show.`
+                              : `You can't win this game any more: ${opp} finishes first whatever the dice show.`;
+            if (info.kind === 'gammon') t += info.canSaveGammon ? ` You haven't borne off a checker yet, so giving up now is a gammon. You could still avoid it by bearing one off before ${opp} finishes; if you do, you'll be offered to give up again for 1 point.` : ` You can't bear a checker off in time, so the gammon can't be avoided.`;
+            if (info.kind === 'backgammon') t += info.canSaveBackgammon ? ` You still have a checker in ${opp}'s home board, so giving up now is a backgammon. You could still get it out in time; if you do, you'll be offered to give up again for less.` : ` You can't get your checker out of ${opp}'s home board in time, so the backgammon can't be avoided.`;
             document.getElementById('concede-text').innerText = t;
             document.getElementById('concede-points').innerText = `Giving up now counts as ${kind}: ${opp} scores ${worth} point${worth === 1 ? '' : 's'}` + (worth < info.points ? ` (the match only needs ${needed}).` : '.');
             document.getElementById('concede-yes').innerText = `Give up (${worth} point${worth === 1 ? '' : 's'})`;
