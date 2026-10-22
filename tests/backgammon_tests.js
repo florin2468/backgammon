@@ -271,18 +271,21 @@ test('a single game: the loser has borne off a checker', () => {
     const st = pos({ w: { 0: 2 }, offW: 13, r: { 19: 5, 20: 5, 21: 4 }, offR: 1 });
     const info = E.concessionInfo(st, R, W);
     assert(info, 'lost'); assert.strictEqual(info.points, 1); assert.strictEqual(info.kind, 'game');
+    assert.strictEqual(info.offer, 1, 'offered as a single game');
 });
 test('a gammon: the loser has not borne off, and can not any more', () => {
     const st = pos({ w: { 0: 2 }, offW: 13, r: { 18: 5, 19: 5, 22: 5 } });
     const info = E.concessionInfo(st, R, W);
     assert(info); assert.strictEqual(info.points, 2); assert.strictEqual(info.kind, 'gammon');
     assert.strictEqual(info.canSaveGammon, false, 'white bears off both checkers on its next turn');
+    assert.strictEqual(info.offer, 2, 'offered as a gammon');
 });
 test('a backgammon: the loser still has a checker in the winner\'s home board', () => {
     const st = pos({ w: { 0: 2 }, offW: 13, r: { 4: 1, 20: 14 } });
     const info = E.concessionInfo(st, R, W);
     assert(info); assert.strictEqual(info.points, 3); assert.strictEqual(info.kind, 'backgammon');
     assert.strictEqual(info.canSaveBackgammon, false);
+    assert.strictEqual(info.offer, 3, 'offered as a backgammon only because it cannot be avoided');
 });
 test('a gammon or backgammon that could still be avoided is reported as avoidable', () => {
     // white has six checkers to bear off (several turns); red, far back, still cannot win, but may save the backgammon
@@ -290,6 +293,20 @@ test('a gammon or backgammon that could still be avoided is reported as avoidabl
     const info = E.concessionInfo(st, R, R);       // red to move
     assert(info, 'lost'); assert.strictEqual(info.points, 3);
     assert.strictEqual(info.canSaveBackgammon, true, 'one die takes the checker out of the home board');
+    assert.strictEqual(info.canSaveGammon, true, 'white needs up to 8 turns: red could even bear a checker off');
+    assert.strictEqual(info.offer, 0, 'no offer: playing on could still give red a single game');
+});
+test('offered only at the best result the loser can still reach', () => {
+    // red has a checker in white's home board that could still get out, but can't bear a checker off before white finishes
+    for (const toMove of [W, R]) {
+        const info = E.concessionInfo(pos({ w: { 0: 3 }, offW: 12, r: { 4: 1, 8: 14 } }), R, toMove);
+        assert(info && info.points === 3, 'the position itself is a backgammon');
+        assert.strictEqual(info.canSaveBackgammon, true); assert.strictEqual(info.canSaveGammon, false);
+        assert.strictEqual(info.offer, 2, 'offered as a gammon, the best red can still get');
+    }
+    // lost, but red could still bear a checker off before white (with the slowest dice) finishes: no offer yet
+    const info = E.concessionInfo(pos({ w: { 3: 6 }, offW: 9, r: { 12: 15 } }), R, W);
+    assert(info, 'lost'); assert.strictEqual(info.canSaveGammon, true); assert.strictEqual(info.offer, 0);
 });
 test('not provably lost: a lucky run of doubles could still win', () => {
     // equal races, loser to move
@@ -307,7 +324,7 @@ test('both colours are treated the same (mirrored positions give the same answer
     const base = [pos({ w: { 0: 2 }, offW: 13, r: { 18: 5, 19: 5, 22: 5 } }), pos({ w: { 0: 2 }, offW: 13, r: { 4: 1, 20: 14 } }), pos({ w: { 3: 6 }, offW: 9, r: { 4: 1, 8: 14 } })];
     for (const st of base) for (const toMove of [W, R]) {
         const a = E.concessionInfo(st, R, toMove), b = E.concessionInfo(mirror(st), W, E.other(toMove));
-        assert.deepStrictEqual(a && [a.points, a.canSaveGammon, a.canSaveBackgammon], b && [b.points, b.canSaveGammon, b.canSaveBackgammon]);
+        assert.deepStrictEqual(a && [a.points, a.canSaveGammon, a.canSaveBackgammon, a.offer], b && [b.points, b.canSaveGammon, b.canSaveBackgammon, b.offer]);
     }
 });
 test('worst-case bear-off turns agree with an independent slow solver', () => {
@@ -384,6 +401,34 @@ test('whenever the game is called lost, no random continuation lets the loser wi
     }
     assert(called >= 20, 'enough lost positions were found to test: ' + called);
     assert.strictEqual(loserWins, 0, 'the loser won ' + loserWins + ' simulated games from positions called lost');
+});
+test('whenever giving up is offered, no random continuation gives the loser a better result than the price', () => {
+    const seen = { 1: 0, 2: 0, 3: 0 }; let better = 0, offers = 0;
+    for (let t = 0; t < 4000 && offers < 90; t++) {
+        // random race: white (winner side) bearing off; red with some checkers possibly still in white's home board
+        const wn = 1 + Math.floor(rnd() * 5), spec = { w: {}, r: {}, offW: 15 - wn };
+        for (let i = 0; i < wn; i++) { const pt = Math.floor(rnd() * 3); spec.w[pt] = (spec.w[pt] || 0) + 1; }
+        const off = rnd() < 0.3 ? 1 + Math.floor(rnd() * 3) : 0, rn = 15 - off; spec.offR = off;
+        for (let i = 0; i < rn; i++) { const pt = (i === 0 && rnd() < 0.5) ? 3 + Math.floor(rnd() * 3) : 6 + Math.floor(rnd() * 18); spec.r[pt] = (spec.r[pt] || 0) + 1; }
+        const st = pos(spec), toMove = rnd() < 0.5 ? W : R;
+        if (E.hasContact(st)) continue;
+        const info = E.concessionInfo(st, R, toMove);
+        if (!info || !info.offer) continue;
+        offers++; seen[info.offer]++;
+        for (let sim = 0; sim < 20; sim++) {
+            const g = E.cloneState(st); let p = toMove, guard = 0, winner = null;
+            while (!winner && guard++ < 300) {
+                const dice = rollDice(), turns = E.enumerateTurns(g, p, dice);
+                if (turns.length) { const pick = turns[Math.floor(rnd() * turns.length)]; pick.moves.forEach(m => E.applyRaw(g, p, m)); }
+                if (g.off[p].length === 15) winner = p;
+                p = E.other(p);
+            }
+            const result = winner === R ? 0 : E.scoreGame(g, W).points;     // what red ends up losing (0 = red won)
+            if (result < info.offer) better++;
+        }
+    }
+    assert(offers >= 30 && seen[2] > 0 && seen[3] > 0, 'enough offers of each kind were tested: ' + JSON.stringify(seen));
+    assert.strictEqual(better, 0, better + ' simulated games ended better for the loser than the price offered');
 });
 
 (async () => {

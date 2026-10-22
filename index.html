@@ -580,7 +580,7 @@
             </div>
 
             <p id="online-error" class="hidden mt-3 text-sm text-red-400 text-center"></p>
-            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-21b (give-up offered again when cheaper)</p>
+            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-22a (give-up only at your best result)</p>
         </div>
     </div>
 
@@ -670,7 +670,7 @@
                 <p>• <strong>Online:</strong> Press Play Online, create a game and send the link (or the 6-character code) to a friend. Once you are connected you both choose the match length and turn timer, and the game starts when you confirm the same settings; colours are drawn at random. Dice are thrown by the host's browser. If the connection drops, the game pauses and reconnects by itself (you can even reload the page and resume). An optional turn timer skips the turn of a player who runs out of time, and when a match ends either player can ask for a rematch.</p>
                 <p>• <strong>Watching:</strong> Once both players have started an online game, anyone with the game code, or the spectator link from Settings, can press Watch and follow it live: the board, the dice and the score. Spectators can join at any time but can't play, and the players see how many people are watching. In Settings a spectator can choose whose side of the board is drawn at the bottom.</p>
                 <p>• <strong>After a match with spectators:</strong> Each player chooses Keep playing, Watch or Quit. If both keep playing, it's a rematch. If a player stops, the spectators can take the free seat; the new pair then chooses the settings for their match, and everyone else watches it. The player who created the game should stay on the page until the next game is set up, because the game room runs on that page.</p>
-                <p>• <strong>Giving up:</strong> Once no contact is left and your opponent will finish first whatever the dice show, you're offered to give the game up: it counts as a single game (1 point), a gammon (2) or a backgammon (3), whatever it is worth at that moment. If you play on, the offer comes back each time giving up gets cheaper (after your last checker leaves your opponent's home board, and after you bear off your first checker), and the flag button lets you give up at any time.</p>
+                <p>• <strong>Giving up:</strong> Once no contact is left and your opponent will finish first whatever the dice show, you're offered to give the game up, but only when playing on can't get you a better result. It costs the best result you can still reach: a single game (1 point) once you've borne off a checker; a gammon (2) once you can no longer bear a checker off in time, even with a checker still in your opponent's home board as long as it could still get out; a backgammon (3) only when it can't. While you could still save the gammon there's no offer. The flag button lets you give up at any time while the offer stands.</p>
                 <p>• <strong>Scoring:</strong> A win scores 1 point. A gammon (the loser has borne off no checkers) scores 2. A backgammon (a gammon where the loser still has a checker on the bar or in your home board) scores 3. The first player to reach the match target wins the match.</p>
             </div>
         </div>
@@ -866,10 +866,20 @@
             const homeLo = winner === W ? 0 : 18, homeHi = winner === W ? 5 : 23;
             let inHome = 0;
             for (let i = homeLo; i <= homeHi; i++) if (getCheckerColor(st.board[i]) === loser) inHome += st.board[i].length;
+            const borneOff = st.off[loser].length > 0;
+            const canSaveGammon = !borneOff && toOne + lead <= Wmax;
+            const canSaveBackgammon = inHome > 0 && Math.ceil(inHome / 4) + lead <= Wmax;
+            // What giving up costs: the best result the loser can still reach, offered only once playing on can't do better.
+            //  1 once a checker is borne off; nothing while the gammon could still be saved (bearing a checker off in time);
+            //  then 2 if every checker could still leave the winner's home board in time (the backgammon can still be avoided),
+            //  and 3 only when it can't.
+            let offer = 0;
+            if (borneOff) offer = 1;
+            else if (!canSaveGammon) offer = (inHome > 0 && !canSaveBackgammon) ? 3 : 2;
             return {
                 points: sc.points, kind, label: sc.label, winnerTurns: Wmax, loserTurns: Lmin,
-                canSaveGammon: st.off[loser].length === 0 && toOne + lead <= Wmax,
-                canSaveBackgammon: inHome > 0 && Math.ceil(inHome / 4) + lead <= Wmax
+                canSaveGammon, canSaveBackgammon, inHome, offer,
+                offerKind: offer === 1 ? 'game' : (offer === 2 ? 'gammon' : (offer === 3 ? 'backgammon' : null))
             };
         }
 
@@ -1642,10 +1652,10 @@
         }
 
         // Called when a player has borne off all 15 checkers
-        function handleGameEnd(winner, conceded) {
+        function handleGameEnd(winner, conceded, concededPts) {
             lastWinner = winner;
             concedeAskedAt = 99; hideConcede();
-            const result = scoreGame(winner);
+            const result = conceded && [1, 2, 3].includes(concededPts) ? { points: concededPts, label: offerLabel(concededPts) } : scoreGame(winner);
             gamesPlayed++;
             // Points beyond the match target don't count (a gammon in a 1-point match is still just 1 point)
             const awarded = Math.min(result.points, Math.max(0, matchLength - matchScore[winner]));
@@ -1682,7 +1692,8 @@
         // comes back each time it gets cheaper: a backgammon (3) becomes a gammon (2) once the loser's last checker is out of
         // the winner's home board, and a single game (1) once the loser has borne a checker off.
         let concedeAskedAt = 0, concedeInfo = null;
-        const concedeWorth = info => Math.min(info.points, Math.max(1, matchLength - matchScore[oppColor()]));
+        const concedeWorth = info => Math.min(info.offer, Math.max(1, matchLength - matchScore[oppColor()]));
+        const offerLabel = pts => pts === 1 ? 'a win' : (pts === 2 ? 'a gammon' : 'a backgammon');
         function hideConcede() {
             concedeInfo = null;
             const m = document.getElementById('concede-modal'), b = document.getElementById('concede-btn');
@@ -1694,7 +1705,8 @@
             if (watch.on) return;
             if (!matchActive || !gameActive || openingRoll || isRolling || isAnimating || diceValues.length > 0 || rolledThisTurn) return;
             if (online.active && (online.paused || online.opponentGone)) return;
-            const info = E.concessionInfo(state, myColor, currentPlayer);
+            let info = E.concessionInfo(state, myColor, currentPlayer);
+            if (info && !info.offer) info = null;          // lost, but playing on could still save the gammon: no offer yet
             concedeInfo = info;
             document.getElementById('concede-btn').classList.toggle('hidden', !info);
             if (info) {
@@ -1706,20 +1718,24 @@
             const opp = opponentName, winner = oppColor();
             const needed = Math.max(0, matchLength - matchScore[winner]);
             const worth = concedeWorth(info);
-            const kind = info.kind === 'game' ? 'a single game' : (info.kind === 'gammon' ? 'a gammon' : 'a backgammon');
+            const kind = info.offer === 1 ? 'a single game' : (info.offer === 2 ? 'a gammon' : 'a backgammon');
             let t = prevWorth ? `Giving up is cheaper now: ${worth} point${worth === 1 ? '' : 's'} instead of ${prevWorth}. You still can't win: ${opp} finishes first whatever the dice show.`
                               : `You can't win this game any more: ${opp} finishes first whatever the dice show.`;
-            if (info.kind === 'gammon') t += info.canSaveGammon ? ` You haven't borne off a checker yet, so giving up now is a gammon. You could still avoid it by bearing one off before ${opp} finishes; if you do, you'll be offered to give up again for 1 point.` : ` You can't bear a checker off in time, so the gammon can't be avoided.`;
-            if (info.kind === 'backgammon') t += info.canSaveBackgammon ? ` You still have a checker in ${opp}'s home board, so giving up now is a backgammon. You could still get it out in time; if you do, you'll be offered to give up again for less.` : ` You can't get your checker out of ${opp}'s home board in time, so the backgammon can't be avoided.`;
+            if (info.offer === 1) t += ` You have borne off a checker, so this is a single game; playing on can't get you a better result.`;
+            if (info.offer === 2) t += info.inHome > 0
+                ? ` You can't bear a checker off before ${opp} finishes, so a gammon can't be avoided. You still have a checker in ${opp}'s home board, but it could still get out in time, so giving up counts only as a gammon.`
+                : ` You can't bear a checker off before ${opp} finishes, so the gammon can't be avoided.`;
+            if (info.offer === 3) t += ` You can't get your checker out of ${opp}'s home board in time, so the backgammon can't be avoided.`;
             document.getElementById('concede-text').innerText = t;
-            document.getElementById('concede-points').innerText = `Giving up now counts as ${kind}: ${opp} scores ${worth} point${worth === 1 ? '' : 's'}` + (worth < info.points ? ` (the match only needs ${needed}).` : '.');
+            document.getElementById('concede-points').innerText = `Giving up now counts as ${kind}: ${opp} scores ${worth} point${worth === 1 ? '' : 's'}` + (worth < info.offer ? ` (the match only needs ${needed}).` : '.');
             document.getElementById('concede-yes').innerText = `Give up (${worth} point${worth === 1 ? '' : 's'})`;
             document.getElementById('concede-modal').classList.remove('hidden');
         }
         function openConcede() {
             if (!gameActive || !concedeInfo) return;
             // the points may have changed since (a checker borne off): work them out again
-            const info = E.concessionInfo(state, myColor, currentPlayer) || concedeInfo;
+            const now = E.concessionInfo(state, myColor, currentPlayer);
+            const info = now && now.offer ? now : concedeInfo;
             concedeInfo = info;
             showConcedeModal(info);
         }
@@ -1728,14 +1744,18 @@
             if (yes) concedeGame(false);
         }
         // fromPeer: the opponent gave up (online). Otherwise it is this player who gives up.
-        function concedeGame(fromPeer) {
+        // The game is scored at the price that was offered: the best result the loser could still reach (see concessionInfo)
+        function concedeGame(fromPeer, peerPts) {
             if (!gameActive || !matchActive) return;
             const loser = fromPeer ? oppColor() : myColor, winner = other(loser);
+            const info = E.concessionInfo(state, loser, currentPlayer);
+            let pts = info && info.offer ? info.offer : 0;
+            if (!pts && fromPeer && [1, 2, 3].includes(peerPts)) pts = peerPts;     // (the two screens disagree for a moment: take the sender's)
             gameActive = false;
             clearTimeout(endTurnTimer); aiPlan = null; gameGen++; clearHint();
             selectedSource = null; validTargets = []; updateHitboxCursors();
-            if (online.active && !fromPeer) netSend({ t: 'resign', p: loser });
-            handleGameEnd(winner, true);
+            if (online.active && !fromPeer) netSend({ t: 'resign', p: loser, pts: pts || undefined });
+            handleGameEnd(winner, true, pts || 0);
         }
 
         // ---------- victory animation ----------
@@ -4206,7 +4226,7 @@
         function netApply(m) {
             switch (m.t) {
                 case 'resign':
-                    if (gameActive && m.p === oppColor()) concedeGame(true);
+                    if (gameActive && m.p === oppColor()) concedeGame(true, m.pts);
                     return;
                 case 'openRoll':
                     if ((m.p !== W && m.p !== R) || !validDice(m.d)) return onDesync('bad opening roll');
