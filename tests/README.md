@@ -27,6 +27,9 @@ Online play has only been tested with a simulated PeerJS. Before relying on it, 
    Watch: the spectator gets "Take the free seat"; after pressing it, the new pair land on the settings screen of a new game
    and the player who chose Watch is watching it.
 
+9. On a phone held upright: the phone layout (score card at the top, dice on the board's bar, Undo / Roll / Hint at the
+   bottom, the ... menu) should fill the screen without scrolling; turned sideways it switches to the landscape layout.
+
 To pin the PeerJS library, see the comment above its `<script>` tag in the HTML file.
 
 ## Relay fallback

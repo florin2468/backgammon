@@ -298,9 +298,89 @@
         html[data-compact] #me-badge > *, html[data-compact] #opp-badge > * { margin-left: 0 !important; margin-right: 0 !important; }
         html[data-compact] #me-badge, html[data-compact] #opp-badge { column-gap: 6px; padding-left: 8px; padding-right: 8px; }
         html[data-compact] .chip { font-size: 10px; padding: 1px 5px; }
+
+        /* ---------- Phone layout (portrait phones; the page sets data-phone on <html>, see applyLayoutMode) ----------
+           One column, thumb-first: a slim top bar (home, score card, menu), the opponent's strip, the board as large as the
+           screen allows with the dice on its bar, your strip, a short status, and the buttons at the bottom. Nothing here
+           applies to computers, tablets or phones held sideways. */
+        #phone-top, #phone-actions, #phone-start, #phone-sheet { display: none; }
+        html[data-phone] body { padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); justify-content: flex-start; min-height: 100dvh; box-sizing: border-box; }
+        html[data-phone] body > header, html[data-phone] #spec-info, html[data-phone] #roll-btn-wrap,
+        html[data-phone] #start-match-btn, html[data-phone] #online-btn { display: none !important; }
+        html[data-phone] main { width: 100%; max-width: none; margin: 0; flex: 1 1 auto; justify-content: flex-start; }
+        html[data-phone] #board-container { overflow: hidden; }   /* checkers gliding to a new layout never push the page wider */
+        html[data-phone] #phone-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; height: 52px; flex: none; }
+        #phone-top .ph-right { display: flex; gap: 6px; }
+        .ph-icon { width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; padding: 0; background: rgba(15,23,42,0.9); border: 1px solid #334155; border-radius: 12px; color: #f1f5f9; cursor: pointer; }
+        .ph-icon.ph-flag { color: #fda4af; }
+        .ph-hidden { display: none !important; }
+        #ph-score { min-width: 0; flex: 0 1 auto; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 14px; background: rgba(15,23,42,0.9); border: 1px solid #334155; border-radius: 12px; }
+        #ph-score-t { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 800; letter-spacing: 0.02em; color: #fde68a; }
+        #ph-score-s { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 600; color: #cbd5e1; }
+        html[data-phone] #opp-row { margin: 0 0 6px; width: 100%; }
+        html[data-phone] #opp-badge, html[data-phone] #me-badge { width: 100%; box-sizing: border-box; height: 38px; justify-content: flex-start; flex-wrap: nowrap; column-gap: 8px; padding: 0 10px; border-radius: 12px; }
+        html[data-phone] #me-badge { margin-top: 6px; align-self: stretch; }
+        html[data-phone] #opp-badge > *, html[data-phone] #me-badge > * { margin-left: 0 !important; margin-right: 0 !important; }
+        html[data-phone] #opp-timer, html[data-phone] #me-timer { margin-left: auto !important; }
+        html[data-phone] .chip { font-size: 10px; padding: 1px 5px; }
+        html[data-phone] #status-banner { width: 100%; box-sizing: border-box; margin-top: 6px; height: 34px; padding: 0 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 12.5px; line-height: 15px; }
+        /* the board takes all the height that is left (258px = top bar, both strips, status, buttons) */
+        html[data-phone][data-vboard] #board-stage { width: 100%; aspect-ratio: auto; height: min(calc(100vh - var(--ph-reserved, 258px)), calc((100vw - 12px) * 1.8)); height: min(calc(100dvh - var(--ph-reserved, 258px)), calc((100vw - 12px) * 1.8)); }
+        /* the dice lie on the board's bar */
+        html[data-phone][data-vboard] #board-stage > #dice-wrapper { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; height: auto; z-index: 35; gap: 6px; pointer-events: none; }
+        html[data-phone][data-vboard] #board-stage > #dice-wrapper > .die { width: 30px; height: 30px; margin: 0 !important; border-radius: 7px; border-width: 2px; }
+        html[data-phone][data-vboard] #board-stage:has(#next-game-wrap:not(.hidden)) > #dice-wrapper { visibility: hidden; }
+        /* the buttons at the bottom, where the thumb is */
+        html[data-phone] #phone-actions { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; gap: 10px; width: 100%; box-sizing: border-box; padding: 8px 2px 6px; flex: none; }
+        html[data-phone] #phone-actions.ph-off { display: none; }
+        html[data-phone] #phone-start.ph-on { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; box-sizing: border-box; padding: 8px 2px 6px; flex: none; }
+        .ph-btn { height: 54px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 6px; background: rgba(15,23,42,0.92); border: 1px solid #475569; border-radius: 14px; color: #f1f5f9; font: inherit; cursor: pointer; }
+        .ph-btn:disabled { opacity: 0.45; cursor: default; }
+        #ph-hint { color: #fbbf24; }
+        #ph-main { flex-direction: column; gap: 1px; min-width: 0; }
+        #ph-main:disabled { opacity: 1; }
+        #ph-main-t { font-size: 16px; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        #ph-main-s { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        #ph-main-s:empty { display: none; }
+        #ph-main[data-kind="go"] { background: #15803d; border-color: #4ade80; color: #ffffff; }
+        #ph-main[data-kind="mine"] { background: rgba(22,101,52,0.85); border-color: #14532d; color: #dcfce7; }
+        #ph-main[data-kind="opp"] { background: #0369a1; border-color: #7dd3fc; color: #ffffff; }
+        #ph-main[data-kind="oppdone"] { background: #0c4a6e; border-color: #075985; color: #e0f2fe; }
+        #ph-main[data-kind="idle"], #ph-main[data-kind="spec"] { background: rgba(15,23,42,0.7); border-color: #334155; color: #cbd5e1; }
+        .ph-amber { background: #b45309; border-color: #fcd34d; color: #ffffff; font-size: 15px; font-weight: 800; }
+        .ph-sky { background: #0369a1; border-color: #7dd3fc; color: #ffffff; font-size: 15px; font-weight: 800; }
+        /* the game menu: a sheet that slides up from the bottom */
+        html[data-phone] #phone-sheet.ph-open { display: block; position: fixed; inset: 0; z-index: 48; }
+        #phone-sheet .ph-scrim { position: absolute; inset: 0; background: rgba(2,6,23,0.66); }
+        #phone-sheet .ph-panel { position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; max-height: 88dvh; overflow-y: auto; padding: 10px 12px calc(16px + env(safe-area-inset-bottom)); background: #0f172a; border-top: 1px solid #334155; border-radius: 22px 22px 0 0; box-shadow: 0 -12px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 6px; color: #f1f5f9; }
+        #phone-sheet .ph-handle { align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #475569; margin-bottom: 6px; }
+        #phone-sheet .ph-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0 4px 6px; }
+        #phone-sheet .ph-head h2 { margin: 0; font-size: 18px; font-weight: 800; color: #fbbf24; }
+        #ph-sheet-sub { font-size: 12px; font-weight: 600; color: #cbd5e1; text-align: right; }
+        .ph-row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px; text-align: left; background: #1e293b; border: 1px solid #334155; border-radius: 14px; color: #f1f5f9; font: inherit; cursor: pointer; }
+        .ph-row .ph-l { flex: 1 1 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .ph-t { font-size: 15px; font-weight: 700; }
+        .ph-s { font-size: 12px; font-weight: 500; color: #cbd5e1; }
+        .ph-row.ph-danger { background: rgba(136,19,55,0.35); border-color: #9f1239; color: #fecdd3; }
+        .ph-row.ph-danger .ph-s { color: #fda4af; }
+        .ph-copy { font-size: 13px; font-weight: 700; color: #7dd3fc; }
+        .ph-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+        .ph-two .ph-row { min-height: 52px; gap: 10px; }
+        .ph-row.ph-leave { justify-content: center; background: transparent; border-color: #475569; color: #fda4af; min-height: 52px; }
+        .ph-row.ph-back { justify-content: center; margin-top: 4px; min-height: 52px; background: #b45309; border-color: #fcd34d; color: #ffffff; font-size: 16px; font-weight: 800; }
 </style>
 </head>
 <body class="flex flex-col justify-between items-center p-2 sm:p-4 min-h-screen">
+
+    <!-- Phone layout only (see the data-phone CSS): top bar -->
+    <div id="phone-top">
+        <button id="ph-home" class="ph-icon" onclick="resetGame()" aria-label="New game or leave"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
+        <div id="ph-score" role="status" aria-live="polite"><div id="ph-score-t">Classic Wooden Backgammon</div><div id="ph-score-s">Play the computer or a friend</div></div>
+        <div class="ph-right">
+            <button id="ph-flag" class="ph-icon ph-flag ph-hidden" onclick="openConcede()" aria-label="Give up this game"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V3"/><path d="M5 4h13l-2.5 4L18 12H5"/></svg></button>
+            <button class="ph-icon" onclick="phoneMenu(true)" aria-label="Game menu"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+        </div>
+    </div>
 
     <header class="w-full max-w-5xl flex justify-between items-center mb-2 sm:mb-4 px-2">
         <div class="flex items-center space-x-2">
@@ -452,6 +532,35 @@
         <div id="spec-info" class="hidden mt-1 text-[10px] sm:text-xs font-semibold text-sky-300 text-center z-30"></div>
     </main>
 
+    <!-- Phone layout only: the buttons at the bottom (during a game) or the two ways to start one -->
+    <nav id="phone-actions" aria-label="Game actions">
+        <button id="ph-undo" class="ph-btn" onclick="undoMove()" aria-label="Undo move" disabled><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg></button>
+        <button id="ph-main" class="ph-btn" onclick="phoneMainClick()" data-kind="idle" disabled><span id="ph-main-t">Roll dice</span><span id="ph-main-s"></span></button>
+        <button id="ph-hint" class="ph-btn" onclick="showHint()" aria-label="Hint"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5 5 0 1 0 7.5 11.5c.8.8 1.3 1.5 1.5 2.5"/></svg></button>
+    </nav>
+    <div id="phone-start">
+        <button class="ph-btn ph-amber" onclick="showMatchModal()"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg><span>Play the computer</span></button>
+        <button class="ph-btn ph-sky" onclick="showOnlineModal()"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/></svg><span>Play online</span></button>
+    </div>
+
+    <!-- Phone layout only: the game menu -->
+    <div id="phone-sheet" role="dialog" aria-modal="true" aria-label="Game menu">
+        <div class="ph-scrim" onclick="phoneMenu(false)"></div>
+        <div class="ph-panel">
+            <div class="ph-handle"></div>
+            <div class="ph-head"><h2>Game menu</h2><span id="ph-sheet-sub"></span></div>
+            <button id="ph-m-giveup" class="ph-row ph-danger" onclick="phoneMenu(false); openConcede()"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V3"/><path d="M5 4h13l-2.5 4L18 12H5"/></svg><span class="ph-l"><span class="ph-t">Give up this game</span><span class="ph-s" id="ph-m-giveup-s"></span></span></button>
+            <button id="ph-m-swap" class="ph-row" onclick="phoneMenu(false); setMyColor(myColor === 'w' ? 'r' : 'w')"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4"/><path d="m3 8 4-4 4 4"/><path d="M17 8v12"/><path d="m21 16-4 4-4-4"/></svg><span class="ph-l"><span class="ph-t" id="ph-m-swap-t">Swap colours</span><span class="ph-s" id="ph-m-swap-s"></span></span></button>
+            <button id="ph-m-spec" class="ph-row" onclick="phoneCopyWatch()"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="ph-l"><span class="ph-t">Invite spectators</span><span class="ph-s" id="ph-m-spec-s"></span></span><span class="ph-copy" id="ph-m-spec-c">Copy</span></button>
+            <div class="ph-two">
+                <button class="ph-row" onclick="phoneMenu(false); toggleSettingsModal()"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="m4.9 4.9 2.1 2.1"/><path d="m17 17 2.1 2.1"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="m4.9 19.1 2.1-2.1"/><path d="m17 7 2.1-2.1"/></svg><span class="ph-t">Settings</span></button>
+                <button class="ph-row" onclick="phoneMenu(false); toggleHelpModal()"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span class="ph-t">Rules &amp; help</span></button>
+            </div>
+            <button id="ph-m-leave" class="ph-row ph-leave" onclick="phoneMenu(false); resetGame()"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg><span class="ph-t" id="ph-m-leave-t">Leave the game</span></button>
+            <button class="ph-row ph-back" onclick="phoneMenu(false)">Back to the game</button>
+        </div>
+    </div>
+
     <div id="net-banner" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-[45] max-w-[92vw] px-4 py-2 bg-slate-900/95 border border-red-400/70 rounded-xl shadow-2xl text-center">
         <div id="net-banner-text" class="text-sm font-semibold text-red-200"></div>
         <div id="net-banner-btns" class="hidden mt-2 flex gap-2 justify-center">
@@ -580,7 +689,7 @@
             </div>
 
             <p id="online-error" class="hidden mt-3 text-sm text-red-400 text-center"></p>
-            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-22a (give-up only at your best result)</p>
+            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-26a (phone layout)</p>
         </div>
     </div>
 
@@ -1409,11 +1518,15 @@
             const root = document.documentElement;
             const supported = !!(window.CSS && CSS.supports && CSS.supports('width', '1cqw'));
             // upright only pays off when the screen is tall enough that the board gets bigger than the flat one would be
-            const tall = (window.innerHeight - 300) > (Math.min(window.innerWidth, 640) - 24) * 1.1;
+            const tall = (window.innerHeight - (mqPortraitPhone.matches ? 258 : 300)) > (Math.min(window.innerWidth, 640) - 24) * 1.1;   // (the phone layout needs less room around the board)
             const upright = supported && !flatBoard && mqPortraitPhone.matches && tall;
             boardRot = upright ? (homeOrientation === 'RIGHT' ? 90 : -90) : 0;
             if (upright) root.setAttribute('data-vboard', boardRot === 90 ? 'cw' : 'ccw'); else root.removeAttribute('data-vboard');
             if (mqLandscapePhone.matches) root.setAttribute('data-compact', '1'); else root.removeAttribute('data-compact');
+            const phone = mqPortraitPhone.matches;
+            if (phone) root.setAttribute('data-phone', '1'); else { root.removeAttribute('data-phone'); phoneMenu(false); }
+            phonePlaceDice(phone && upright);
+            if (phone) phoneSync();
         }
 
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1612,7 +1725,7 @@
             gameActive = false;
             document.getElementById('start-match-btn').classList.remove('hidden');
             document.getElementById('online-btn').classList.remove('hidden');
-            setStatus("Press Start Match to play the computer, or Play Online to play a friend.");
+            setStatus(isPhone() ? "Choose below: play the computer, or a friend online." : "Press Start Match to play the computer, or Play Online to play a friend.");
             updateUI();
         }
 
@@ -1629,7 +1742,7 @@
 
         function closeMatchModal() {
             document.getElementById('match-modal').classList.add('hidden');
-            setStatus("Press Start Match to play the computer, or Play Online to play a friend.");
+            setStatus(isPhone() ? "Choose below: play the computer, or a friend online." : "Press Start Match to play the computer, or Play Online to play a friend.");
         }
 
         function showMatchModal() {
@@ -2700,19 +2813,24 @@
 
             const oppRoll = (online.active && openingRoll) ? (!!openRolls[myColor] && !openRolls[oppColor()]) : (currentPlayer !== myColor);
             const base = "w-full font-bold rounded-lg border border-solid shadow-2xl transition ";
-            if (watch.on) { btn.disabled = true; btn.className = base + "invisible pointer-events-none"; return; }   // spectators don't roll
+            if (watch.on) { btn.disabled = true; btn.className = base + "invisible pointer-events-none"; phoneRollKind = 'spec'; phoneSync(); return; }   // spectators don't roll
             if (canRoll) {
                 btn.className = base + "pointer-events-auto bg-green-600 hover:bg-green-500 active:scale-95 border-green-400 cursor-pointer";
+                phoneRollKind = 'go';
             } else if (matchActive && gameActive && oppRoll) {
                 // the other player's turn to roll: same look as yours, in sky blue (bright until they roll, then dimmed)
                 const oppRolled = !(online.active && openingRoll) && (rolledThisTurn || isRolling || diceValues.length > 0);
                 btn.className = base + "pointer-events-none cursor-default " + (oppRolled ? "roll-opp-done" : "roll-opp-ready");
+                phoneRollKind = oppRolled ? 'oppdone' : 'opp';
             } else if ((currentPlayer === myColor || (online.active && openingRoll)) && matchActive) {
                 btn.className = base + "pointer-events-none bg-green-800/75 border-green-900 cursor-default";
+                phoneRollKind = 'mine';
             } else {
                 btn.className = base + "pointer-events-none bg-gray-300/30 border-gray-600 cursor-default";
+                phoneRollKind = 'idle';
             }
             evalConcession();
+            phoneSync();
         }
 
         function setStatus(msg) {
@@ -3808,6 +3926,7 @@
                 t = `\u{1F441} ${specSeen.n} watching` + (specSeen.names.length ? ': ' + specSeen.names.join(', ') : '');
             }
             el.innerText = t; el.classList.toggle('hidden', !t);
+            phoneSync();
         }
         function updateSpecChrome() {
             const w = watch.on;
@@ -4007,6 +4126,106 @@
             netSend({ t: 'seat' });
             if (watch.last) specRenderSeat(watch.last);
         }
+
+        // =====================================================================
+        //  PHONE LAYOUT (portrait phones only; see the data-phone CSS)
+        // The phone has its own top bar, bottom buttons and game menu. They only mirror and call what the normal layout
+        // already has (the Roll Dice / Undo / Hint buttons, the give-up flag, Settings, Help), so the game itself is the same.
+        let phoneRollKind = 'idle';          // set by updateRollButton: go | mine | opp | oppdone | idle | spec
+        let phoneDiceHome = null;            // where the dice live in the normal layout
+        const isPhone = () => document.documentElement.hasAttribute('data-phone');
+        function phonePlaceDice(onBar) {     // on an upright phone board the dice lie on the board's bar
+            const d = document.getElementById('dice-wrapper'), stage = document.getElementById('board-stage');
+            if (!d || !stage) return;
+            if (!phoneDiceHome) phoneDiceHome = { parent: d.parentNode, next: d.nextSibling };
+            if (onBar) { if (d.parentNode !== stage) stage.appendChild(d); }
+            else if (d.parentNode !== phoneDiceHome.parent) phoneDiceHome.parent.insertBefore(d, phoneDiceHome.next);
+        }
+        const DIFF_LABEL = { easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' };
+        function phoneFaces() {
+            return ['die-1', 'die-2'].map(id => { const m = /(\d)$/.exec(document.getElementById(id).getAttribute('aria-label') || ''); return m ? +m[1] : 0; });
+        }
+        function phoneSync() {
+            if (!isPhone()) return;
+            const $ = id => document.getElementById(id);
+            // score card
+            let t, s;
+            if (watch.on && watch.last) {
+                const nm = watch.last.names || {};
+                t = `${cleanName(nm[W])} ${matchScore.w} – ${matchScore.r} ${cleanName(nm[R])}`;
+                s = `watching · first to ${matchLength}`;
+            } else if (matchActive) {
+                t = `YOU ${matchScore[myColor]} – ${matchScore[oppColor()]} ${opponentName.toUpperCase()}`;
+                s = `first to ${matchLength} · ` + (online.active ? 'online' + (specSeen.n ? ` · ${specSeen.n} watching` : '') : (DIFF_LABEL[aiDifficulty] || ''));
+            } else { t = 'Classic Wooden Backgammon'; s = 'Play the computer or a friend'; }
+            if ($('ph-score-t').innerText !== t) $('ph-score-t').innerText = t;
+            if ($('ph-score-s').innerText !== s) $('ph-score-s').innerText = s;
+            // bottom: the game buttons, or the two ways to start
+            const start = !matchActive && !watch.on && !online.active;
+            $('phone-start').classList.toggle('ph-on', start);
+            $('phone-actions').classList.toggle('ph-off', start);
+            $('ph-home').style.visibility = start ? 'hidden' : 'visible';
+            // the main button follows the Roll Dice button
+            const main = $('ph-main'), opp = opponentName, f = phoneFaces(), rolled = f.every(validDie) ? `${f[0]} · ${f[1]}` : '';
+            let mt = 'Roll dice', ms = '';
+            const kind = (!gameActive && phoneRollKind !== 'spec') ? 'idle' : phoneRollKind;   // no game running: nothing left to roll or play
+            switch (kind) {
+                case 'go': ms = openingRoll ? 'opening roll' : 'your turn'; break;
+                case 'mine':
+                    if (isRolling) { mt = 'Rolling...'; }
+                    else if (online.active && openingRoll) { mt = 'Opening roll'; ms = `waiting for ${opp}`; }
+                    else if (diceValues.length) { mt = rolled ? `Rolled ${rolled}` : 'Your move'; ms = `${diceValues.length} move${diceValues.length === 1 ? '' : 's'} left`; }
+                    else mt = 'Your turn';
+                    break;
+                case 'opp': mt = `${opp}'s turn`; ms = online.active && openingRoll ? 'opening roll' : (isRolling ? 'rolling...' : 'about to roll'); break;
+                case 'oppdone': mt = `${opp}'s turn`; ms = isRolling ? 'rolling...' : (rolled ? `rolled ${rolled}` : ''); break;
+                case 'spec': mt = 'Watching'; ms = 'spectators can only watch'; break;
+                default: mt = gameActive ? 'Roll dice' : (matchOver ? 'Match over' : 'Game over');
+            }
+            main.dataset.kind = kind;
+            main.disabled = document.getElementById('roll-btn').disabled;
+            if ($('ph-main-t').innerText !== mt) $('ph-main-t').innerText = mt;
+            if ($('ph-main-s').innerText !== ms) $('ph-main-s').innerText = ms;
+            $('ph-undo').disabled = watch.on || $('undo-btn').disabled;
+            $('ph-hint').disabled = !(gameActive && currentPlayer === myColor && diceValues.length > 0 && !isAnimating && !inputBlocked());
+            $('ph-flag').classList.toggle('ph-hidden', $('concede-btn').classList.contains('hidden'));
+        }
+        function phoneMainClick() { if (!document.getElementById('roll-btn').disabled) handleRollDice(); }
+        function phoneMenu(open) {
+            const sheet = document.getElementById('phone-sheet');
+            if (!sheet) return;
+            if (!open) { sheet.classList.remove('ph-open'); return; }
+            const $ = id => document.getElementById(id), opp = opponentName;
+            $('ph-sheet-sub').innerText = watch.on ? 'watching' : (matchActive ? `vs ${opp}${online.active ? '' : ' (' + (DIFF_LABEL[aiDifficulty] || '') + ')'} · YOU ${matchScore[myColor]} – ${matchScore[oppColor()]} · to ${matchLength}` : '');
+            const give = !!(concedeInfo && gameActive && !watch.on);
+            $('ph-m-giveup').classList.toggle('ph-hidden', !give);
+            if (give) { const w = concedeWorth(concedeInfo); $('ph-m-giveup-s').innerText = `${opp} scores ${w} point${w === 1 ? '' : 's'} (${concedeInfo.offer === 1 ? 'a single game' : concedeInfo.offer === 2 ? 'a gammon' : 'a backgammon'}).`; }
+            const other = myColor === W ? 'Red' : 'White';
+            if (watch.on) { $('ph-m-swap-t').innerText = 'View from the other side'; $('ph-m-swap-s').innerText = "Only changes what you see."; }
+            else if (online.active) { $('ph-m-swap-t').innerText = 'Swap colours'; $('ph-m-swap-s').innerText = `Ask ${opp}. Every checker stays where it is.`; }
+            else { $('ph-m-swap-t').innerText = `Play ${other}`; $('ph-m-swap-s').innerText = matchActive ? 'Every checker stays where it is.' : 'Your colour for the next match.'; }
+            const spec = online.active && !!online.code && !watch.on;
+            $('ph-m-spec').classList.toggle('ph-hidden', !spec);
+            if (spec) { $('ph-m-spec-s').innerText = specSeen.n ? `${specSeen.n} watching${specSeen.names.length ? ': ' + specSeen.names.join(', ') : ''}` : (location.protocol === 'file:' ? `Copy the code ${online.code}` : 'Copy the watch link'); $('ph-m-spec-c').innerText = 'Copy'; }
+            const leave = watch.on ? 'Stop watching' : (online.active ? 'Leave the game' : (matchActive ? 'New match' : ''));
+            $('ph-m-leave').classList.toggle('ph-hidden', !leave);
+            if (leave) $('ph-m-leave-t').innerText = leave;
+            sheet.classList.add('ph-open');
+        }
+        function phoneCopyWatch() {
+            if (!online.active || !online.code) return;
+            updateSpecChrome();
+            const text = location.protocol === 'file:' ? online.code : document.getElementById('spec-link').value;
+            const done = () => { const c = document.getElementById('ph-m-spec-c'); c.innerText = 'Copied!'; setTimeout(() => { c.innerText = 'Copy'; }, 1500); };
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => {});
+            else { const i = document.getElementById('spec-link'); i.select(); try { document.execCommand('copy'); done(); } catch (e) {} }
+        }
+        // the Undo button and the give-up flag change in many places: follow them directly
+        try {
+            const mo = new MutationObserver(() => phoneSync());
+            ['undo-btn', 'concede-btn'].forEach(id => { const el = document.getElementById(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ['disabled', 'class'] }); });
+        } catch (e) {}
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') phoneMenu(false); });
 
         // ---------- starting a match ----------
         function startOnlineMatch(len, hostColor, oppName, timer) {
