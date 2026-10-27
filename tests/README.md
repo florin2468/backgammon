@@ -10,7 +10,9 @@ The tests load that exact block, so they always test the code that ships.
 Needs only Node 16+. It checks: starting position, hitting and blocked points, bar entry, bearing off, the
 "play as many dice as possible" and larger-die rules, combined moves, gammon/backgammon scoring, Red/White symmetry
 (200 random positions), 300 random full games (invariants, undo), every AI level, Expert determinism, and the
-position validator used for saved and received games.
+position validator used for saved and received games. The win-chance block (`<script id="bg-win">`) is checked against
+the rules engine (same legal turns and the same position scores on 3,000 random positions each) and on positions whose
+chances are known exactly.
 
 ## Two-device check of online play (not automated)
 Online play has only been tested with a simulated PeerJS. Before relying on it, try once with two real devices:
@@ -29,6 +31,8 @@ Online play has only been tested with a simulated PeerJS. Before relying on it, 
 
 9. On a phone held upright: the phone layout (score card at the top, dice on the board's bar, Undo / Roll / Hint at the
    bottom, the ... menu) should fill the screen without scrolling; turned sideways it switches to the landscape layout.
+10. Switch on Win chance (above the board) on both devices and the spectator: the numbers should appear within a second,
+    change after each roll and move, and match on all three screens once they settle.
 
 To pin the PeerJS library, see the comment above its `<script>` tag in the HTML file.
 

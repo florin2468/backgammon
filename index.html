@@ -262,8 +262,8 @@
 
         /* Portrait phones: the board is turned upright (24 points in two columns, bar across the middle, your tray at the
            bottom) so it can use the whole screen height. The board is laid out sideways at its normal size inside a stage
-           and rotated 90 degrees; cq units size it from the stage. 300px = space kept for header, badges and status. */
-        html[data-vboard] #board-stage { display: block; position: relative; width: min(100%, calc((100dvh - 300px) / 1.6)); aspect-ratio: 10 / 16; container-type: size; margin: 0 auto; }
+           and rotated 90 degrees; cq units size it from the stage. 332px = space kept for header, badges, the win-chance row and status. */
+        html[data-vboard] #board-stage { display: block; position: relative; width: min(100%, calc((100dvh - 332px) / 1.6)); aspect-ratio: 10 / 16; container-type: size; margin: 0 auto; }
         html[data-vboard] #board-container { position: absolute !important; top: 0; left: 0; width: 100cqh !important; height: 100cqw !important; max-height: none !important; aspect-ratio: auto !important; transform-origin: 0 0; padding: 4px !important; border-width: 4px; border-radius: 8px; }
         html[data-vboard="cw"]  #board-container { transform: translateX(100cqw) rotate(90deg); }
         html[data-vboard="ccw"] #board-container { transform: translateY(100cqh) rotate(-90deg); }
@@ -277,13 +277,13 @@
         html[data-compact] body { padding: 4px 8px; justify-content: flex-start; }
         html[data-compact] header { margin-bottom: 4px; }
         html[data-compact] header > div.text-center { display: none; }
-        html[data-compact] main { display: grid; grid-template-columns: minmax(0, 1fr) 250px; grid-template-rows: auto auto auto auto 1fr; column-gap: 10px; align-items: start; max-width: none; margin: 0; width: 100%; }
+        html[data-compact] main { display: grid; grid-template-columns: minmax(0, 1fr) 250px; grid-template-rows: auto auto auto auto auto 1fr; column-gap: 10px; align-items: start; max-width: none; margin: 0; width: 100%; }
         html[data-compact] #board-container { grid-column: 1; grid-row: 1 / -1; height: calc(100dvh - 64px); width: auto; max-width: 100%; max-height: none; aspect-ratio: 16 / 10; justify-self: center; }
         html[data-compact] #dice-wrapper { grid-column: 2; grid-row: 1; margin: 0 0 4px; justify-self: center; }
         html[data-compact] #opp-row { grid-column: 2; grid-row: 2; flex-direction: column; margin: 0 0 6px; align-items: stretch; }
         html[data-compact] #start-match-btn, html[data-compact] #online-btn { position: static !important; transform: none !important; align-self: stretch; margin: 0 0 6px; text-align: center; }
-        html[data-compact] #status-banner { grid-column: 2; grid-row: 3; margin: 0 0 6px; }
-        html[data-compact] #me-badge { grid-column: 2; grid-row: 4; margin: 0; align-self: stretch; }
+        html[data-compact] #status-banner { grid-column: 2; grid-row: 4; margin: 0 0 6px; }
+        html[data-compact] #me-badge { grid-column: 2; grid-row: 5; margin: 0; align-self: stretch; }
         html[data-compact] #opp-badge { align-self: stretch; }
 
         /* Stats badges: compact chips that wrap cleanly on narrow screens */
@@ -324,8 +324,8 @@
         html[data-phone] #opp-timer, html[data-phone] #me-timer { margin-left: auto !important; }
         html[data-phone] .chip { font-size: 10px; padding: 1px 5px; }
         html[data-phone] #status-banner { width: 100%; box-sizing: border-box; margin-top: 6px; height: 34px; padding: 0 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 12.5px; line-height: 15px; }
-        /* the board takes all the height that is left (258px = top bar, both strips, status, buttons) */
-        html[data-phone][data-vboard] #board-stage { width: 100%; aspect-ratio: auto; height: min(calc(100vh - var(--ph-reserved, 258px)), calc((100vw - 12px) * 1.8)); height: min(calc(100dvh - var(--ph-reserved, 258px)), calc((100vw - 12px) * 1.8)); }
+        /* the board takes all the height that is left (290px = top bar, both strips, the win-chance row, status, buttons) */
+        html[data-phone][data-vboard] #board-stage { width: 100%; aspect-ratio: auto; height: min(calc(100vh - var(--ph-reserved, 290px)), calc((100vw - 12px) * 1.8)); height: min(calc(100dvh - var(--ph-reserved, 290px)), calc((100vw - 12px) * 1.8)); }
         /* the dice lie on the board's bar */
         html[data-phone][data-vboard] #board-stage > #dice-wrapper { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; height: auto; z-index: 35; gap: 6px; pointer-events: none; }
         html[data-phone][data-vboard] #board-stage > #dice-wrapper > .die { width: 30px; height: 30px; margin: 0 !important; border-radius: 7px; border-width: 2px; }
@@ -368,6 +368,40 @@
         .ph-two .ph-row { min-height: 52px; gap: 10px; }
         .ph-row.ph-leave { justify-content: center; background: transparent; border-color: #475569; color: #fda4af; min-height: 52px; }
         .ph-row.ph-back { justify-content: center; margin-top: 4px; min-height: 52px; background: #b45309; border-color: #fcd34d; color: #ffffff; font-size: 16px; font-weight: 800; }
+
+        /* ---------- Win chance: the switch and the meter in the slim row above the board ---------- */
+        #wp-row { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 26px; margin-bottom: 6px; position: relative; z-index: 30; }
+        #board-container { max-height: calc(70vh - 32px); }   /* (the board gives up the row's 32px, so the page is no taller than before) */
+        #wp-toggle { display: inline-flex; align-items: center; gap: 8px; height: 26px; padding: 0 11px 0 6px; flex: none; border-radius: 9999px; background: rgba(15,23,42,0.92); border: 1px solid #334155; color: #e2e8f0; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+        #wp-toggle:hover { border-color: #475569; color: #ffffff; }
+        #wp-toggle:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+        #wp-toggle .wp-sw { position: relative; flex: none; width: 30px; height: 18px; box-sizing: border-box; border-radius: 9999px; background: #334155; border: 1px solid #475569; transition: background 0.2s, border-color 0.2s; }
+        #wp-toggle .wp-sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; transition: transform 0.2s, background 0.2s; }
+        #wp-toggle[aria-checked="true"] .wp-sw { background: #059669; border-color: #10b981; }
+        #wp-toggle[aria-checked="true"] .wp-sw::after { transform: translateX(12px); background: #ffffff; }
+        #wp-meter { display: none; align-items: center; gap: 8px; height: 26px; padding: 0 12px; min-width: 0; box-sizing: border-box; border-radius: 9999px; background: rgba(15,23,42,0.92); border: 1px solid #334155; box-shadow: 0 4px 12px rgba(0,0,0,0.35); font-size: 12px; font-weight: 700; color: #f1f5f9; font-variant-numeric: tabular-nums; }
+        #wp-row.wp-on #wp-meter { display: flex; }
+        .wp-side { display: inline-flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap; }
+        .wp-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; border-width: 1px !important; box-sizing: border-box; }
+        .wp-name { min-width: 0; max-width: 7rem; overflow: hidden; text-overflow: ellipsis; color: #cbd5e1; font-weight: 600; }
+        .wp-pct { flex: none; min-width: 2.4em; color: #fcd34d; font-weight: 800; }
+        #wp-me .wp-pct { text-align: right; }
+        #wp-bar { position: relative; flex: none; width: 10rem; height: 8px; border-radius: 9999px; overflow: hidden; background: #475569; }
+        #wp-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; background: #94a3b8; box-shadow: 1px 0 0 #0f172a; transition: width 0.35s ease; }
+        #wp-bar.wp-top-w, #wp-fill.wp-w { background: linear-gradient(#ffffff, #cbd5e1); }
+        #wp-bar.wp-top-r, #wp-fill.wp-r { background: linear-gradient(#ef4444, #b91c1c); }
+        #wp-meter.wp-idle .wp-pct { color: #94a3b8; }
+        #wp-meter.wp-idle #wp-fill { width: 50% !important; background: #64748b; }
+        #wp-meter.wp-idle #wp-bar { background: #475569; }
+        html[data-phone] #wp-row { height: 26px; margin: 0 0 6px; justify-content: flex-start; gap: 6px; }
+        html[data-phone] #wp-toggle { height: 26px; padding: 0 9px 0 5px; gap: 6px; font-size: 11px; }
+        html[data-phone] #wp-meter { flex: 1 1 auto; height: 26px; padding: 0 9px; gap: 6px; font-size: 11px; }
+        html[data-phone] #wp-bar { flex: 1 1 auto; width: auto; min-width: 24px; }
+        html[data-phone] .wp-name { max-width: 4.5rem; }
+        html[data-compact] #wp-row { grid-column: 2; grid-row: 3; margin: 0 0 6px; flex-wrap: wrap; height: auto; row-gap: 6px; }
+        html[data-compact] #wp-meter { flex: 1 1 100%; }
+        html[data-compact] #wp-bar { flex: 1 1 auto; width: auto; min-width: 24px; }
+        html[data-compact] .wp-name { max-width: 4.5rem; }
 </style>
 </head>
 <body class="flex flex-col justify-between items-center p-2 sm:p-4 min-h-screen">
@@ -433,6 +467,16 @@
             <span class="chip text-xs bg-slate-800 px-2 py-0.5 rounded border border-slate-700 font-mono text-amber-300" title="Match points (first to reach the target wins)">MATCH: <span id="opp-match-score">0</span>/<span id="opp-match-total">-</span></span>
             <span id="opp-timer" class="hidden text-xs px-2 py-0.5 rounded border font-mono tabular-nums" title="Turn timer"></span>
         </div>
+        </div>
+
+        <!-- Win chance: a switch, and (when on) each side's chance to win this game -->
+        <div id="wp-row">
+            <button id="wp-toggle" type="button" role="switch" aria-checked="false" onclick="toggleWinChance()" title="Show each side's chance to win this game"><span class="wp-sw" aria-hidden="true"></span><span>Win chance</span></button>
+            <div id="wp-meter" class="wp-idle" role="group" aria-label="Win chance">
+                <span id="wp-me" class="wp-side"><span id="wp-me-dot" class="wp-dot checker-white" aria-hidden="true"></span><span id="wp-me-name" class="wp-name">YOU</span><span id="wp-me-pct" class="wp-pct">–</span></span>
+                <div id="wp-bar" aria-hidden="true"><div id="wp-fill"></div></div>
+                <span id="wp-opp" class="wp-side"><span id="wp-opp-pct" class="wp-pct">–</span><span id="wp-opp-name" class="wp-name">AI</span><span id="wp-opp-dot" class="wp-dot checker-red" aria-hidden="true"></span></span>
+            </div>
         </div>
 
         <!-- MAIN BOARD (the stage lets the board turn upright on portrait phones) -->
@@ -689,7 +733,7 @@
             </div>
 
             <p id="online-error" class="hidden mt-3 text-sm text-red-400 text-center"></p>
-            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-26a (phone layout)</p>
+            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-27a (win chance)</p>
         </div>
     </div>
 
@@ -772,6 +816,7 @@
                 <p>• <strong>Interaction:</strong> Click or tap a checker (or its point) to select it, then click the point where it should go. On touch screens the legal destinations are tinted. Keyboard: Tab to a movable point, Enter to select, Tab to a destination, Enter to move. Shortcuts: <strong>R</strong> roll, <strong>U</strong> undo, <strong>H</strong> hint.</p>
                 <p>• <strong>Who starts:</strong> Only at the start of a match: each player rolls both dice (online, each player clicks Roll Dice for their own). A double wins; if both roll doubles the higher double wins; otherwise the higher total wins. A tie is rolled again. Every later game of the match starts with the winner of the previous game, who simply rolls and plays.</p>
                                 <p>• <strong>Hint:</strong> The lightbulb button works out a good way to play your roll and pulses the first checker to move and where it goes.</p>
+                                <p>• <strong>Win chance:</strong> The switch above the board shows each side's chance to win this game. It plays the position out 1,000 times with a quick computer player and updates after every roll and move. It is an estimate (usually within a few percent); hovering over it with a mouse also shows the chances of a gammon.</p>
                 <p>• <strong>Saved:</strong> Your settings, and an unfinished match against the computer, are remembered if you close the page.</p>
                 <p>• <strong>Both dice at once:</strong> Select a checker and click a point that needs both dice (or several dice on doubles). The checker travels there in one move, as long as every step along the way is legal. Undo takes the whole move back.</p>
                 <p>• <strong>Animation:</strong> Checkers glide smoothly from point to point.</p>
@@ -1437,6 +1482,275 @@
     if (typeof module !== 'undefined' && module.exports) module.exports = BGEngine;
     </script>
 
+    <script id="bg-win">
+    // ---------- Win chance: plays the position out many times with a quick computer player ----------
+    // Self-contained (no page or engine code), so it can also run in a background Worker built from this script's text.
+    // A position is two Int8Array(26), one per side, each counted from that side's own point of view:
+    //   [0] = checkers borne off, [1..24] = points (1 = the last point before bearing off), [25] = checkers on the bar.
+    // My point q is the opponent's point 25 - q.
+    const BGWin = (function () {
+        const MAX_PLIES = 2000;
+        const POINT_VALUE = [0, 1.5, 2.5, 4, 5.5, 7, 6, 6.5, 5, 4, 3, 2.5, 2, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 4, 6, 5, 3, 1.5, 1];
+
+        // Rolls as bits of one number: the 6 doubles are bits 0-5, the 15 other rolls bits 6-20 (each counts twice of 36)
+        const BIT = [];
+        (function () {
+            let k = 6;
+            for (let x = 1; x <= 6; x++) { BIT[x] = []; }
+            for (let x = 1; x <= 6; x++) {
+                BIT[x][x] = 1 << (x - 1);
+                for (let y = x + 1; y <= 6; y++) { BIT[x][y] = BIT[y][x] = 1 << k; k++; }
+            }
+        })();
+        const DIRECT = [0];                                   // every roll that contains the number d
+        for (let d = 1; d <= 6; d++) { let m = 0; for (let x = 1; x <= 6; x++) m |= BIT[d][x]; DIRECT.push(m); }
+        function bits(m) { let c = 0; while (m) { m &= m - 1; c++; } return c; }
+
+        // The rolls on which b's checker on its point k (25 = its bar) hits my blot on my point q (a = my checkers)
+        function shotsFrom(k, q, a) {
+            const d = k + q - 25;
+            if (d < 1 || d > 24) return 0;
+            let m = d <= 6 ? DIRECT[d] : 0;
+            if (d >= 2 && d <= 12) {
+                for (let x = 1; x <= 6; x++) {
+                    const y = d - x;
+                    if (y < 1 || y > 6) continue;
+                    if (a[25 - (k - x)] < 2 || a[25 - (k - y)] < 2) m |= BIT[x][y];
+                }
+            }
+            for (let x = 1; x <= 6; x++) {
+                if (d % x !== 0) continue;
+                const n = d / x;
+                if (n < 2 || n > 4) continue;
+                let open = true;
+                for (let j = 1; j < n; j++) if (a[25 - (k - x * j)] >= 2) { open = false; break; }
+                if (open) m |= BIT[x][x];
+            }
+            return m;
+        }
+        // Of the 36 rolls, how many let the opponent (b) hit my blot on my point q? Same rules as the game's own AI.
+        function hitRolls(q, b, a) {
+            let m = 0;
+            if (b[25] > 0) m = shotsFrom(25, q, a);           // a checker on the bar has to come in first
+            else for (let k = 26 - q; k <= 24; k++) if (b[k] > 0) m |= shotsFrom(k, q, a);   // (only checkers behind the blot)
+            return bits(m & 63) + 2 * bits(m >>> 6);
+        }
+
+        function contact(a, b) {
+            let qa = 0, qb = 0;
+            for (let q = 25; q >= 1; q--) if (a[q]) { qa = q; break; }
+            for (let q = 25; q >= 1; q--) if (b[q]) { qb = q; break; }
+            return qa + qb > 24;
+        }
+
+        // How good the position is for side a (higher = better); the same weights as the game's AI evaluation
+        function side(a, b, inContact, aToMove) {
+            let pip = 25 * a[25];
+            if (!inContact) {
+                for (let q = 1; q <= 24; q++) pip += a[q] * q;
+                return -pip + 1.2 * a[0];
+            }
+            let s = 0, run = 0, bestRun = 0, blots = 0;
+            for (let q = 1; q <= 24; q++) {
+                const n = a[q];
+                if (n === 0) { run = 0; continue; }
+                pip += n * q;
+                if (n >= 2) {
+                    s += POINT_VALUE[q];
+                    if (n > 3) s -= 1.2 * (n - 3);
+                    if (++run > bestRun) bestRun = run;
+                } else { run = 0; blots++; }
+            }
+            s -= 0.8 * pip;
+            if (bestRun >= 3) s += 3 * (bestRun - 2) * (bestRun - 2);
+            let oppHome = 0;
+            for (let k = 1; k <= 6; k++) if (b[k] >= 2) oppHome++;
+            s -= a[25] * (12 + 3 * oppHome);
+            if (blots) {
+                const weight = aToMove ? 0.25 : 1, extra = 3 * oppHome + (oppHome >= 5 ? 8 : 0);
+                for (let q = 1; q <= 24; q++) {
+                    if (a[q] !== 1) continue;
+                    s -= 0.5;
+                    const h = hitRolls(q, b, a);
+                    if (h > 0) s -= weight * (h / 36) * ((25 - q) + extra);
+                }
+            }
+            return s;
+        }
+        // Score of a finished turn for the side that just moved (a); the opponent (b) is to move next
+        function score(a, b) {
+            if (a[0] === 15) return 1e6;
+            const c = contact(a, b);
+            return side(a, b, c, false) - side(b, a, c, true);
+        }
+
+        // ---------- move generation ----------
+        function canMove(a, b, s, d) {
+            if (a[s] === 0) return false;
+            if (a[25] > 0 && s !== 25) return false;
+            const t = s - d;
+            if (t >= 1) return b[25 - t] < 2;
+            for (let q = 7; q <= 25; q++) if (a[q]) return false;     // bearing off needs every checker at home
+            if (t === 0) return true;
+            for (let q = s + 1; q <= 6; q++) if (a[q]) return false;  // a higher die only bears off the rearmost checker
+            return true;
+        }
+        function apply(a, b, s, d) {
+            const t = s - d;
+            a[s]--;
+            if (t >= 1) { a[t]++; if (b[25 - t] === 1) { b[25 - t] = 0; b[25]++; } }
+            else a[0]++;
+        }
+
+        // Plays the best turn (by score) for a against b with the dice, in place. Follows the rules: as many dice as
+        // possible, and the larger die when only one of two can be played.
+        const bufA = [], bufB = [];
+        for (let i = 0; i < 5; i++) { bufA.push(new Int8Array(26)); bufB.push(new Int8Array(26)); }
+        const bestA = new Int8Array(26), bestB = new Int8Array(26);
+        let bestDepth, bestScore, bestBig;   // bestBig: (one-die turns only) whether the best one used the larger die
+        let big = 0;
+
+        function leaf(a, b, depth, usedBig) {
+            if (collector) { collector(a, b, depth, usedBig); return; }
+            if (depth < bestDepth) return;
+            if (depth === 1 && bestDepth === 1 && bestBig && !usedBig) return;   // the larger die beats any smaller one
+            const v = score(a, b);
+            if (depth > bestDepth || (depth === 1 && usedBig && !bestBig) || v > bestScore) {
+                bestDepth = depth; bestScore = v; bestBig = usedBig;
+                bestA.set(a); bestB.set(b);
+            }
+        }
+        function walkDouble(depth, d, maxS, n) {     // doubles: sources never go up, so each set of moves is seen once
+            const a = bufA[depth], b = bufB[depth];
+            let moved = false;
+            if (depth < n) {
+                for (let s = maxS; s >= 1; s--) {
+                    if (!canMove(a, b, s, d)) continue;
+                    moved = true;
+                    bufA[depth + 1].set(a); bufB[depth + 1].set(b);
+                    apply(bufA[depth + 1], bufB[depth + 1], s, d);
+                    walkDouble(depth + 1, d, s, n);
+                }
+            }
+            if (!moved && depth > 0) leaf(a, b, depth, false);
+        }
+        function walkPair(d1, d2) {
+            const a0 = bufA[0], b0 = bufB[0];
+            for (let s = 25; s >= 1; s--) {
+                if (!canMove(a0, b0, s, d1)) continue;
+                const a1 = bufA[1], b1 = bufB[1];
+                a1.set(a0); b1.set(b0); apply(a1, b1, s, d1);
+                let moved = false;
+                if (d2) {
+                    for (let s2 = 25; s2 >= 1; s2--) {
+                        if (!canMove(a1, b1, s2, d2)) continue;
+                        moved = true;
+                        const a2 = bufA[2], b2 = bufB[2];
+                        a2.set(a1); b2.set(b1); apply(a2, b2, s2, d2);
+                        leaf(a2, b2, 2, false);
+                    }
+                }
+                if (!moved) leaf(a1, b1, 1, d1 === big);
+            }
+        }
+        function search(a, b, dice) {
+            bestDepth = 0; bestScore = -Infinity; bestBig = false;
+            bufA[0].set(a); bufB[0].set(b);
+            if (dice.length === 1) { big = dice[0]; walkPair(dice[0], 0); }
+            else if (dice.every(x => x === dice[0])) walkDouble(0, dice[0], 25, Math.min(4, dice.length));
+            else { big = Math.max(dice[0], dice[1]); walkPair(dice[0], dice[1]); walkPair(dice[1], dice[0]); }
+        }
+        // Plays the best turn for a (against b) with the dice, in place: [d], [d1, d2], or two to four of the same
+        // (a double, possibly part-played). Returns false when nothing can be played.
+        function playBest(a, b, dice) {
+            search(a, b, dice);
+            if (bestDepth === 0) return false;
+            a.set(bestA); b.set(bestB);
+            return true;
+        }
+        // (tests) every distinct position the dice can lead to, as strings
+        let collector = null;
+        function allTurns(a, b, dice) {
+            const found = [];
+            collector = (x, y, depth, usedBig) => found.push({ k: Array.from(x).join(',') + '|' + Array.from(y).join(','), depth, usedBig });
+            try { search(a, b, dice); } finally { collector = null; }
+            let max = 0;
+            found.forEach(f => { if (f.depth > max) max = f.depth; });
+            let keep = found.filter(f => f.depth === max);
+            if (max === 1 && keep.some(f => f.usedBig)) keep = keep.filter(f => f.usedBig);
+            return Array.from(new Set(keep.map(f => f.k)));
+        }
+
+        // ---------- playing games out ----------
+        // A small fast random generator, seeded per game so the same position always gives the same estimate
+        function rngFor(i) {
+            let x = (Math.imul(i + 1, 0x9E3779B1) ^ 0x5bd1e995) | 0;
+            if (x === 0) x = 1;
+            return () => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return (x >>> 0) / 4294967296; };
+        }
+        const gA = new Int8Array(26), gB = new Int8Array(26), dice2 = [0, 0], dice4 = [0, 0, 0, 0];
+
+        // One game from the position (mover a, other b; dice = the mover's dice still to play, or null if not rolled yet).
+        // Returns +1/+2/+3 if the mover wins (single / gammon / backgammon), -1/-2/-3 if the other side does.
+        function playOut(a0, b0, dice, i) {
+            const rnd = rngFor(i);
+            gA.set(a0); gB.set(b0);
+            let me = gA, them = gB, sign = 1;
+            if (dice && dice.length) {
+                playBest(me, them, dice);
+                if (me[0] === 15) return result(me, them, sign);
+                const t = me; me = them; them = t; sign = -sign;
+            }
+            for (let ply = 0; ply < MAX_PLIES; ply++) {
+                const d1 = 1 + Math.floor(rnd() * 6), d2 = 1 + Math.floor(rnd() * 6);
+                let ds;
+                if (d1 === d2) { dice4[0] = dice4[1] = dice4[2] = dice4[3] = d1; ds = dice4; }
+                else { dice2[0] = d1; dice2[1] = d2; ds = dice2; }
+                playBest(me, them, ds);
+                if (me[0] === 15) return result(me, them, sign);
+                const t = me; me = them; them = t; sign = -sign;
+            }
+            // (never happens in practice) call it for the side with fewer pips to go
+            let pm = 0, pt = 0;
+            for (let q = 1; q <= 25; q++) { pm += me[q] * q; pt += them[q] * q; }
+            return (pm <= pt ? 1 : -1) * sign;
+        }
+        function result(winner, loser, sign) {
+            let pts = 1;
+            if (loser[0] === 0) {
+                pts = 2;
+                for (let q = 19; q <= 25; q++) if (loser[q]) { pts = 3; break; }   // still on the bar or in the winner's home
+            }
+            return pts * sign;
+        }
+
+        // acc counts results from the mover's side: n games, w wins, wg/wb gammons/backgammons won, lg/lb lost
+        function newAcc() { return { n: 0, w: 0, wg: 0, wb: 0, lg: 0, lb: 0 }; }
+        function addResult(acc, r) {
+            acc.n++;
+            if (r > 0) { acc.w++; if (r >= 2) acc.wg++; if (r >= 3) acc.wb++; }
+            else { if (r <= -2) acc.lg++; if (r <= -3) acc.lb++; }
+        }
+        // job: { a, b, dice } as for playOut. With dice already rolled the quick player's move is the same in every game,
+        // so it is worked out once and the games start from the position after it.
+        function run(job, from, to, acc) {
+            if (!job.start) {
+                if (job.dice && job.dice.length) {
+                    const a = Int8Array.from(job.a), b = Int8Array.from(job.b);
+                    playBest(a, b, job.dice);
+                    job.start = { a: b, b: a, sign: -1, over: a[0] === 15 ? result(a, b, 1) : 0 };
+                } else job.start = { a: job.a, b: job.b, sign: 1, over: 0 };
+            }
+            const st = job.start;
+            for (let i = from; i < to; i++) addResult(acc, st.over || st.sign * playOut(st.a, st.b, null, i));
+            return acc;
+        }
+
+        return { hitRolls, score, canMove, playBest, allTurns, playOut, run, newAcc, addResult, contact };
+    })();
+    if (typeof module !== 'undefined' && module.exports) module.exports = BGWin;
+    </script>
+
     <script>
         const E = BGEngine;
         const W = 'w'; // White: moves 23 -> 0, home board = points 0-5
@@ -1518,7 +1832,7 @@
             const root = document.documentElement;
             const supported = !!(window.CSS && CSS.supports && CSS.supports('width', '1cqw'));
             // upright only pays off when the screen is tall enough that the board gets bigger than the flat one would be
-            const tall = (window.innerHeight - (mqPortraitPhone.matches ? 258 : 300)) > (Math.min(window.innerWidth, 640) - 24) * 1.1;   // (the phone layout needs less room around the board)
+            const tall = (window.innerHeight - (mqPortraitPhone.matches ? 290 : 332)) > (Math.min(window.innerWidth, 640) - 24) * 1.1;   // (the phone layout needs less room around the board)
             const upright = supported && !flatBoard && mqPortraitPhone.matches && tall;
             boardRot = upright ? (homeOrientation === 'RIGHT' ? 90 : -90) : 0;
             if (upright) root.setAttribute('data-vboard', boardRot === 90 ? 'cw' : 'ccw'); else root.removeAttribute('data-vboard');
@@ -2805,6 +3119,7 @@
         //  - opponent has rolled        -> darker, semi-transparent sky blue, unclickable
         //  - no game running            -> transparent light gray, unclickable
         function updateRollButton() {
+            wpSync();
             const btn = document.getElementById('roll-btn');
             const canRoll = (online.active && openingRoll)
                 ? (gameActive && !openRolls[myColor] && !isRolling && !online.rollPending && !inputBlocked())     // each player rolls their own opening dice
@@ -2848,7 +3163,7 @@
                 localStorage.setItem(SETTINGS_KEY, JSON.stringify({
                     difficulty: aiDifficulty, orientation: homeOrientation,
                     color: online.active ? online.prevColor : myColor,
-                    sound: soundEnabled, volume: Math.round(soundVolume * 100), flat: flatBoard
+                    sound: soundEnabled, volume: Math.round(soundVolume * 100), flat: flatBoard, winChance: winChanceOn
                 }));
             } catch (e) {}
         }
@@ -2871,6 +3186,8 @@
             if (c.color === W || c.color === R) { myColor = c.color; updatePlayAsButtons(); }
             flatBoard = c.flat === true;
             updateBoardButtons();
+            winChanceOn = c.winChance === true;
+            wpRender();
             if (c.orientation === 'LEFT' || c.orientation === 'RIGHT') setHomeOrientation(c.orientation);
         }
         function updateBoardButtons() {
@@ -2967,6 +3284,184 @@
         function toggleSoundSetting() {
             soundEnabled = !soundEnabled;
             document.getElementById('sound-toggle-btn').setAttribute('aria-checked', String(soundEnabled));
+            saveSettings();
+        }
+
+        // ---------- Win chance (the switch and meter above the board) ----------
+        // Each side's chance to win this game, estimated by playing the position out WP_GAMES times with a quick computer
+        // player (BGWin, above). The games run in a background worker so play never stutters; the numbers refine as the
+        // games come in and start again whenever the position or the dice change. Every game has its own fixed random
+        // seed, so the same position always gives the same numbers, on every screen (both players and any spectators).
+        const WP_GAMES = 1000, WP_GAMES_SLOW = 400;   // (the second if no worker can be started: then it runs in small slices here)
+        let winChanceOn = false;
+        const wp = { key: '', worker: null, noWorker: false, job: null, local: 0, mover: null, pW: null, final: false, acc: null, n: 0, done: false };
+
+        // What the meter should show right now
+        function wpSituation() {
+            if (!matchActive) return { kind: 'idle' };
+            if (state.off.w.length === 15) return { kind: 'won', winner: W };
+            if (state.off.r.length === 15) return { kind: 'won', winner: R };
+            if (!gameActive) return { kind: 'over' };
+            if (openingRoll) return { kind: 'even' };                       // nobody has moved yet: exactly even
+            const rolled = diceValues.length > 0 && !isRolling;
+            const mover = (rolledThisTurn && !rolled && !isRolling) ? other(currentPlayer) : currentPlayer;   // (a finished turn: the other side is next)
+            return { kind: 'est', mover: mover, dice: rolled ? diceValues.slice() : null };
+        }
+        // The position in BGWin's form: one array per side, counted from that side ([0] off, [1..24] points, [25] bar)
+        function wpCompact() {
+            const w = new Int8Array(26), r = new Int8Array(26);
+            for (let i = 0; i < 24; i++) {
+                const a = state.board[i];
+                if (!a.length) continue;
+                if (a[0].charAt(2) === W) w[i + 1] = a.length; else r[24 - i] = a.length;
+            }
+            w[25] = state.bar.w.length; r[25] = state.bar.r.length;
+            w[0] = state.off.w.length; r[0] = state.off.r.length;
+            return { w: w, r: r };
+        }
+
+        // Called whenever the screen is brought up to date: starts a new estimate when the position or dice changed
+        function wpSync() {
+            if (!winChanceOn) return;
+            const sit = wpSituation();
+            if (sit.kind !== 'est') {
+                const key = sit.kind + (sit.winner || '');
+                if (key !== wp.key) {
+                    wp.key = key; wpStop();
+                    wp.pW = sit.kind === 'won' ? (sit.winner === W ? 1 : 0) : sit.kind === 'even' ? 0.5 : null;
+                    wp.final = sit.kind === 'won'; wp.acc = null;
+                }
+            } else {
+                const c = wpCompact();
+                const a = sit.mover === W ? c.w : c.r, b = sit.mover === W ? c.r : c.w;
+                const key = sit.mover + ':' + a.join(',') + '|' + b.join(',') + '|' + (sit.dice ? sit.dice.join('') : '-');
+                if (key !== wp.key) {           // (the old numbers stay up until the first games of the new position are in)
+                    wp.key = key; wp.mover = sit.mover; wp.final = false; wp.done = false;
+                    wpStart({ key: key, a: Array.from(a), b: Array.from(b), dice: sit.dice, n: WP_GAMES });
+                }
+            }
+            wpRender();
+        }
+
+        function wpWorkerMain() {          // runs inside the worker (BGWin's script text is put in front of it)
+            let cur = 0;
+            self.onmessage = (e) => {
+                const m = e.data, id = ++cur;
+                if (!m || !m.key) return;                  // (a stop request)
+                const job = { a: Int8Array.from(m.a), b: Int8Array.from(m.b), dice: m.dice };
+                const acc = BGWin.newAcc();
+                let i = 0;
+                const step = () => {
+                    if (id !== cur) return;                // a newer position arrived
+                    const t0 = Date.now(), budget = i === 0 ? 40 : 120;   // first numbers quickly, then fewer updates
+                    while (i < m.n && Date.now() - t0 < budget) { const to = Math.min(m.n, i + 10); BGWin.run(job, i, to, acc); i = to; }
+                    self.postMessage({ key: m.key, acc: acc, done: i >= m.n });
+                    if (i < m.n) setTimeout(step, 0);
+                };
+                step();
+            };
+        }
+        function wpGetWorker() {
+            if (wp.worker || wp.noWorker) return wp.worker;
+            try {
+                const src = document.getElementById('bg-win').textContent + '\n(' + wpWorkerMain.toString() + ')();\n';
+                const w = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+                w.onmessage = (e) => wpResult(e.data);
+                w.onerror = (e) => {               // no worker after all (some browsers refuse them on local files): run here instead
+                    if (e && e.preventDefault) e.preventDefault();
+                    try { w.terminate(); } catch (x) {}
+                    wp.worker = null; wp.noWorker = true;
+                    if (wp.job) wpLocal(wp.job);
+                };
+                wp.worker = w;
+            } catch (e) { wp.noWorker = true; }
+            return wp.worker;
+        }
+        function wpStart(job) {
+            wp.job = job; wp.local++;
+            const w = wpGetWorker();
+            if (w) w.postMessage(job); else wpLocal(job);
+        }
+        function wpStop() {
+            wp.job = null; wp.local++;
+            if (wp.worker) wp.worker.postMessage({});
+        }
+        // Same work on this page, a few milliseconds at a time
+        function wpLocal(job) {
+            const id = ++wp.local, n = Math.min(job.n, WP_GAMES_SLOW);
+            const j = { a: Int8Array.from(job.a), b: Int8Array.from(job.b), dice: job.dice };
+            const acc = BGWin.newAcc();
+            let i = 0;
+            const step = () => {
+                if (id !== wp.local || !winChanceOn) return;
+                const t0 = performance.now();
+                while (i < n && performance.now() - t0 < 8) { const to = Math.min(n, i + 2); BGWin.run(j, i, to, acc); i = to; }
+                wpResult({ key: job.key, acc: Object.assign({}, acc), done: i >= n });
+                if (i < n) setTimeout(step, 30);
+            };
+            setTimeout(step, 0);
+        }
+        function wpResult(m) {
+            if (!m || m.key !== wp.key || !winChanceOn || !m.acc || !m.acc.n) return;
+            const pMover = m.acc.w / m.acc.n;
+            wp.pW = wp.mover === W ? pMover : 1 - pMover;
+            wp.acc = m.acc; wp.done = !!m.done;
+            wpRender();
+        }
+
+        function wpRender() {
+            const $ = (id) => document.getElementById(id);
+            $('wp-row').classList.toggle('wp-on', winChanceOn);
+            $('wp-toggle').setAttribute('aria-checked', String(winChanceOn));
+            if (!winChanceOn) return;
+            const me = myColor, opp = oppColor();
+            const dot = (c) => 'wp-dot ' + (c === W ? 'checker-white' : 'checker-red');
+            $('wp-me-dot').className = dot(me);
+            $('wp-opp-dot').className = dot(opp);
+            const meName = meLabel(), oppName = opponentName;
+            $('wp-me-name').textContent = meName;
+            $('wp-opp-name').textContent = oppName;
+            const meter = $('wp-meter');
+            if (wp.pW == null) {
+                meter.classList.add('wp-idle');
+                $('wp-me-pct').textContent = '–'; $('wp-opp-pct').textContent = '–';
+                const note = matchActive ? 'Game over.' : 'Shown once a game is under way.';
+                meter.setAttribute('aria-label', 'Win chance: ' + note);
+                meter.title = 'Chance to win this game. ' + note;
+                return;
+            }
+            meter.classList.remove('wp-idle');
+            const pMe = me === W ? wp.pW : 1 - wp.pW;
+            const v = Math.round(pMe * 100);         // (the two always add up to 100)
+            const pct = (x) => {                       // never 100% or 0% unless the game is really decided
+                if (!wp.final && x >= 100) return '>99%';
+                if (!wp.final && x <= 0) return '<1%';
+                return x + '%';
+            };
+            const a = pct(v), b = pct(100 - v);
+            $('wp-me-pct').textContent = a;
+            $('wp-opp-pct').textContent = b;
+            $('wp-fill').className = 'wp-' + me;
+            $('wp-fill').style.width = (pMe * 100).toFixed(1) + '%';
+            $('wp-bar').className = 'wp-top-' + opp;
+            meter.setAttribute('aria-label', `Win chance: ${meName} ${a}, ${oppName} ${b}`);
+            let tip;
+            if (wp.final) tip = 'This game is decided.';
+            else if (!wp.acc) tip = 'Chance to win this game. Before the opening roll both sides are even.';
+            else {
+                const acc = wp.acc, meMoves = wp.mover === me, share = (x) => Math.round(100 * x / acc.n) + '%';
+                const meG = meMoves ? acc.wg : acc.lg, oppG = meMoves ? acc.lg : acc.wg;
+                tip = `Chance to win this game, estimated from ${acc.n}${wp.done ? '' : ' (so far)'} games played out from here by a quick computer player. ` +
+                      `Gammons: ${meName} ${share(meG)}, ${oppName} ${share(oppG)}.`;
+            }
+            meter.title = tip;
+        }
+        function toggleWinChance() {
+            winChanceOn = !winChanceOn;
+            wp.key = ''; wp.pW = null; wp.acc = null; wp.final = false;
+            if (!winChanceOn) wpStop();
+            wpRender();
+            wpSync();
             saveSettings();
         }
 

@@ -1,6 +1,6 @@
 // Unit tests for the rules + AI engine inside backgammon_game.html.
 // Usage:   node backgammon_tests.js [path/to/backgammon_game.html]
-// No dependencies: it pulls the <script id="bg-engine"> block out of the game file and runs it in Node.
+// No dependencies: it pulls the <script id="bg-engine"> and <script id="bg-win"> blocks out of the game file and runs them in Node.
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
@@ -15,6 +15,10 @@ vm.createContext(sandbox);
 vm.runInContext(m[1] + '\n;this.__E = BGEngine;', sandbox);
 const E = sandbox.__E;
 const { W, R } = E;
+const mw = html.match(/<script id="bg-win">([\s\S]*?)<\/script>/);
+if (!mw) { console.error('No <script id="bg-win"> block found in ' + file); process.exit(2); }
+vm.runInContext(mw[1] + '\n;this.__WIN = BGWin;', sandbox);
+const WIN = sandbox.__WIN;
 
 // ---------- tiny test runner ----------
 let passed = 0, failed = 0;
@@ -429,6 +433,67 @@ test('whenever giving up is offered, no random continuation gives the loser a be
     }
     assert(offers >= 30 && seen[2] > 0 && seen[3] > 0, 'enough offers of each kind were tested: ' + JSON.stringify(seen));
     assert.strictEqual(better, 0, better + ' simulated games ended better for the loser than the price offered');
+});
+
+section('Win chance (quick play-outs for the meter above the board)');
+// The game position in the win-chance engine's form: per side [0] off, [1..24] points counted from that side, [25] bar
+function compact(st) {
+    const w = new Int8Array(26), r = new Int8Array(26);
+    for (let i = 0; i < 24; i++) { const a = st.board[i]; if (!a.length) continue; if (E.getCheckerColor(a) === W) w[i + 1] = a.length; else r[24 - i] = a.length; }
+    w[25] = st.bar.w.length; r[25] = st.bar.r.length; w[0] = st.off.w.length; r[0] = st.off.r.length;
+    return { w, r };
+}
+const sides = (st, p) => { const c = compact(st); return p === W ? [c.w, c.r] : [c.r, c.w]; };
+const keyOf = (a, b) => Array.from(a).join(',') + '|' + Array.from(b).join(',');
+function randomPositions(count, fn) {
+    let n = 0;
+    while (n < count) {
+        const g = E.createInitialState(); let p = rnd() < 0.5 ? W : R;
+        for (let ply = 0; ply < 300 && n < count; ply++) {
+            fn(g, p); n++;
+            const t = E.enumerateTurns(g, p, rollDice());
+            if (t.length) E.applySequence(g, p, t[Math.floor(rnd() * t.length)].moves);
+            if (g.off[p].length === 15) break;
+            p = E.other(p);
+        }
+    }
+}
+test('its moves are exactly the rules engine\'s legal turns (whole rolls and part-played ones)', () => {
+    randomPositions(3000, (g, p) => {
+        let dice = rollDice();
+        if (rnd() < 0.2) dice = dice.slice(0, 1 + Math.floor(rnd() * dice.length));
+        const [a, b] = sides(g, p);
+        const mine = Array.from(WIN.allTurns(a, b, dice)).sort();      // (Array.from: the engine runs in its own context)
+        const theirs = Array.from(new Set(E.enumerateTurns(g, p, dice).map(t => {
+            const undo = E.applySequence(g, p, t.moves); const [x, y] = sides(g, p); undo(); return keyOf(x, y);
+        }))).sort();
+        assert.deepStrictEqual(mine, theirs, `${p} with ${dice}: ${mine.length} vs ${theirs.length} positions`);
+    });
+});
+test('it judges positions exactly like the computer player', () => {
+    randomPositions(3000, (g, p) => {
+        const [a, b] = sides(g, p);
+        const ev = (p === R ? 1 : -1) * E.evaluatePosition(g, E.other(p));
+        assert(Math.abs(WIN.score(a, b) - ev) < 1e-9, `${WIN.score(a, b)} vs ${ev}`);
+    });
+});
+test('known chances come out right, and the same position always gives the same answer', () => {
+    const est = (a, b, dice, n) => { const acc = WIN.newAcc(); WIN.run({ a: Int8Array.from(a), b: Int8Array.from(b), dice }, 0, n, acc); return acc; };
+    const z = () => new Array(26).fill(0);
+    let a = z(), b = z(); a[6] = 1; a[0] = 14; b[1] = 1; b[0] = 14;          // last checker on the 6 point vs one on the 1 point: 27 of 36 rolls win
+    let r = est(a, b, null, 2000);
+    assert(Math.abs(r.w / r.n - 0.75) < 0.035, 'last checker on the 6 point: ' + r.w / r.n);
+    assert.strictEqual(est(a, b, [6, 1], 50).w, 50, 'a 6 bears it off');
+    assert.strictEqual(est(a, b, [2, 1], 50).w, 0, 'a 2-1 does not, and the other side bears off');
+    a = z(); b = z(); a[1] = 2; a[0] = 13; b[1] = 1; b[0] = 14;
+    assert.strictEqual(est(a, b, null, 200).w, 200, 'two checkers on the 1 point always come off');
+    a = z(); b = z(); a[13] = 5; a[8] = 4; a[6] = 4; a[25] = 2; b[1] = 2; b[2] = 2; b[3] = 2; b[4] = 2; b[5] = 2; b[6] = 3; b[8] = 2;
+    r = est(a, b, null, 400);
+    assert(r.w / r.n < 0.1 && r.lg / r.n > 0.5, 'two on the bar against a closed board: ' + JSON.stringify(r));
+    const s = E.createInitialState(), [sa, sb] = sides(s, W);
+    const r1 = est(sa, sb, null, 300), r2 = est(sa, sb, null, 300);
+    assert.strictEqual(JSON.stringify(r1), JSON.stringify(r2), 'fixed seeds: same games, same numbers');
+    assert(Math.abs(r1.w / r1.n - 0.5) < 0.1, 'the starting position is about even: ' + r1.w / r1.n);
 });
 
 (async () => {
