@@ -19,7 +19,7 @@ Online play has only been tested with a simulated PeerJS. Before relying on it, 
 
 1. Open the game on both devices from a web address (or the same file on each) and press Play Online.
 2. Device A: pick a match length and create the game. Device B: enter the code (or open the link) and press Join.
-3. Roll, move, undo on both sides; the boards must stay identical.
+3. Roll, move, undo on both sides; the boards must stay identical. There is no hint button in online games.
 4. Turn off Wi-Fi on one device for ~10 s, then back on: the game should pause, then resume by itself.
 5. Reload one device mid-game and press Resume.
 6. Finish a 1-point match and press Rematch on both devices.

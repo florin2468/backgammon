@@ -333,6 +333,8 @@
         /* the buttons at the bottom, where the thumb is */
         html[data-phone] #phone-actions { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; gap: 10px; width: 100%; box-sizing: border-box; padding: 8px 2px 6px; flex: none; }
         html[data-phone] #phone-actions.ph-off { display: none; }
+        html[data-phone] #phone-actions.ph-nohint { grid-template-columns: 56px minmax(0, 1fr); }   /* online: no hint button, the main button is wider */
+        #ph-hint.hidden { display: none; }
         html[data-phone] #phone-start.ph-on { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; box-sizing: border-box; padding: 8px 2px 6px; flex: none; }
         .ph-btn { height: 54px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 6px; background: rgba(15,23,42,0.92); border: 1px solid #475569; border-radius: 14px; color: #f1f5f9; font: inherit; cursor: pointer; }
         .ph-btn:disabled { opacity: 0.45; cursor: default; }
@@ -733,7 +735,7 @@
             </div>
 
             <p id="online-error" class="hidden mt-3 text-sm text-red-400 text-center"></p>
-            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-29a (opening roll is played)</p>
+            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-29c (no hints online)</p>
         </div>
     </div>
 
@@ -815,7 +817,7 @@
                 <p>• <strong>Objective:</strong> Move all 15 checkers to your Home Board and bear them off before your opponent.</p>
                 <p>• <strong>Interaction:</strong> Click or tap a checker (or its point) to select it, then click the point where it should go. On touch screens the legal destinations are tinted. Keyboard: Tab to a movable point, Enter to select, Tab to a destination, Enter to move. Shortcuts: <strong>R</strong> roll, <strong>U</strong> undo, <strong>H</strong> hint.</p>
                 <p>• <strong>Who starts:</strong> Only at the start of a match: each player rolls both dice (online, each player clicks Roll Dice for their own). A double wins; if both roll doubles the higher double wins; otherwise the higher total wins. A tie is rolled again. The winner starts by playing the dice they just rolled (a double is played four times), so nobody rolls again. Every later game of the match starts with the winner of the previous game, who simply rolls and plays.</p>
-                                <p>• <strong>Hint:</strong> The lightbulb button works out a good way to play your roll and pulses the first checker to move and where it goes.</p>
+                                <p>• <strong>Hint:</strong> The lightbulb button works out a good way to play your roll and pulses the first checker to move and where it goes. Hints are only available against the computer, not in online games.</p>
                                 <p>• <strong>Win chance:</strong> The switch above the board shows each side's chance to win this game. It plays the position out 1,000 times with a quick computer player and updates after every roll and move. It is an estimate (usually within a few percent); hovering over it with a mouse also shows the chances of a gammon.</p>
                 <p>• <strong>Saved:</strong> Your settings, and an unfinished match against the computer, are remembered if you close the page.</p>
                 <p>• <strong>Both dice at once:</strong> Select a checker and click a point that needs both dice (or several dice on doubles). The checker travels there in one move, as long as every step along the way is legal. Undo takes the whole move back.</p>
@@ -1797,6 +1799,8 @@
         let matchActive = false;   // false until the first match is started
         let openingRoll = false;   // true at the start of each game, until the opening roll decides who goes first
         let openRolls = { w: null, r: null };   // online opening roll: each player's own two dice, once they have clicked Roll Dice
+        let openRound = 0;                      // online opening roll: which attempt this is (goes up after a tie or a restart), so a
+                                                // roll for the next attempt that arrives before this screen has shown the tie waits for it
         let isAnimating = false;
         
         let selectedSource = null; // Either a point index (0-23) or 'bar'
@@ -1988,7 +1992,7 @@
             concedeAskedAt = 0; hideConcede();
             const fixedStarter = (starter === W || starter === R);
             currentPlayer = fixedStarter ? starter : myColor;   // (during the opening roll the Roll Dice button belongs to the player)
-            openingRoll = !fixedStarter; openRolls = { w: null, r: null };
+            openingRoll = !fixedStarter; openRolls = { w: null, r: null }; openRound = 0;
             selectedSource = null;
             validTargets = [];
             gameActive = true;
@@ -2811,7 +2815,7 @@
             const myRank = openingRank(mine), theirRank = openingRank(theirs);
             const summary = `Opening roll: YOU ${openingShort(mine)}, ${opponentName} ${openingShort(theirs)}.`;
             if (myRank === theirRank && online.active) {            // a tie online: both click Roll Dice again
-                isRolling = false; openRolls = { w: null, r: null };
+                isRolling = false; openRolls = { w: null, r: null }; openRound++;
                 setStatus(`${summary} A tie - both click Roll Dice again.`);
                 updateRollButton();
                 return;
@@ -3064,8 +3068,18 @@
             document.querySelectorAll('.hint-target').forEach(e => e.classList.remove('hint-target'));
             document.querySelectorAll('.hint-tray').forEach(e => e.classList.remove('hint-tray'));
         }
+        // Hints are only for games against the computer: never online (players or spectators)
+        const hintsAllowed = () => opponentKind === 'ai' && !online.active && !watch.on;
+        function syncHintButtons() {
+            const off = !hintsAllowed();
+            document.getElementById('hint-btn').classList.toggle('hidden', off);
+            document.getElementById('ph-hint').classList.toggle('hidden', off);
+            document.getElementById('phone-actions').classList.toggle('ph-nohint', off);
+        }
+
         // Works out a good way to play the whole roll (the Expert search) and pulses the first checker to move and where it goes
         async function showHint() {
+            if (!hintsAllowed()) return;
             if (hintBusy || !gameActive || currentPlayer !== myColor || diceValues.length === 0 || isAnimating || isRolling || inputBlocked()) return;
             const legal = getAllMoves(myColor, diceValues);
             if (legal.length === 0) return;
@@ -3076,7 +3090,7 @@
             let plan = null;
             try { plan = await E.expertPickPlanAsync(state, myColor, diceValues.slice()); } catch (e) { plan = null; }
             hintBusy = false;
-            if (!gameActive || currentPlayer !== myColor || fastSig() !== sig || diceValues.join() !== diceKey) return;   // the position changed meanwhile
+            if (!hintsAllowed() || !gameActive || currentPlayer !== myColor || fastSig() !== sig || diceValues.join() !== diceKey) return;   // the position changed meanwhile (or an online game began)
             if (!plan || plan.length === 0) plan = [legal[0]];
 
             const f = m => m.from === 'bar' ? 'Bar' : String(vi(m.from) + 1);
@@ -3130,6 +3144,7 @@
         //  - no game running            -> transparent light gray, unclickable
         function updateRollButton() {
             wpSync();
+            syncHintButtons();
             const btn = document.getElementById('roll-btn');
             const canRoll = (online.active && openingRoll)
                 ? (gameActive && !openRolls[myColor] && !isRolling && !online.rollPending && !inputBlocked())     // each player rolls their own opening dice
@@ -4435,7 +4450,7 @@
         }
         function updateSpecChrome() {
             const w = watch.on;
-            document.getElementById('hint-btn').classList.toggle('hidden', w);
+            syncHintButtons();
             document.getElementById('undo-btn').classList.toggle('hidden', w);
             const note = document.getElementById('play-as-note');
             if (!note.dataset.orig) note.dataset.orig = note.innerText;
@@ -4915,13 +4930,19 @@
             if (!gameActive) return 'wait';
             const theirTurn = currentPlayer === m.p;
             switch (m.t) {
-                case 'openRoll': return !openingRoll ? 'drop' : (openRolls[m.p] ? 'drop' : (isRolling ? 'wait' : 'ready'));
+                case 'openRoll':
+                    if (!openingRoll) return 'drop';
+                    if (Number.isInteger(m.n) && m.n !== openRound) return m.n > openRound ? 'wait' : 'drop';   // (next attempt: wait until the tie is shown here)
+                    return openRolls[m.p] ? 'drop' : (isRolling ? 'wait' : 'ready');
                 case 'roll':    return (!openingRoll && theirTurn && diceValues.length === 0 && !isRolling && !isAnimating) ? 'ready' : 'wait';
                 case 'move':    return (theirTurn && diceValues.length > 0 && !isAnimating && !isRolling) ? 'ready' : 'wait';
                 case 'undo':    return (theirTurn && !isAnimating) ? 'ready' : 'wait';
                 case 'timeout': return (!openingRoll && theirTurn && !isAnimating && !isRolling) ? 'ready' : 'wait';
                 case 'rollReq': {   // host only: the guest asks for a roll
-                    if (openingRoll) return openRolls[other(online.hostColor)] ? 'drop' : (isRolling ? 'wait' : 'ready');
+                    if (openingRoll) {
+                        if (Number.isInteger(m.n) && m.n !== openRound) return m.n > openRound ? 'wait' : 'drop';
+                        return openRolls[other(online.hostColor)] ? 'drop' : (isRolling ? 'wait' : 'ready');
+                    }
                     if (currentPlayer !== other(online.hostColor)) return 'wait';          // our turn hasn't flipped yet
                     if (diceValues.length > 0 || isRolling || rolledThisTurn) return 'drop';
                     return isAnimating ? 'wait' : 'ready';
@@ -5000,7 +5021,7 @@
         function hostOpenRoll(color) {
             if (!gameActive || online.paused || !openingRoll || isRolling || openRolls[color]) return;
             const d = rollDiceValues();
-            netSend({ t: 'openRoll', p: color, d: d });
+            netSend({ t: 'openRoll', p: color, d: d, n: openRound });
             playOpenRoll(color, d);
         }
         // Local click on Roll Dice while online
@@ -5012,7 +5033,7 @@
             clearTimeout(online.rollPendingTimer);
             online.rollPendingTimer = setTimeout(() => { online.rollPending = false; updateRollButton(); }, 6000);   // lost request: allow another click
             updateRollButton();
-            netSend({ t: 'rollReq', p: myColor });
+            netSend({ t: 'rollReq', p: myColor, n: openRound });
         }
 
         // ---------- next game / rematch ----------
@@ -5149,7 +5170,7 @@
             if (!openingRoll) currentPlayer = other(currentPlayer);    // the same player is still to move
             if (lastWinner) lastWinner = other(lastWinner);
             turnHistory = [];
-            if (openingRoll) { openRolls = { w: null, r: null }; currentPlayer = myColor; }
+            if (openingRoll) { openRolls = { w: null, r: null }; openRound++; currentPlayer = myColor; }
             online.queue = [];
             const snap = makeSnapshot({ swapped: true });
             netSend(snap);
@@ -5162,7 +5183,7 @@
         function makeSnapshot(extra) {
             return Object.assign({ t: 'snapshot', state: state, currentPlayer: currentPlayer, diceValues: diceValues, openingRoll: openingRoll,
                      rolledThisTurn: rolledThisTurn, isRolling: isRolling, matchScore: matchScore, matchLength: matchLength, gamesPlayed: gamesPlayed,
-                     matchOver: matchOver, gameActive: gameActive, timerLimit: online.timerLimit, hostColor: online.hostColor, lw: lastWinner }, extra || {});
+                     matchOver: matchOver, gameActive: gameActive, timerLimit: online.timerLimit, hostColor: online.hostColor, lw: lastWinner, openRound: openRound }, extra || {});
         }
         // The host sends its position when it is not in the middle of a roll/move animation
         function sendSnapshotWhenIdle(resume, tries) {
@@ -5170,7 +5191,7 @@
             if (!online.active || online.role !== 'host') return;
             if ((isRolling || isAnimating) && tries < 60) { setTimeout(() => sendSnapshotWhenIdle(resume, tries + 1), 100); return; }
             if (resume) { turnHistory = []; document.getElementById('undo-btn').disabled = true; }   // both sides start the turn's undo history afresh
-            if (openingRoll) { openRolls = { w: null, r: null }; currentPlayer = myColor; updateRollButton(); }   // an opening roll in progress starts over on both screens
+            if (openingRoll) { clearTimeout(rollTimeout); openRolls = { w: null, r: null }; openRound++; currentPlayer = myColor; updateRollButton(); }   // an opening roll in progress starts over on both screens
             online.queue = [];
             netSend(makeSnapshot({ resume: !!resume }));
         }
@@ -5192,7 +5213,7 @@
             state = m.state; currentPlayer = m.currentPlayer; diceValues = m.diceValues.slice();
             openingRoll = !!m.openingRoll; rolledThisTurn = !!m.rolledThisTurn;
             // A roll that was still being thrown when the snapshot was taken never completed: throw it again
-            if (openingRoll) { rolledThisTurn = false; openRolls = { w: null, r: null }; currentPlayer = myColor; }
+            if (openingRoll) { rolledThisTurn = false; openRolls = { w: null, r: null }; currentPlayer = myColor; if (Number.isInteger(m.openRound)) openRound = m.openRound; }
             else if (diceValues.length === 0 && m.isRolling) rolledThisTurn = false;
             if (m.matchScore && Number.isInteger(m.matchScore.w) && Number.isInteger(m.matchScore.r)) matchScore = { w: m.matchScore.w, r: m.matchScore.r };
             if ([1, 3, 5].includes(m.matchLength)) matchLength = m.matchLength;
