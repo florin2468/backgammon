@@ -733,7 +733,7 @@
             </div>
 
             <p id="online-error" class="hidden mt-3 text-sm text-red-400 text-center"></p>
-            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-27a (win chance)</p>
+            <p class="mt-3 text-[10px] text-slate-500 text-center">Online build: 2026-10-29a (opening roll is played)</p>
         </div>
     </div>
 
@@ -814,7 +814,7 @@
             <div class="space-y-2 text-xs text-slate-300 max-h-[60vh] overflow-y-auto pr-1">
                 <p>• <strong>Objective:</strong> Move all 15 checkers to your Home Board and bear them off before your opponent.</p>
                 <p>• <strong>Interaction:</strong> Click or tap a checker (or its point) to select it, then click the point where it should go. On touch screens the legal destinations are tinted. Keyboard: Tab to a movable point, Enter to select, Tab to a destination, Enter to move. Shortcuts: <strong>R</strong> roll, <strong>U</strong> undo, <strong>H</strong> hint.</p>
-                <p>• <strong>Who starts:</strong> Only at the start of a match: each player rolls both dice (online, each player clicks Roll Dice for their own). A double wins; if both roll doubles the higher double wins; otherwise the higher total wins. A tie is rolled again. Every later game of the match starts with the winner of the previous game, who simply rolls and plays.</p>
+                <p>• <strong>Who starts:</strong> Only at the start of a match: each player rolls both dice (online, each player clicks Roll Dice for their own). A double wins; if both roll doubles the higher double wins; otherwise the higher total wins. A tie is rolled again. The winner starts by playing the dice they just rolled (a double is played four times), so nobody rolls again. Every later game of the match starts with the winner of the previous game, who simply rolls and plays.</p>
                                 <p>• <strong>Hint:</strong> The lightbulb button works out a good way to play your roll and pulses the first checker to move and where it goes.</p>
                                 <p>• <strong>Win chance:</strong> The switch above the board shows each side's chance to win this game. It plays the position out 1,000 times with a quick computer player and updates after every roll and move. It is an estimate (usually within a few percent); hovering over it with a mouse also shows the chances of a gammon.</p>
                 <p>• <strong>Saved:</strong> Your settings, and an unfinished match against the computer, are remembered if you close the page.</p>
@@ -2015,8 +2015,8 @@
                 }
                 return;
             }
-            setStatus(online.active ? "Opening roll: each player clicks Roll Dice for their own two dice; a double wins, otherwise the higher total plays first."
-                                    : "Opening roll: click Roll Dice. Each player rolls both dice; a double wins, otherwise the higher total plays first.");
+            setStatus(online.active ? "Opening roll: each player clicks Roll Dice for their own two dice; a double or else the higher total wins and plays those dice."
+                                    : "Opening roll: click Roll Dice. Each player rolls both dice; a double or else the higher total wins and plays those dice.");
             document.getElementById('roll-btn').disabled = false;
         }
 
@@ -2741,8 +2741,8 @@
         const rollDiceValues = () => [rollDie(), rollDie()];
 
         // Opening roll: each player rolls BOTH dice, one player after the other (the two dice on screen show
-        // YOU first, then the opponent). The higher total wins the right to start, and then rolls the dice again
-        // for the first move of the game. A tie is re-rolled until one side is higher.
+        // YOU first, then the opponent). The higher roll starts and plays the dice it rolled as its first move
+        // (nobody rolls again). A tie is re-rolled until one side is higher.
         function doOpeningRoll() {
             if (!gameActive || isRolling || !openingRoll) return;
             if (online.active) return;                              // online, each player clicks Roll Dice for their own dice (see playOpenRoll)
@@ -2780,7 +2780,7 @@
         }
 
         // Online opening roll: ONE player's two dice (color = whose). The roller clicked Roll Dice on their own screen; the host
-        // chose the numbers. When both players have rolled, the higher total decides who starts.
+        // chose the numbers. When both players have rolled, the higher roll starts and plays those dice.
         function playOpenRoll(color, dice) {
             if (!gameActive || !openingRoll || openRolls[color]) return;
             openRolls[color] = dice.slice();
@@ -2823,24 +2823,34 @@
                 return;
             }
 
-            // A double wins (the higher double if both rolled one), otherwise the higher total; the winner then rolls the dice again for the first move
+            // A double wins (the higher double if both rolled one), otherwise the higher total. The winner plays the dice
+            // it rolled as its first move (a double four times); nobody rolls again.
             const first = myRank > theirRank ? myColor : oppColor();
+            const d = first === myColor ? mine : theirs;
             isRolling = false;
             openingRoll = false; openRolls = { w: null, r: null };
-            rolledThisTurn = false;
             currentPlayer = first;
             turnSerial++;
+            rolledThisTurn = true;
+            diceValues = d[0] === d[1] ? [d[0], d[0], d[0], d[0]] : [d[0], d[1]];
+            turnHistory = [];
+            renderDie(document.getElementById('die-1'), d[0]);      // the winner's dice stay on the table
+            renderDie(document.getElementById('die-2'), d[1]);
+            document.getElementById('dice-wrapper').classList.remove('invisible');
+            document.getElementById('undo-btn').disabled = true;
             updateUI();
 
-            const score = summary;
+            const what = d[0] === d[1] ? `double ${d[0]}s` : `${d[0]} and ${d[1]}`;
             if (first === myColor) {
-                setStatus(`${score} You go first - click Roll Dice for your first move.`);
-            } else if (opponentKind === 'ai') {
-                setStatus(`${score} ${opponentName} goes first and rolls for its first move...`);
-                rollTimeout = aiLater(aiRoll, 1500);
+                let note = '';
+                if (getAllMoves(myColor, diceValues).length < getAllMovesRaw(myColor, diceValues).length) {
+                    note = ' Rule: you must play as many dice as possible (the larger die if only one can be played), so some moves are unavailable.';
+                }
+                setStatus(`${summary} You go first and play your ${what}.${note}`);
             } else {
-                setStatus(`${score} ${opponentName} goes first and rolls for the first move...`);
+                setStatus(`${summary} ${opponentName} goes first and plays ${opponentKind === 'ai' ? 'its' : 'their'} ${what}.`);
             }
+            checkTurnState();      // the computer starts moving; with nothing playable (never at the start) the turn passes
         }
 
         // The AI rolling for itself (only if it really is the AI's turn)
@@ -4360,7 +4370,7 @@
             }
             if (m.open) {
                 const done = [W, R].filter(c => openRolls[c]);
-                if (!done.length) return 'Opening roll: each player rolls both dice; a double wins, otherwise the higher total plays first.';
+                if (!done.length) return 'Opening roll: each player rolls both dice; a double or else the higher total wins and plays those dice.';
                 if (done.length === 1) return `Opening roll: ${N(done[0])} rolled ${openRolls[done[0]].join('-')}. Waiting for ${N(other(done[0]))}...`;
                 return `Opening roll: ${N(W)} ${openRolls.w.join('-')}, ${N(R)} ${openRolls.r.join('-')}.`;
             }
