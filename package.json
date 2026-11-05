@@ -1,0 +1,13 @@
+{
+  "name": "backgammon",
+  "private": true,
+  "description": "Classic Wooden Backgammon: tests",
+  "scripts": {
+    "test": "node tests/backgammon_tests.js && node tests/browser/run.js",
+    "test:unit": "node tests/backgammon_tests.js",
+    "test:browser": "node tests/browser/run.js"
+  },
+  "devDependencies": {
+    "playwright": "1.56.0"
+  }
+}

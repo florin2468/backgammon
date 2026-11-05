@@ -9,3 +9,23 @@ jobs:
         with:
           node-version: 20
       - run: node tests/backgammon_tests.js
+
+  # The game in a real browser (Chromium through Playwright): play against the computer, the phone layout, and online
+  # games between several pages (PeerJS and the relay brokers are replaced by in-test mocks, so no network is used).
+  # The suite is split in three groups that run side by side.
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [computer, online, spectators]
+    name: browser (${{ matrix.group }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/browser/run.js --jobs 2 --group ${{ matrix.group }}
