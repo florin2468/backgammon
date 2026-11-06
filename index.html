@@ -4387,10 +4387,13 @@
             // The chances only change once a player has finished a turn: during a turn (the roll and each checker moved)
             // the meter keeps showing the position as it was when the turn began, so it never hints at a move.
             const ph = turnPhase();
-            if (ph === 'opening' || turnSerial === openingTurn) return { kind: 'even' };   // nobody has finished a turn yet: exactly even
+            const firstTurn = watch.on ? !!(watch.last && watch.last.ft) : turnSerial === openingTurn;
+            if (ph === 'opening' || firstTurn) return { kind: 'even' };   // nobody has finished a turn yet: exactly even
             if (ph === 'done') return { kind: 'est', mover: other(currentPlayer), st: state };     // (the turn is over: the other side is next)
             if (ph === 'toRoll') return { kind: 'est', mover: currentPlayer, st: state };
-            return { kind: 'est', mover: currentPlayer, st: turnHistory.length ? turnHistory[0].state : state };  // rolling or moving
+            // rolling or moving: the position the turn began with (a spectator is told it by the host)
+            const start = turnHistory.length ? turnHistory[0].state : (watch.on && watch.turnStart) || state;
+            return { kind: 'est', mover: currentPlayer, st: start };
         }
         // The position in BGWin's form: one array per side, counted from that side ([0] off, [1..24] points, [25] bar)
         function wpCompact(state) {
@@ -4684,7 +4687,7 @@
         };
         // Spectating (see SPECTATORS below). watch: this screen is watching someone else's game. specHost: the host's list of
         // spectators. specSeen: what the players know about who is watching.
-        const watch = { on: false, ended: false, code: null, viewHost: true, last: null, roll: -1, animating: false, meName: '',
+        const watch = { on: false, ended: false, turnStart: null, code: null, viewHost: true, last: null, roll: -1, animating: false, meName: '',
                         lastRx: 0, lastOk: 0, lastPing: 0, lastAttempt: 0, startedAt: 0, viaRelay: false, tick: null, prevColor: W };
         const specHost = { list: [], pushT: null, keepT: null, last: '', lastAt: 0, rollSeq: 0, rollVals: null };
         const specSeen = { n: 0, names: [] };
@@ -5416,7 +5419,8 @@
                      hid: document.getElementById('dice-wrapper').classList.contains('invisible'), rolling: isRolling,
                      roll: specHost.rollSeq, rv: specHost.rollVals, open: openingRoll, or: openRolls, score: matchScore, len: matchLength,
                      ga: gameActive, mo: matchOver, gp: gamesPlayed, paused: online.paused, gone: online.opponentGone, end: lastEnd,
-                     n: specViewers().length, after: after.on ? afterView() : null };
+                     n: specViewers().length, after: after.on ? afterView() : null,
+                     ts: turnHistory.length ? turnHistory[0].state : null, ft: turnSerial === openingTurn };   // (for the win chance: the position the turn began with)
         }
         function specRolled(v1, v2) {          // a roll is being thrown on the host's screen
             specHost.rollSeq++; specHost.rollVals = [v1, v2];
@@ -5538,6 +5542,7 @@
             myColor = view;
             opponentName = cleanName(names[other(view)]); watch.meName = cleanName(names[view]);
             state = m.state; currentPlayer = m.cp; diceValues = m.dice.slice();
+            watch.turnStart = m.ts && E.isValidState(m.ts) ? m.ts : null;
             openingRoll = !!m.open; rolledThisTurn = diceValues.length > 0;
             openRolls = { w: null, r: null };
             if (m.or) [W, R].forEach(c => { if (validDice(m.or[c])) openRolls[c] = m.or[c].slice(); });
