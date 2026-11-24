@@ -11,7 +11,7 @@ const GROUPS = {
     computer: [   // against the computer, PC-sized screen and phone layout
         'offline_features.js', 'offline_midturn.js', 'offline_concede.js', 'offline_fairoffer.js', 'offline_blocked.js',
         'offline_blocked2.js', 'offline_rollcolour.js', 'offline_pointcolour.js', 'offline_recolour.js', 'offline_seatswap.js',
-        'offline_opening.js', 'offline_winchance.js', 'offline_drag.js', 'offline_master.js', 'offline_history.js', 'offline_language.js', 'phone_play.js',
+        'offline_opening.js', 'offline_winchance.js', 'offline_drag.js', 'offline_master.js', 'offline_history.js', 'offline_language.js', 'offline_coach.js', 'phone_play.js',
     ],
     online: [     // online through the PeerJS mock: connection trouble, sessions, settings; and the backup relay
         'online.js drop', 'online.js blackhole', 'online.js grace', 'online.js reloadguest', 'online.js reloadhost', 'online.js timer',

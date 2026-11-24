@@ -19,6 +19,11 @@ const mw = html.match(/<script id="bg-win">([\s\S]*?)<\/script>/);
 if (!mw) { console.error('No <script id="bg-win"> block found in ' + file); process.exit(2); }
 vm.runInContext(mw[1] + '\n;this.__WIN = BGWin;', sandbox);
 const WIN = sandbox.__WIN;
+const mn = html.match(/<script id="bg-nn">([\s\S]*?)<\/script>/);
+if (!mn) { console.error('No <script id="bg-nn"> block found in ' + file); process.exit(2); }
+sandbox.atob = s => Buffer.from(s, 'base64').toString('latin1');
+vm.runInContext(mn[1] + '\n;this.__NN = BGNet;', sandbox);
+const NN = sandbox.__NN;
 
 // ---------- tiny test runner ----------
 let passed = 0, failed = 0;
@@ -494,6 +499,58 @@ test('known chances come out right, and the same position always gives the same 
     const r1 = est(sa, sb, null, 300), r2 = est(sa, sb, null, 300);
     assert.strictEqual(JSON.stringify(r1), JSON.stringify(r2), 'fixed seeds: same games, same numbers');
     assert(Math.abs(r1.w / r1.n - 0.5) < 0.1, 'the starting position is about even: ' + r1.w / r1.n);
+});
+
+section('The coach\'s network (BGNet)');
+test('it plays the same moves as the rules engine', () => {
+    let n = 0;
+    for (let g = 0; g < 12; g++) {
+        const st = E.createInitialState(); let p = W;
+        for (let k = 0; k < 200; k++) {
+            const d1 = 1 + Math.floor(rnd() * 6), d2 = 1 + Math.floor(rnd() * 6), dice = d1 === d2 ? [d1, d1, d1, d1] : [d1, d2];
+            const [a, b] = sides(st, p), want = new Set();
+            const turns = E.enumerateTurns(st, p, dice);
+            for (const t of turns) { const u = E.applySequence(st, p, t.moves); const [x, y] = sides(st, p); want.add(Array.from(x).join() + '|' + Array.from(y).join()); u(); }
+            if (!turns.length) want.add(Array.from(a).join() + '|' + Array.from(b).join());
+            const got = new Set(NN.plays(a, b, d1, d2).map(r => Array.from(r.a).join() + '|' + Array.from(r.b).join()));
+            assert.strictEqual(got.size, want.size, 'number of plays');
+            for (const k of got) assert(want.has(k), 'a play the engine does not allow');
+            n++;
+            if (turns.length) E.applySequence(st, p, turns[Math.floor(rnd() * turns.length)].moves);
+            if (st.off[p].length === 15) break;
+            p = p === W ? R : W;
+        }
+    }
+    assert(n > 500, 'positions checked: ' + n);
+});
+test('its judgement is sane', () => {
+    const z = () => new Array(26).fill(0);
+    const ok = y => y.length === 5 && y.every(v => v >= 0 && v <= 1) && y[1] <= y[0] && y[2] <= y[1] && y[3] <= 1 - y[0] && y[4] <= y[3];
+    let a = z(), b = z(); a[1] = 2; a[0] = 13; b[6] = 5; b[0] = 10;                 // I bear off my last two next roll
+    let y = NN.evaluate(a, b);
+    assert(ok(y) && y[0] > 0.97, 'a won race: ' + y);
+    y = NN.evaluate(b, a);
+    assert(ok(y) && y[0] < 0.05, 'the same race from the other side: ' + y);
+    const s = E.createInitialState(), [sa, sb] = sides(s, W);
+    y = NN.evaluate(sa, sb);
+    assert(ok(y) && y[0] > 0.45 && y[0] < 0.65, 'the starting position, on roll: ' + y);
+    a = z(); b = z(); a[0] = 15; b[13] = 15;
+    assert.strictEqual(JSON.stringify(NN.after(a, b)), '[1,1,0,0,0]', 'all borne off, the other side none: a gammon');
+    b[13] = 0; b[22] = 1; b[13] = 14;
+    assert.strictEqual(JSON.stringify(NN.after(a, b)), '[1,1,1,0,0]', 'with a checker in my home board: a backgammon');
+});
+test('it knows the standard opening moves', () => {
+    const best = (d1, d2) => {
+        const st = E.createInitialState(), seen = new Map();
+        for (const t of E.enumerateTurns(st, W, [d1, d2])) { const u = E.applySequence(st, W, t.moves); const [x, y] = sides(st, W); const k = Array.from(x).join(); if (!seen.has(k)) seen.set(k, { x, y }); u(); }
+        let top = null, e = -9;
+        for (const c of seen.values()) { const v = NN.money(NN.after2(c.x, c.y, NN.money)); if (v > e) { e = v; top = c.x; } }
+        return top;
+    };
+    let x = best(3, 1); assert(x[5] === 2, '3-1 makes the 5 point');
+    x = best(4, 2); assert(x[4] === 2, '4-2 makes the 4 point');
+    x = best(6, 1); assert(x[7] === 2, '6-1 makes the bar point');
+    x = best(5, 3); assert(x[3] === 2, '5-3 makes the 3 point');
 });
 
 (async () => {

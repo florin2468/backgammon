@@ -12,11 +12,13 @@ Needs only Node 16+. It checks: starting position, hitting and blocked points, b
 (200 random positions), 300 random full games (invariants, undo), every AI level, Expert determinism, and the
 position validator used for saved and received games. The win-chance block (`<script id="bg-win">`) is checked against
 the rules engine (same legal turns and the same position scores on 3,000 random positions each) and on positions whose
-chances are known exactly.
+chances are known exactly. The coach's network (`<script id="bg-nn">`) must play exactly the engine's moves, rate won
+and lost races and finished games correctly, and know the standard opening moves (3-1, 4-2, 6-1, 5-3).
 
 ## Browser tests
 `tests/browser/` drives the real page in Chromium (Playwright): games against the computer on a PC-sized screen and in
-the phone layout, dragging checkers, Master and the hint button, the match history and its `.mat` export (replayed move
+the phone layout, dragging checkers, Master and the hint button, the Coach (ratings, waiting after a mistake, the best move shown with
+arrows, undo and try again, the side panel and the phone card, Romanian), the match history and its `.mat` export (replayed move
 by move with the rules engine), the Romanian translation, and online games between several pages. The network is never
 used: PeerJS and the relay brokers are replaced by in-test mocks (`sandbox.js` refuses every other request). The online
 tests cover dropped and slow connections, reloads, the lobby, rematches, colour swaps, spectators and free seats, the

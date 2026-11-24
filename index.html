@@ -405,13 +405,13 @@
         /* ---------- Win chance: the switch and the meter in the slim row above the board ---------- */
         #wp-row { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 26px; margin-bottom: 6px; position: relative; z-index: 30; }
         #board-container { max-height: calc(70vh - 32px); }   /* (the board gives up the row's 32px, so the page is no taller than before) */
-        #wp-toggle { display: inline-flex; align-items: center; gap: 8px; height: 26px; padding: 0 11px 0 6px; flex: none; border-radius: 9999px; background: rgba(15,23,42,0.92); border: 1px solid #334155; color: #e2e8f0; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
-        #wp-toggle:hover { border-color: #475569; color: #ffffff; }
-        #wp-toggle:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
-        #wp-toggle .wp-sw { position: relative; flex: none; width: 30px; height: 18px; box-sizing: border-box; border-radius: 9999px; background: #334155; border: 1px solid #475569; transition: background 0.2s, border-color 0.2s; }
-        #wp-toggle .wp-sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; transition: transform 0.2s, background 0.2s; }
-        #wp-toggle[aria-checked="true"] .wp-sw { background: #059669; border-color: #10b981; }
-        #wp-toggle[aria-checked="true"] .wp-sw::after { transform: translateX(12px); background: #ffffff; }
+        #wp-toggle, #coach-toggle { display: inline-flex; align-items: center; gap: 8px; height: 26px; padding: 0 11px 0 6px; flex: none; border-radius: 9999px; background: rgba(15,23,42,0.92); border: 1px solid #334155; color: #e2e8f0; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+        #wp-toggle:hover, #coach-toggle:hover { border-color: #475569; color: #ffffff; }
+        #wp-toggle:focus-visible, #coach-toggle:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+        #wp-toggle .wp-sw, #coach-toggle .wp-sw { position: relative; flex: none; width: 30px; height: 18px; box-sizing: border-box; border-radius: 9999px; background: #334155; border: 1px solid #475569; transition: background 0.2s, border-color 0.2s; }
+        #wp-toggle .wp-sw::after, #coach-toggle .wp-sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; transition: transform 0.2s, background 0.2s; }
+        #wp-toggle[aria-checked="true"] .wp-sw, #coach-toggle[aria-checked="true"] .wp-sw { background: #059669; border-color: #10b981; }
+        #wp-toggle[aria-checked="true"] .wp-sw::after, #coach-toggle[aria-checked="true"] .wp-sw::after { transform: translateX(12px); background: #ffffff; }
         #wp-meter { display: none; align-items: center; gap: 8px; height: 26px; padding: 0 12px; min-width: 0; box-sizing: border-box; border-radius: 9999px; background: rgba(15,23,42,0.92); border: 1px solid #334155; box-shadow: 0 4px 12px rgba(0,0,0,0.35); font-size: 12px; font-weight: 700; color: #f1f5f9; font-variant-numeric: tabular-nums; }
         #wp-row.wp-on #wp-meter { display: flex; }
         .wp-side { display: inline-flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap; }
@@ -427,7 +427,7 @@
         #wp-meter.wp-idle #wp-fill { width: 50% !important; background: #64748b; }
         #wp-meter.wp-idle #wp-bar { background: #475569; }
         html[data-phone] #wp-row { height: 26px; margin: 0 0 6px; justify-content: flex-start; gap: 6px; }
-        html[data-phone] #wp-toggle { height: 26px; padding: 0 9px 0 5px; gap: 6px; font-size: 11px; }
+        html[data-phone] #wp-toggle, html[data-phone] #coach-toggle { height: 26px; padding: 0 9px 0 5px; gap: 6px; font-size: 11px; }
         html[data-phone] #wp-meter { flex: 1 1 auto; height: 26px; padding: 0 9px; gap: 6px; font-size: 11px; }
         html[data-phone] #wp-bar { flex: 1 1 auto; width: auto; min-width: 24px; }
         html[data-phone] .wp-name { max-width: 4.5rem; }
@@ -435,6 +435,83 @@
         html[data-compact] #wp-meter { flex: 1 1 100%; }
         html[data-compact] #wp-bar { flex: 1 1 auto; width: auto; min-width: 24px; }
         html[data-compact] .wp-name { max-width: 4.5rem; }
+        #coach-toggle.hidden { display: none; }
+        html[data-phone] #wp-row { gap: 5px; }
+        html[data-phone] #wp-toggle, html[data-phone] #coach-toggle { padding: 0 8px 0 4px; gap: 5px; }
+        html[data-phone] #wp-meter { padding: 0 7px; gap: 4px; }
+        html[data-phone] #wp-row.wp-on .wp-name { display: none; }      /* (the dots say whose chance it is) */
+
+        /* ---------- Coach: the card after your turn, and the arrows of a move on the board ---------- */
+        #coach-arrows { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 25; overflow: visible; }   /* (above the checkers, below the coach card) */
+        #coach-card { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(640px, calc(100vw - 24px)); z-index: 45;
+                      background: rgba(15,23,42,0.97); border: 1px solid #334155; border-radius: 14px; box-shadow: 0 14px 36px rgba(0,0,0,0.55); color: #e2e8f0; font-size: 13px; line-height: 1.4; }
+        #coach-card.hidden { display: none; }
+        #coach-head { display: flex; align-items: center; gap: 10px; padding: 9px 10px 9px 12px; }
+        #coach-badge { flex: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #fff; background: #475569; }
+        #coach-card[data-verdict="best"] #coach-badge { background: #059669; }
+        #coach-card[data-verdict="excellent"] #coach-badge { background: #0d9488; }
+        #coach-card[data-verdict="mistake"] #coach-badge { background: #d97706; }
+        #coach-card[data-verdict="blunder"] #coach-badge { background: #dc2626; }
+        #coach-card[data-verdict="busy"] #coach-badge { background: transparent; border: 3px solid #475569; border-top-color: #fbbf24; animation: coachSpin 0.8s linear infinite; }
+        @keyframes coachSpin { to { transform: rotate(360deg); } }
+        #coach-text { flex: 1 1 auto; min-width: 0; }
+        #coach-title { font-weight: 800; font-size: 14px; color: #f8fafc; font-variant-numeric: tabular-nums; }
+        #coach-card[data-verdict="mistake"] #coach-title { color: #fbbf24; }
+        #coach-card[data-verdict="blunder"] #coach-title { color: #f87171; }
+        #coach-sub { color: #94a3b8; font-size: 12px; font-weight: 600; }
+        #coach-sub:empty { display: none; }
+        .coach-icon { flex: none; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; background: transparent; border: 1px solid transparent; cursor: pointer; }
+        .coach-icon:hover { background: #1e293b; color: #fff; }
+        .coach-icon:focus-visible { outline: 2px solid #f59e0b; outline-offset: 1px; }
+        .coach-icon.hidden { display: none; }
+        #coach-more svg { transition: transform 0.2s; }
+        #coach-card.cc-open #coach-more svg { transform: rotate(180deg); }
+        #coach-body { display: none; padding: 2px 14px 12px; border-top: 1px solid #1e293b; max-height: 46vh; overflow-y: auto; }
+        #coach-card.cc-open #coach-body { display: block; }
+        #coach-why { margin: 9px 0 10px; padding-left: 18px; list-style: disc; }
+        #coach-why li { margin: 3px 0; }
+        #coach-why li::marker { color: #64748b; }
+        .coach-h { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; margin-bottom: 3px; }
+        #coach-moves { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+        #coach-moves td { padding: 3px 6px; border-top: 1px solid #1e293b; white-space: nowrap; }
+        #coach-moves td:first-child { color: #64748b; width: 1.8em; padding-left: 0; }
+        #coach-moves td:nth-child(2) { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #f1f5f9; white-space: normal; width: 100%; }
+        #coach-moves td:nth-child(3) { color: #fcd34d; font-weight: 700; text-align: right; }
+        #coach-moves td:nth-child(4) { color: #94a3b8; text-align: right; }
+        #coach-moves td:nth-child(5) { color: #38bdf8; font-weight: 700; font-size: 11px; }
+        #coach-moves tr.cm-mine td:nth-child(2) { color: #7dd3fc; }
+        #coach-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+        #coach-actions button { height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 700; font-size: 13px; cursor: pointer; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; }
+        #coach-actions button:hover { background: #273449; color: #fff; }
+        #coach-actions button.hidden { display: none; }
+        #coach-actions #coach-go { background: #059669; border-color: #10b981; color: #fff; }
+        #coach-actions #coach-go:hover { background: #047857; }
+        #coach-actions #coach-show { margin-right: auto; color: #fde68a; border-color: #854d0e; }
+        #coach-card[data-view="best"] #coach-show { color: #7dd3fc; border-color: #075985; }
+        #coach-mini { display: none; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; font-weight: 700; color: #fde68a; }
+        #coach-mini span { flex: 1 1 auto; }
+        #coach-mini button { height: 34px; padding: 0 16px; border-radius: 9px; font-weight: 700; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; cursor: pointer; }
+        #coach-card.cc-mini #coach-head, #coach-card.cc-mini #coach-body { display: none; }
+        #coach-card.cc-mini #coach-mini { display: flex; }
+        #coach-card[data-verdict="idle"] #coach-badge { background: #334155; color: #94a3b8; }
+        /* wide screens: a panel beside the board */
+        html.coach-dock body { padding-right: 356px; }
+        html.coach-dock #coach-card { left: auto; right: 16px; top: 50%; bottom: auto; transform: translateY(-50%); width: 324px; max-height: calc(100vh - 32px); overflow-y: auto; }
+        html.coach-dock #coach-card #coach-body { display: block; max-height: none; overflow: visible; }
+        html.coach-dock #coach-card[data-verdict="idle"] #coach-body, html.coach-dock #coach-card[data-verdict="busy"] #coach-body { display: none; }
+        html.coach-dock #coach-more { display: none; }
+        html.coach-dock #coach-actions { flex-direction: column; align-items: stretch; }
+        html.coach-dock #coach-actions #coach-show { margin-right: 0; }
+        html[data-phone] #coach-card { bottom: 6px; width: calc(100vw - 12px); font-size: 12.5px; }
+        html[data-phone] #coach-card:not(.cc-open):not(.cc-mini) { bottom: 84px; }      /* (folded, it keeps clear of the Roll button) */
+        html[data-compact] #coach-card { left: auto; right: 6px; top: 6px; bottom: 6px; transform: none; width: min(320px, 42vw); overflow-y: auto; font-size: 12.5px; }
+        html[data-compact] #coach-card:not(.cc-open) { bottom: auto; }
+        html[data-compact] #coach-body { max-height: none; overflow: visible; }
+        html[data-compact] #coach-actions { flex-direction: column; align-items: stretch; }
+        html[data-compact] #coach-actions #coach-show { margin-right: 0; }
+        html[data-phone] #coach-body { max-height: 52vh; }
+        html[data-phone] #coach-actions button { height: 38px; padding: 0 12px; flex: 1 1 auto; }
+        html[data-phone] #coach-actions #coach-show { flex: 1 1 100%; margin-right: 0; }
 </style>
 </head>
 <body class="flex flex-col justify-between items-center p-2 sm:p-4 min-h-screen">
@@ -508,6 +585,7 @@
         <!-- Win chance: a switch, and (when on) each side's chance to win this game -->
         <div id="wp-row">
             <button id="wp-toggle" type="button" role="switch" aria-checked="false" onclick="toggleWinChance()" title="Show each side's chance to win this game"><span class="wp-sw" aria-hidden="true"></span><span>Win chance</span></button>
+            <button id="coach-toggle" type="button" role="switch" aria-checked="false" onclick="toggleCoach()" title="After each of your turns against the computer: how your move compares with the best one, and why"><span class="wp-sw" aria-hidden="true"></span><span>Coach</span></button>
             <div id="wp-meter" class="wp-idle" role="group" aria-label="Win chance">
                 <span id="wp-me" class="wp-side"><span id="wp-me-dot" class="wp-dot checker-white" aria-hidden="true"></span><span id="wp-me-name" class="wp-name">YOU</span><span id="wp-me-pct" class="wp-pct">–</span></span>
                 <div id="wp-bar" aria-hidden="true"><div id="wp-fill"></div></div>
@@ -593,6 +671,7 @@
             <!-- PERSISTENT CHECKERS LAYER -->
             <!-- ALL checkers live here. They move purely via transform: translate() -->
             <div id="checkers-layer"></div>
+            <svg id="coach-arrows" aria-hidden="true"></svg>
 
         </div>
         </div>
@@ -797,7 +876,7 @@
                         <option value="medium" selected>Medium</option>
                         <option value="hard">Hard</option>
                         <option value="expert">Expert</option>
-                        <option value="master">Master (thinks a little longer)</option>
+                        <option value="master">Master (judges like the coach)</option>
                     </select>
                 </div>
                 <div>
@@ -848,6 +927,27 @@
         </div>
     </div>
 
+    <!-- Coach: how your last move compares with the best one (games against the computer) -->
+    <div id="coach-card" class="hidden" role="region" aria-live="polite" aria-label="Coach" data-verdict="busy" data-view="mine">
+        <div id="coach-head">
+            <span id="coach-badge" aria-hidden="true"></span>
+            <div id="coach-text"><div id="coach-title">Checking your move...</div><div id="coach-sub"></div></div>
+            <button id="coach-more" type="button" class="coach-icon hidden" onclick="coachToggleDetails()" aria-expanded="false" title="Details" aria-label="Details"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"></polyline></svg></button>
+            <button id="coach-close" type="button" class="coach-icon hidden" onclick="coachClose()" title="Close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <div id="coach-mini"><span id="coach-mini-t">The best move is shown on the board</span><button type="button" onclick="coachShow('mine')">Back</button></div>
+        <div id="coach-body">
+            <ul id="coach-why"></ul>
+            <div class="coach-h">Top moves</div>
+            <table id="coach-moves"></table>
+            <div id="coach-actions">
+                <button id="coach-show" type="button" class="hidden" onclick="coachTogglePreview()">Show best move</button>
+                <button id="coach-retry" type="button" class="hidden" onclick="coachRetry()">Undo and try again</button>
+                <button id="coach-go" type="button" class="hidden" onclick="coachContinue()">Continue</button>
+            </div>
+        </div>
+    </div>
+
     <div id="history-modal" onclick="if (event.target === this) toggleHistoryModal()" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden cursor-default">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl relative text-slate-100" role="dialog" aria-labelledby="hs-title">
             <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
@@ -883,8 +983,9 @@
                 <p>• <strong>Objective:</strong> Move all 15 checkers to your Home Board and bear them off before your opponent.</p>
                 <p>• <strong>Interaction:</strong> Drag a checker to where it should go, or click or tap a checker (or its point) to select it, then click the point where it should go. On touch screens the legal destinations are tinted. Keyboard: Tab to a movable point, Enter to select, Tab to a destination, Enter to move. Shortcuts: <strong>R</strong> roll, <strong>U</strong> undo, <strong>H</strong> hint.</p>
                 <p>• <strong>Who starts:</strong> Only at the start of a match: each player rolls both dice (online, each player clicks Roll Dice for their own). A double wins; if both roll doubles the higher double wins; otherwise the higher total wins. A tie is rolled again. The winner starts by playing the dice they just rolled (a double is played four times), so nobody rolls again. Every later game of the match starts with the winner of the previous game, who simply rolls and plays.</p>
-                                <p>• <strong>Hint:</strong> The lightbulb button works out a good way to play your roll and pulses the first checker to move and where it goes. Hints are only available against the computer, not in online games.</p>
-                <p>• <strong>Computer levels:</strong> Easy to Master, in Settings. Master tries out its best few moves by playing each of them out many times, so it takes a moment longer; the hint button uses it too.</p>
+                                <p>• <strong>Hint:</strong> The lightbulb button works out the best way to play your roll (the move the coach would call best) and pulses the first checker to move and where it goes. Hints are only available against the computer, not in online games.</p>
+                <p>• <strong>Computer levels:</strong> Easy to Master, in Settings. Master judges every move with the coach's neural network, looking one roll ahead: the strongest level. The hint button uses the same judgement.</p>
+                <p>• <strong>Coach:</strong> The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits: show the best move on the board (with arrows), undo and try again, or continue. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.</p>
                                 <p>• <strong>Win chance:</strong> The switch above the board shows each side's chance to win this game. It plays the position out 1,000 times with a quick computer player and updates each time a player finishes a turn (not during a turn, so it never hints at a move). It is an estimate (usually within a few percent); hovering over it with a mouse also shows the chances of a gammon.</p>
                 <p>• <strong>Saved:</strong> Your settings, and an unfinished match against the computer, are remembered if you close the page.</p>
                 <p>• <strong>History:</strong> The chart button lists the matches played on this device, with your results against each opponent. Export turns any match into a .mat file that GNU Backgammon and other analysis programs can open.</p>
@@ -1607,6 +1708,17 @@
             return bits(m & 63) + 2 * bits(m >>> 6);
         }
 
+        // Of the 36 rolls, how many let b hit at least one of a's blots (the coach's "shots")
+        function anyHitRolls(a, b) {
+            let m = 0;
+            for (let q = 1; q <= 24; q++) {
+                if (a[q] !== 1) continue;
+                if (b[25] > 0) m |= shotsFrom(25, q, a);
+                else for (let k = 26 - q; k <= 24; k++) if (b[k] > 0) m |= shotsFrom(k, q, a);
+            }
+            return bits(m & 63) + 2 * bits(m >>> 6);
+        }
+
         function contact(a, b) {
             let qa = 0, qb = 0;
             for (let q = 25; q >= 1; q--) if (a[q]) { qa = q; break; }
@@ -1817,9 +1929,181 @@
             return acc;
         }
 
-        return { hitRolls, score, canMove, playBest, allTurns, playOut, run, newAcc, addResult, contact };
+        return { hitRolls, anyHitRolls, score, canMove, playBest, allTurns, playOut, run, newAcc, addResult, contact };
     })();
     if (typeof module !== 'undefined' && module.exports) module.exports = BGWin;
+    </script>
+
+    <script id="bg-nn">
+    // ---------- The evaluation network (trained by self-play for the coach) ----------
+    // A small neural network, trained for this game by playing itself (TD learning, like TD-Gammon), judges a position
+    // with one side on roll: its chances to win, to win a gammon or a backgammon, and to lose one. Positions are two
+    // Int8Array(26) as in BGWin: [0] off, [1..24] points from that side, [25] bar; a = the side on roll.
+    // Self-contained, so it can also run in a worker. Weights: int16, one scale per layer, base64.
+    const BGNet = (function () {
+        const NI = 205, NH = 80, NO = 5;
+        let W1 = null, B1, W2, B2;
+        function load(b64, scales) {
+            const bin = atob(b64), n = bin.length >> 1, q = new Int16Array(n);
+            for (let i = 0; i < n; i++) { let v = bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8); q[i] = v > 32767 ? v - 65536 : v; }
+            let o = 0;
+            const take = (len, sc) => { const f = new Float32Array(len); for (let i = 0; i < len; i++) f[i] = q[o++] * sc; return f; };
+            W1 = take(NH * NI, scales[0]); B1 = take(NH, scales[1]); W2 = take(NO * NH, scales[2]); B2 = take(NO, scales[3]);
+        }
+        // ---- the same features as the training program ----
+        const BIT = [], DIRECT = [0];
+        (function () {
+            let k = 6;
+            for (let x = 1; x <= 6; x++) BIT[x] = [];
+            for (let x = 1; x <= 6; x++) { BIT[x][x] = 1 << (x - 1); for (let y = x + 1; y <= 6; y++) { BIT[x][y] = BIT[y][x] = 1 << k; k++; } }
+            for (let d = 1; d <= 6; d++) { let m = 0; for (let x = 1; x <= 6; x++) m |= BIT[d][x]; DIRECT.push(m); }
+        })();
+        const bits = m => { let c = 0; while (m) { m &= m - 1; c++; } return c; };
+        function shotsFrom(k, q, a) {
+            const d = k + q - 25;
+            if (d < 1 || d > 24) return 0;
+            let m = d <= 6 ? DIRECT[d] : 0;
+            if (d >= 2 && d <= 12) for (let x = 1; x <= 6; x++) {
+                const y = d - x; if (y < 1 || y > 6) continue;
+                const i1 = 25 - (k - x), i2 = 25 - (k - y);
+                if ((i1 < 1 || i1 > 24 || a[i1] < 2) || (i2 < 1 || i2 > 24 || a[i2] < 2)) m |= BIT[x][y];
+            }
+            for (let x = 1; x <= 6; x++) {
+                if (d % x) continue; const n = d / x; if (n < 2 || n > 4) continue;
+                let open = true;
+                for (let j = 1; j < n; j++) { const i = 25 - (k - x * j); if (i >= 1 && i <= 24 && a[i] >= 2) { open = false; break; } }
+                if (open) m |= BIT[x][x];
+            }
+            return m;
+        }
+        function anyHit(a, b) {
+            let m = 0;
+            for (let q = 1; q <= 24; q++) {
+                if (a[q] !== 1) continue;
+                if (b[25] > 0) m |= shotsFrom(25, q, a);
+                else for (let k = 26 - q; k <= 24; k++) if (b[k] > 0) m |= shotsFrom(k, q, a);
+            }
+            return bits(m & 63) + 2 * bits(m >>> 6);
+        }
+        const closedHome = a => { let c = 0; for (let q = 1; q <= 6; q++) if (a[q] >= 2) c++; return c; };
+        const longestBlock = a => { let run = 0, best = 0; for (let q = 1; q <= 24; q++) { if (a[q] >= 2) { run++; if (run > best) best = run; } else run = 0; } return best; };
+        const pips = a => { let p = 25 * a[25]; for (let q = 1; q <= 24; q++) p += q * a[q]; return p; };
+        function contact(a, b) {
+            let qa = 0, qb = 0;
+            for (let q = 25; q >= 1; q--) if (a[q]) { qa = q; break; }
+            for (let q = 25; q >= 1; q--) if (b[q]) { qb = q; break; }
+            return qa + qb > 24;
+        }
+        const X = new Float32Array(NI), H = new Float32Array(NH), ACT = new Int32Array(NI);
+        function encode(a, b) {
+            let i = 0;
+            for (const s of [a, b]) {
+                for (let q = 1; q <= 24; q++) { const n = s[q]; X[i++] = n >= 1 ? 1 : 0; X[i++] = n >= 2 ? 1 : 0; X[i++] = n >= 3 ? 1 : 0; X[i++] = n > 3 ? (n - 3) / 2 : 0; }
+                X[i++] = s[25] / 2; X[i++] = s[0] / 15;
+            }
+            X[i++] = contact(a, b) ? 1 : 0;
+            X[i++] = pips(a) / 100; X[i++] = pips(b) / 100;
+            X[i++] = anyHit(b, a) / 36; X[i++] = anyHit(a, b) / 36;
+            X[i++] = closedHome(b) / 6; X[i++] = closedHome(a) / 6;
+            X[i++] = longestBlock(a) / 6; X[i++] = longestBlock(b) / 6;
+        }
+        const sig = v => 1 / (1 + Math.exp(-v));
+        // the chances for a (on roll): [win, win gammon, win backgammon, lose gammon, lose backgammon]
+        function evaluate(a, b) {
+            encode(a, b);
+            let na = 0;
+            for (let i = 0; i < NI; i++) if (X[i] !== 0) ACT[na++] = i;
+            for (let j = 0; j < NH; j++) {
+                let v = B1[j]; const o = j * NI;
+                for (let t = 0; t < na; t++) { const i = ACT[t]; v += W1[o + i] * X[i]; }
+                H[j] = sig(v);
+            }
+            const y = [0, 0, 0, 0, 0];
+            for (let k = 0; k < NO; k++) { let v = B2[k]; const o = k * NH; for (let j = 0; j < NH; j++) v += W2[o + j] * H[j]; y[k] = sig(v); }
+            if (y[1] > y[0]) y[1] = y[0];
+            if (y[2] > y[1]) y[2] = y[1];
+            if (y[3] > 1 - y[0]) y[3] = 1 - y[0];
+            if (y[4] > y[3]) y[4] = y[3];
+            return y;
+        }
+        const flip = y => [1 - y[0], y[3], y[4], y[1], y[2]];
+        // after side a has moved (b to roll next): a's chances, exact when the game is over
+        function after(a, b) {
+            if (a[0] >= 15) {
+                let r = 1;
+                if (b[0] === 0) { r = 2; if (b[25] > 0) r = 3; else for (let q = 19; q <= 24; q++) if (b[q] > 0) { r = 3; break; } }
+                return [1, r >= 2 ? 1 : 0, r >= 3 ? 1 : 0, 0, 0];
+            }
+            return flip(evaluate(b, a));
+        }
+        // ---- moves on these arrays (the same rules as the game; checked against its engine) ----
+        function step(a, b, from, d) {          // plays one die for a (changes a and b); false if not allowed
+            if (a[from] <= 0 || (a[25] > 0 && from !== 25)) return false;
+            const to = from - d;
+            if (to >= 1) {
+                if (b[25 - to] >= 2) return false;
+                a[from]--; a[to]++;
+                if (b[25 - to] === 1) { b[25 - to] = 0; b[25]++; }
+                return true;
+            }
+            for (let q = 7; q <= 25; q++) if (a[q]) return false;
+            if (to < 0) for (let q = from + 1; q <= 6; q++) if (a[q]) return false;
+            a[from]--; a[0]++;
+            return true;
+        }
+        // every different result of a playing the roll: [{ a, b }] (at least the position itself)
+        function plays(a0, b0, d1, d2) {
+            const dice = d1 === d2 ? [d1, d1, d1, d1] : [d1, d2], high = Math.max(d1, d2);
+            let depthMax = -1, out = new Map();
+            const rec = (a, b, rest, depth, usedHigh) => {
+                let any = false;
+                const tried = {};
+                for (let k = 0; k < rest.length; k++) {
+                    const d = rest[k];
+                    if (tried[d]) continue;
+                    tried[d] = true;
+                    const others = rest.slice(0, k).concat(rest.slice(k + 1));
+                    for (let from = 25; from >= 1; from--) {
+                        if (a[from] <= 0) continue;
+                        const a2 = a.slice(), b2 = b.slice();
+                        if (!step(a2, b2, from, d)) continue;
+                        any = true;
+                        rec(a2, b2, others, depth + 1, usedHigh || d === high);
+                    }
+                }
+                if (any) return;
+                if (depth < depthMax) return;
+                if (depth > depthMax) { depthMax = depth; out = new Map(); }
+                const key = a.join() + '|' + b.join(), was = out.get(key);
+                if (was) { if (usedHigh) was.high = true; } else out.set(key, { a, b, high: usedHigh });
+            };
+            rec(Int8Array.from(a0), Int8Array.from(b0), dice, 0, false);
+            let res = [...out.values()];
+            if (d1 !== d2 && depthMax === 1 && res.some(r => r.high)) res = res.filter(r => r.high);
+            return res;
+        }
+        const ROLLS = [];
+        for (let x = 1; x <= 6; x++) for (let y = x; y <= 6; y++) ROLLS.push([x, y, x === y ? 1 : 2]);
+        // a's chances after it moved into (a, b), looking one roll of b's ahead (b answers with its best play by the network)
+        function after2(a, b, value) {
+            if (a[0] >= 15) return after(a, b);
+            const acc = [0, 0, 0, 0, 0];
+            for (const [x, y, w] of ROLLS) {
+                let best = null, bestEq = -Infinity;
+                for (const r of plays(b, a, x, y)) {                   // b moves: r.a is b, r.b is a
+                    const v = after(r.a, r.b), e = value(v);
+                    if (e > bestEq) { bestEq = e; best = v; }
+                }
+                const mine = flip(best);
+                for (let k = 0; k < 5; k++) acc[k] += w * mine[k];
+            }
+            return acc.map(v => v / 36);
+        }
+        const money = y => 2 * y[0] - 1 + y[1] - y[3] + y[2] - y[4];
+        return { load, evaluate, after, after2, plays, money, flip, ROLLS, ready: () => !!W1 };
+    })();
+    // the weights (80 hidden units, 205 inputs; trained by self-play)
+    BGNet.load("AQQcAjoCqAQuA3QCzwIaBMYCHAP8AqoEjwJgA1UDaAb/Am8ESQPDCRsCjQcjA7sIyQI8BIgEPQZ6A9EDhwTFCpsDVQRPB1IDxANKBGgHsQOnA+sDkwYRAdECmQNZAlMBYgOBBAgFEggJA/IDPgNZAgkDtwMuBOUAWwLAA+wCvQCZAK0DYQE7AX3+vAMRBEIDDwDb/4EBcQC7/EcAbgNJAk/70P0hACABqfmW+hH6h/66+Jz1N/YY/k323u6i9Mr+X+bJ+d0FEwBuAt0DvgSwArUD3gWpBbkCggT0CNUFvgKzBOILkAfeALAECA+sBgEBbQU0DWoIjP8tBK4Bvgc1/T8F2AfFBrv5rgOT/7sGs/ZaBIv/KgbX9coBrv9ABAv3xP5B//MBjvb2BsP+IP9L+vP9wf/U/YL4tf0E/zX7bfas/Gb/VPdX9TD9MQDh9nju1v1s/uftgPUm/q8AH+469nr9uf6M6bbzvP4R/lrjlvWb/mkAteR19oT8E/845XXz8fy4/hW6Mhjdvyr7LqQBgO33sQJGAmn/Wvpw/eP5i/OT8dn1W/Z+9Sn2K/aP89L3/vr+9Kv3ePwp/gz3/frT/Ez+1fUN+5n7svxC+6v+ngAHAMT65P0O//L+1v3m/lwAW/93/VL/a/8rAJz+PgGKAOsA5P4vAB0BZf/n/Dr9Z/+fABr9P/9Q/z0AlP2hABL/1AAp/ucAU//D/g7+3wCKACr/Qf7z/r8AGQAz/q793/6I/2b9J//0/9b/BP7f/pz+dQCT/lv+Mf/KAFn9e/8T/2P/Rf58/w//O//v9G8GIwHY/kwDPAWFAcQBuAMvBRkCCgLDBPoFdwK6Am0FqAXKBEwC0gUlCG4EjAIIBCQIIgN1BIsEjwC2A8QC1wSZBKQEZgNmApD/dgW0AhYBbf/7BKID/wAbAIMFXQDl/z//JAYbAhoF3gQOB9YCYQJa/zcFAgVbAKUA0wSXBhwCkv86BFAIegR+AKMEnwiEBokBsdba/FX9AwBH1gv9GQBN/lvZMfzh/Xb+rNvk/D//UP6L4DX+nP4z/9zwGv5f/z3+nfeD7+ffe+q55sLxJvtxAaj4pvaj/8sByvuA+7D8jQEm/r3+1P3rAMX+2P93/6wAcP89AIIALgDn/8oAxQFNALkDAgGPAlgBL/8XAa4AugI+/w0BDwI2Akv+wv/SAMQBZf15/84AqAD1/PL/BAGCAR//RQBX/4UBhfvY/00C7v+E/u3/MAGF/678mwDkAIz/iP14ATUAtf9k/4sB6QB1AIAABwJIAgT/twCkALYApQHNAjEAGQH9AFAD2wDP/isAsANDAsH8rf/9BML/CPqQAQb+Cf3G+hz65e2H+gAE/PuZ+WX93QP+/AP6Zf6bBNH8Ovsa/5oEuf79+6L+3gazAID9aAZMCTMCHAFqAEoIugE5BHkAWQfnAo4FhADUBrUDvQQDAU8HqgPSApIBdQYmBDsAgQO2A1sB4wAlApQEiASIBdoB3wRAA18A6QBBBKMDJ/+nAPcCEgNA/78AbAKAAf8A1/sBABgBpP/L//4Aif+Z/zn3kwFj/pP+Lva2/uj+rv2Z9Rr5EP5Q//3zBvMH/y3/qvXH8e/9gP2W13Pw4Agc+kLjHv8a+3kEyADQ+e3+iAAxBCcA7wCwAG4E4f/1Ag0ClQTj/20E7gHEBdEAcAXSAhsGuwJEBl4CBwguBO0CLAPhApwCQQJYAiMEKwKIAncCJwWKAjEDbgJTBWcCoQJ/Au8EeAJJA1MChQQSAk8AqAH1BXEBrALxAD4DrQHU/xsAWwPzAUsCYv+tAVYCIAJa/cYCvgBvATn9bf4CAGMDvfmJ+9D/4v76/0370v1PA0P/Nfup/usAPf/e+T/+9P4a/272RPvn/iz+3vYi+aD8A/Av6ZIDFvyJ/j783QTY+7X/7frWBVH8jwHe+x0Gh/15A7X/iAS4AAoE+QOJB8gBDwWGBZcFtgVrBboHuwVyBPUFWgYoB5QCMQbUAa4H/wH2BokAQQgTAroGj/89BxICawEnAHIERwQKCqsKeATWAEAAbgBkA+7/IABG/ugAXwAr/5z/Gv9y/zH+/v52+N0FpAFT/oH6Rfzj/Zn/PfdFAUQDXf0e8ngD3wG2/lHsSP+7Ad7/Yeev/s3/Of9P5cD7Cf3Y/5m2uvQ/4fX4CtOpqiD88P7ZBVkG9PaC/RMDCv86ABL/cP9h/1f/EwDM/sH+EP4hAR//OP4Y/fUAYf+P/vP7/v+J/xr/7PfwAT/6B//7/cb/iPny/FL78P/e+OD8v/8z//T44PzC/z//zPY9/Uv/Sf7V+yf/6f/V/p/0WPlq9CL8d/lK/2MA5/x494L+yf9//OL1Ev8AAKn6jvhZ/3P/q/ir88L8Vf/J/0T+JgDIAeT7swG3/+ECMvu1ARwBkwNM+iADpwBhBef6EwISAYQGXgB/BdwDPgizIezk9fapAyX6dPTM9b8G1Plm8ij5+AXI+tr1mflkBqn6Q/jl+5gGC/sh+Ur4ow4C/Cn3pANj9oD8AvtfARv33fyf+skBcfe1/Lz+XAHr+bv9Qf7aAGb7eP0w/zEC/fwW/rX+nwSZ/F38d/0ZA6H8B/94/ykDx/yY/n3+YgMm/XX/zf62BOP76P1w/oQG2/yV/zL/rACYAL3+2v8dBID92AEE/XUEivwMAif+vQPt/IAAbv6wAjcBAwHA/aMArwR6/TH+q/fS7p0QlQQP75388QbpBev+VvbbE8/r1fRQ+jIEZfpz9TL4F/qE9Cv2lP4K/OXzmvcv/aL8GvL7+/P7t/w/7l/4Nvws/DH7Gf4E/4T/L/3q/nH+9/2r/Mj+lf4OAe38+P4d/zH/X/5x/qMAiQBr/Mf/1P42ABL9xv/8/oT+Ev4NAEEAywCB/IL/RP9VAN/+VP4Y/z//Kv9cADwA3wDx/dX/bv+o/hn/Rv5z/+z/+/5+/w//Uv8w/lsAP/42APD9M/4tAHEAZP5l/gAA+v74/U/+pP+C/937WxbN/7Ph7PTb+hDipPAb//D8RuKi/Bj/If685rv/wP+i/dP0eQExAeP9Sf21BIECAABy93r98v6VABz3G/2G/lQBgfmvAM7/zP7U+rr/TP8Z/xH7dQAU/2YAZP1//6z//f+n+yH9cP/IAMH+LAETAHL/Jv8WAOz/zADT/VYAdP/sAA3+8f6D/2n/VAD1/3//SP+Q/Dn+iP4GAcf8zf6+/v//b/19/joBdQDb/Dr/6P7r/9b+6AA7AR8BL/6Y/6f/xP/oAJEUYfll67bzlf3K/4v4g/cK92j2ZgFj/1P88fxS/hP+xf9e/2z7zf3bAAcDA/0s/7n+rwMF/K/9OP+1AUP7Xv2E+xf+If9D/nn/kgD9/oD9Bv6Z/9/+sv5VAJD/qf0U/x4BGAJJ/QT/TwD5AMH5AgApAGwAHv3P/U3/5v+K/dL93AGFAJn/vf3LAGsB0v56/iMAjAH9/Yf7gwAAARz9Ff0t/IEASAZfBMACawFnB+wE3gRqAcoD1wT3AzIBNv8PAgoCswK+/doBSAB/Ai39dPw+//ECugj7/EH+D/9u9rb3EP5e+GH5mPof/635rPuu+or/lPu7/jb8kP4q/dsCs/+9/j3/hAVOBHz5fPx1/bD+ZPhT/fT+Xv3V+EH+lv+3ACj5v/2K/zn/Lfv8/cT/G//r+17+6f5HALP4/Ptr/tb+Yfvb/rb+cv9z+0j9IQCOACT75f5W/vv+Lfoq/2j/vv7b+rX+Ff9lAKj6p/4c/4L/RvyB/nD/tP/i+of+sf3i/6H6Df44/h3/gfzr+6D9bQA4+5j8Kv6EALLyMhBT9tUIctwS94v62/tE/wr+EP9++g/7g+x789f1bfDn+uf9/PAV9ub8zf9G8rD6+/15/3z2xfly/Sr/lve6+H78tv+KBVsCUQHw/04DYf89AB0BnwddAf8ACAFfBtT/u/+AAT0HdQEzAB4BTgZdATj/OgErAxb+AwGu/wEGWACkAUv/NgKeAekANgBMAjMAAwF/AAMC3gElAXf/pwOIAucBxgBh/ZH+c/8AAQr7Nv5L/s8A7vvI/Lf+hQBM+8v92f9zAN77cv2v/p8AC/7c/LP+tv/99aAUsu2c9RP6uvjz/U78LftP+Fn92Pzi+3r37fz6/Vn8oPe0/gP/Zvx6+XoURg1mAPD6DfJ6+yD9t/4R9Fj6Lv2j/v30jf3C/XP/fPW+/S7+q/8L90z+sf4J/0b4e/85AET/h/dF/Av9Vf9Y+hcAfQD6/xj82v0C/80AY/x0/i//RP/H+5P+if8d/8v9Fv3V/5L/0vni/d/+5/4h/K/9yv5MAFL8Av0d/gIA5Ppm/fT/gwBJ+6P9r/4T/6b75fvU/aQAEff4H77j5PW925PzWv0W/+n3L/ne/MME7v7KAHz9twPx/psB+/+oAgsAuAEuAn8COgDMAfMEigKHAG8BcwUWBB8BiAF1BD8DYAOsAmYFuAPAAgED0QZLAzQCsQItACUDawFkAhX+TAM9ALkBN/4aBMH//P7C/u8CkgDWALYEwgKf/+P/YQC+ARz+KAC8/hcB3fyEAGkAdQAy/cH+nf4n//L5NgCH/in7L/1N/6EALPvr9q/8hP5E91D21vvV/ZXxe/aS/GL+r+W/9wT9rv8y6izyg/zj/ybO9Oei/AsCdfqM/Zn+1AFF/Fj85/9cAgb+Ov5OARkDLQDc/0gBLAQlAagAygKYBlkBOAHwAqAFkwKkBaEDuQRbBO4GsQNuA/UFdwI8BMkDUAYxAo4EfAM8BiwCGgTFBDMC5v8iBLMCuQZ1C3cDqQXMArEBxQJnBfQCEAIrAncFbAIqAVcCIAMtAu0APwLGANUEsgG6/kH/rgHqAJH9OgM/A3kES/wu/r0BbQRW+oj16/9lAnP6rO03/TICiPw+63D5/QEw74XWtvcXy2EGHPSL92wDKQC1/5gJxAENAogBHQNDBNz/KQIhAsQD6/4WAtEAkwNc/+QBav7OAu3/VgPB/5wFXwO/BEUFGAM7/mwC2QJ1ArUAyAF9AXADXgAtAQsAfQRaAK0BaQGDBcP/AQGu/3oE8P9QAtn/AwSJ/usA7f7WAQD/HAGR/8kCIQAiAaAAVwGc/n0BzwCF/QMAlwFdAPL4Zvzf/mf/4QDc/14BdP9H/0IBigJMAnj9DACfAs4BffyDARADDgIe/QgAVwI3Avv/qvzx/pQAyP6d5iL/PP6u+4r4VwHn+8T7Y/rYAGL7X/rr+bT/iPr09+T5+/yD+Gz1q/oX+zz5o/PX99D5vP/a/uv/0/lC/vX8vv2e+Ez+Xv/d/+b4Y/6F/yL/d/jo/mf/SwCn+BkAP/9a/yn4l/19/Qj9mPV6/tj/TwCU9Qn+Xf6v/+7yFv9s/+b/+vLo/mb/+/9w9OD/1f6r/3X2b/84AN//pffD/ZT+DgCG+Xj/Of+EAPD6xv5V/wT/O/w0/tD+wQCp+1b9yf3z/8TpQAv22iMMSc6b00b6IvpwAD4D3QDBA7IAkf/mAEEBff6O/5kA1/+K/oAAUwFq/0P//AF6Amz/gv+WAl0AIf/O/t0DdgD9ArwCFAPhATIBOwH0Ay4C8wCiAUgB8v8IAsf/bwGiAfX/tgBPAHX/vQEMAZP/XQAVBJgAAP9L/6QCvQCv/0L/FgF7/wMAqv+pAAX/JACZ/7P9Qv/P/x8AEP1v/Pb99QDNA/EAbf8OAHsCVwA+AfABSgLAAJoAkADkALcBnAHC/1v/KACnAQYCbv6D/3kAzf888cn6WxrZ3YDLmwHb0Qnfofab+VzU1uEA9mH66tOR5rz3kfxA2Azs2vcN/6fcZOxC90T8AfxP/0cAC/9a+rL9Yf9f/qn6LAB9/+4AtftPAML+bP4b+gkAu/8GAfL82/+D/3D/0fsN/cv9Nf1X/F/+UP/i/yT8rv/B/sv+bfsT/0n/Sf9/+ygA8/4fAAr9Zf7z/pT+CfxKAND/AP/u+ib/gv5T/4z7uv7t/SsAyPyv/ckAy/7u/UT9kf/T/1j8Uf3v/Yj+BuunKOPZhwGQ0fHzvPhS4/H+lgAW6nQE9QGfAt4FLAWiA80DlwdXBhMELAUKCxEHMQQUBYAOqQiEA+gErxEJCysBqwXWD2cIGQLSBaMJCwif/38HsQyhBzf8dwdGAMcG9PmCCHL9iwUW+akEL/28ARP5tf1i/lT+BPuCCH799PuS/av7nv4o+lb8qftV/S/4Zvoe/B//4vQx9ab8N//k9Abysfz9/rbvWPPL/Gb/OPHv8i7+Vv+v7nbwZf3b/+jp8fPy/Y7+LOeP9Tj9hwAR4VT3rv4d/1KzSQ72BVMB7gJyBMgEeAKXA5EDwAShAgkE7QSFBBgDOATcB7gEXQSzA68MGQSVBrEDMgo3BGcFpAaUB8sEiwOXBeIMhgQSBTcIoQKRBDAFyAbTAjwE4wSXBDYBPgNQBdQBYwE0BPcEzgTrBq0DVQWhATcAxgMeBJkCzAADA5oDbQMMAVEBPAWPAtcAnf8FAtgCDgH7/db/SwJ4AkT96f0GAfkDaPv8+zv/wwKu+XX5Zvu1AQf4p/Vm+f8BcvWp8K/3KQJM0ED0P7vmpPz2PvIlA9UCTwJd+An+3Axc3Y/Bhwb70AfQtv0q9hHI6+P/+JX5+r2R63n3g/weuFnwzfZ6+xa3tu/S9yH8aO/B/Kv+e/508Dr8Jf60/WjujfwcAKv/uu2y/RD+HgB88Dj/yADS/uvyNP8//8r/GfYQ/Sf9kfyp+E/+H/+3/m72//2o//f+dviG/TQAVv+C90b/tQCOAIH3w//Y/1f+Fvgn/vL+zP6f9Yr9FACX/hr3Zf7o/pT/A/hw/RoAKP9m++//gf6d/9r5yvs4/5wAOOsVN7AByf8M/loDqP8I/kkBvgEW/6oADQFPAr393gGoAP0Bn/+dAWIAdgD8Ayf/awKMAEL/YAG/AVcBMQDkAEUBCwGw/54AMgLrAPL+hwCJAWgBy/zFAJ3+1P4a/kgBywCFAB0Awf/gABUB4vv2/dP/tP5n/kv+Cv+y/v7+p/5q/rsASPwp/vr/fP7C+5X+kP6n/gIEbf5DAUkBvQJ4AfEAyP/VA6wBLwGYALEBxABY/8n/5AHNAMv/yv9R+ir/tv+2AC4B7/nAxum8ewKH/mj20QBo5hPlevy+6lz3X+fv9sztwPG76mHzpuz37Hzzc/ck6xnwhPi7+7bsM/eW+vf88/Ja+s39Dfn3+68AGAHP/iP72f/W/x39nfut/53/z/5J+icARv8r/+P8nf4o/yQAQvza/5T/TQBm+kb+cf0K+877j/6r/u7/XP3j/nv+rf90/OwAHv+9/qb6m/5r/9b+4Pg5Abj/Y/74+5X+iv67/9j7hwEBAJz+6vvy/9r9Nf6c+aX91f5YAEX4wf7j/pT+yfbK+YX+Jv+35J/hhg1nB/0IqBBsBvII7ghWEZsFVgf7CPgPrwYbB5UIQxCxB+AGNAlVDyEEoAVTCS8QLPhOB1IE2QJo9S4KDgfUBIT0bwQ5ASgAYPMSAhIB2/8R9QQFDwIyAcf34P83AoMAEANbBE8CTf90+Y//2gC7AML6gv8HAbf/UPzM/+r+iwCS9xkAXAD6/333JQDH/6P/owSg/YYB4gCmAPD66gCmAgEBzP3vAMUBzwDGAJ8CNASQBwUDuwQkBP4BhwJqBNUEq/39ogniz8+TETT7R/vxBuHzZfcQBG7/Vv/e7CPtQfkf73r09fsa8Wr0M/ld/qPuNvkp/I79p/C6+Hz7m/1n86T3hvi1+1wBRf8wAdoAPwL9/+3/DAG7AWIAlAAxAPQA+wDPAVEBy/8CAQcBxgCpASMBeP9lAPMB/P4KAKMBDwJ0AG7/zQCpAZUBuP9eAfv/9f97ATz/hAAE/3QAjQCZ/tv+2f8yAG//0gCuAbQABQEVAeQB5ADb/34BqwDvAe7+cABYANn/hP5t/h4BJwFY/x7/GwE5AGL79hy58/H3aPhv9UL6P/pu+rv4Fvr5+r77sfWH+oT88vte9wT7nf7J+4/3EA/xDtgIFPhV9QX7g/wl/Uz2Y/qW+9b8rfX5/Yv9DQCo9pb9vv+u/832TP5u/9r/OPfl/dH+BwEv+dj91f62/L/6LACY/lr/oPmq/YwAPv8p+8v++v+g/yH89f7h/wwB5fxk/ab/fv8n+r/+i/6J/hH73f0cAE7/TPqS/f798f+u+Tb+Wv62AOf63fsn/g4AKPwr/Pz+kP9E8/8pGecc/QLYS/Aj/OX+8PcK/M//dv4CAxf9cfxbAGkBZ/2I/OMAZgAN/sH+EwGY/zv+9P9NADEAUv53ADMA1/+1/gkBHv90+Tn/K/8RAaH9x/4PAMMBEP5RADn/NAKU/vAA4P5sAkL/qABXAHIC4/8gADT/QwKo/rUA9v1jAk3+ef6j/t4CqP67/pP+OQOj/sb+HwAiAzP+mP57/u0EX/5iAHj9pf9Q/xX+Uf+rAIf+VgJs/IUAu/yIAF/+n/3M+gr/Jv27+VH3dP5W/iH1R/Xv/Ib9n+yY+RUAOANdAEUCQP1gBXoA0ABE/LEFnwAwAV38JAWWAHUBSfxtBAgAJAIZ/PcD1//NACD+NQP+AKQADv14AhwAr/9n/awAif9FAfb7AQIgAOsBhfvHAcoAswEC++IABQKU/4H4HQJZ/zf/A/vIAGIBCgFr+7H/qACt/2r6df65/53/6/rp/KsAWABV+Bb91f7PAWX8tP9xADwBA/kc/H//lwJ7+uz9sgD/Atr5NwE0AJQDhPvfAg4ADAQw+wsEagBVBp0E9O0/ByTmYwC/8ODr8gMWAuUGZP/l/wkAHf3A/+QAaP/7/nz9PAFK/9j/hP24Ab/+4P/d/vQBAP+A/+n9kv9CA4T/hv5nAcP+GQF/AJ4B+P52ADsApwHd/kMA3f9dAX/9zAD2//sA//yiAXQAOgGn/vAAZAEkAZn8Hf/7AAsBEwDuAJf/1QBVAFgCnAHOAPQBJwOHASgB3wGpA6gBZAEFB14FZAKiAfkBhgE0AUADpgUIBJEFnwTIBKIEXgXBBg4EAgV9B1wIMgTjAsIIJAsHAnwCAwz7ECjS+/oL/sz99Ppy+y7+Iv15+of8pP78+lX4RvyG/uj6PfYR+5AALvzo9lX88gKT/Jv30PqT/6/7/fhG+zv+3fuo+RD7ov19/HL8X/vP/fz7CP1j+w79Afzt/tz7f/w9/oH/0Pp7/Yr9T/nm+uX9gP4u/7j66/1+/r8Affrv/c39Q/91+iT+lf9rADL5c/9r/XT/1vfy/Fn+Xf+i9+n/3/3G/l/34/3Z/rn+QPat/RYATv8i9UP/dP9K/yH2dv42/6kAB+LC/cMFwTP7ycf6q/wuADsBQgJ+DC8FqvkA99f5/PgR/o37e/zL+BAAWv63+172N/+2/Pz8h/fK/Uf79PoD94T68PdC9ZT7YPxX/lP/8/yB/Gn+nv+O/fL9n//XAPn8yP3V/sEAIP0u/6P/BP8R/jcBrv9N/5sAt/wt/hL/+gJrAWb/LQFK/4/+5/66ANX+SgBHAO//yAHk/0D/NgBa/2T+nwDV/1MABQElAN3+dwNNAC7/QADNBH3/NADE//YBkf8OAMv/5fyi/VD+A//i/vAA5/9W/777wxti9PH6V/pG/nb+H/9M/+39fv2aACL/Ev0j/p0BNv6r/R/8CACD/v39zffD+UX3Sf7895z8ef5o/4T21vul/cf+q/gs/0L/Pf+1+Zv+YP+iAID67/79/9cAh/vZ/yUAtgAe+XP85/4pAdv/vf6S/sb/Ef5V/73/KQAM/nf+7//t/iAAWP6EAB8Abf7U/SEA6f6c//D+7/7C/8f/yv7o/jr/k/2S/z7/m/4e/AoAIv8k/xn7xf/B/rD+8f91/z4AGQBXAgIdLfH58y3u5Pq4/vT9Sf2n/Gn93v3jAKX61veM/TgCEPqf9qz8gwLE+ZH3Dv1iAx77T/vG/XwDs/rf/DgAdwSK+mH6pvy9/jX+Bv6R/M3+Uv+N/aj9of94/vr+dv4SALL+mf7v/7sA5/3o/gcAfP5Q/tH+zgJjAG0BPQKiAq4Abf9oAEwDiwDR/pIAOgMcANL+oACjBJEAd/+n/iMCkv2p/oD+iP7P/jEA2f77/5D9ZP85/jX/p/2j/bv+1P31+6L9Yf41/Ez6PPx9/9X8sfiv+4X+YfxH+g0EjfwYAT7/NwL1/g8BnQHnAcP/cAFYBX4BmABKAfsDcAJLACABRgRUA8r/lwAAAzsFlgP8BBADbQa7AMMCWQaeBrwAWALaAfkG2/58An4AawfT/VYCmACbBlIAxwAZAEEI/gDcA1EFRwgKAnoBmf/ZB+v+IQH9/9QGJv5gAQsA7gMhAEMBcgFlAiT8DwIPAi38bAAVADAAcPni/Uf/YP/o9nb95f9GAMbzKf7z/oEANfVT/bn9wwAB/PT7yP62AG8Fg+R+4XbqlARIAdHy7//6AmwCbvq++e8Gh/179xD5oQhc/xD5JvoECbEAfftO/A8KsACj/LD/fQmpAWD9LgX6DyQBBP6q/04DAAEc/h4ACgGc/0z/GQHy/p7/E/75AL//H/+M/qYAgQDW/uX+RAALAO39RQCC/6EB1/90+73+qAA+AE8AVf86AYUATf9I/2cB///t/aT+RgFY/4z/K/5oA9v/pfzL/LT/sv5Z/rH8ZwM1/x76g/uZAjT+JftZ+8sADvzE+4/7LP8X/LX8WPz//q/9CvzZ/p7sOAJs9Tz8QPt8AJL4nvsO/E8AJvkJ/NX84/9f+f77bP5bAEz40Pw9/jIDGvTm+4/6uQCT+Nr8CQDpAKL4RP0z/lMBOPmb/DwAhgEW+jn9mgGEAFT6Dv5yAOcACfnqADkA+QBk+H/87f3TAf72FwDEAMkBJ/R3//T/RgG88+r99gDr/yL1yv9EAP3/l/JV/fICywKQ+u3++ACgAgHxqP68BQoBb/CQ/+MH+v5M8sIBGwj7/ub8nwjtBWQCFg+CCl8CDTCs6t4T3uo4EREUggdM+PIKdgBo/FwEAvxPAMn7twTW/IAAjfy1BHH+ggHo/boEQwCUA9QBQASKAu0EKwavB1oEBwb4BloH1QR8BngJfAdGBbYGLwjOBx0EIAe9BzAIuwPZB04FigjYA2EIBAM8CZICNQSK/rIJUAEnC8QMRAlh/5IB2v6TCOj9kgJG//EGUv37AJz92wXH/HD/of8SAp/+rgE+/qH5avsW/O7+afeKA8IAIf2r8HAE8ADX/NTm+Po+/zb/mNrw/Kz/zv591vH2B/3U/ayli/z5/f4EP/4ZAvr/+QOb/mYCnAC0BPX+DwMfADYG8f/wA04A9gfLAUEDAwJyCSUDGQGfAOUEdwCWAzEB+AV/AYYBIAFeBsUDuwPGASwGtAOPAkACLQXFBEACIAJ7AvoCuv/MAPYETALTApD//gOKAvL/CQD1A3gCOwCc/24D+gK/AToAAAFgAeQAjv6JAAcAeAJn+93+Gv+qAWoBl/5v/iUDaQHp/LT+YwEiAd358v1WALH/N/fp+j8BDf3x+aP4k/6B6aXvdszmxS7/5PoP/KUGMQG6+XMNlgOP/2YFnf5xAYb+yANy/1r/j/yPA9MBCf4o+7YBdgLI/br5Av9N/0cAPfra/BgByP3h/FT+Bv7a/A39nv0Y/ff8Nv3i/CL/7/yZ/IX8xv4n/SL8+fy0ACP9tPx//jIAXPwV/IT9f/vH/eP74f+U/5H9sfsB/sD/4/21+2/9mwHW/fP8Iv9SAP39p/8T//QBdAAHANP++wB5/w0E6QIdBcECEgd3A0wE0AUzCQIDEATqBoALWQKFAb4GeQcvBSwBqwrv6OP5EPx5+LL3Ovxy/xr7a/h8/mQCb/zG+Rz+8AYJ/e37S/45CU/+bfxJ/EYJe//p+x/9fgYjAN//Af5YBrIA9/+r/uMFPQEYAC0AxAOdANn/KwHMAbQAuf8TABcAr//q/3X/GQLRALv+Hv+VAKoAzf55//0AvAFx/1P//f9j/xP/3P6lANH/q//Y/Zb9Wv9y/wIBkADr/e7+3f2D/vn/gPsQ/an92v5H/aj8Zvz8/Vj+jftB+Bf+5P9X/Fv5Bf31/wztx/V+E90RmuYA+uf+QQSV/Rj7HhALATX8zvwR/2f9If86AJ8Bj/5cAEYBoQKg/t8CvQBlAiL/2QOhAT7/vP4wBOwCrgLpAVT8Yfxz/wX7Wv7t+63+Efs/AAMA6/+9+qYASAB4/7P7gAAX/osAH/wcAE3/Hv+j/Av8eftR/479/P8FAPH+X/3W/+f/JwDS/Nj93/6q/oj7+f48ADgAu/yG/sL+rf88+8L8LP+4/4z8sv0f/6AAJfz+/m//MgB1+/f+Kv/A/vb8Mf4h/lz+nQCQ/W7+4/9W+H4FTgJdAi0Dz/8K/+4CRwEhAtv/rAKKADAAbQCXAHT/AQByAir/N/+cAHUBwwFWAOEDaQQOAxICmv8xBMgDJAQmAkMFWQIJAAgBUgWIAdwBMgFWBWoCGwJ1/1EGxQA1APz+OgZgAroF3AQ9B/QBUADrAAQFagP9/sT/NgTgA0cAbf/lA5UFNAJ0Ac8CEQSGBPIAaeBx/on/hf4w4Uj+QP8b/6jlwv0D/7v+nOdY/Wj+8v+M6ob9Av31/VTye/oU/vH9SvKl/tnnF+gj5XD20QKXAB4BG/6DANr+cwHy+zX9BwGrAKT94vtCAjsA//7A/BcDlwA9AG4AggN9Ae4BcADzBAEFYQKUAt0DSwB8ASYEEgQvAs8CWwR1A04CkgMqArEDygHUBHMBdAPXAawEegAdA7n/wwHLAJQCcAE1BMMBCAJxAjAB2/+wAf4CsQEmAXkCYQKdAUwCRgJRAS0CvwAqAcH/sgIxArb75P9uAl0BTwDcALMB8gXe/9r95/95BUn+KfkV/zkEXv659mz8JwQk+5/2Ofw9A7LW5+IdBB79Tv8U/yAE4f3KAY8A9gIf/08DGwKEA8z+2AOjBF4Csf+BBD0GuQQGAjgEkwUMAdwF+AHfBIUBFgRxAuUEMADfA1cDVP/mAAYDgAP1/RsCBAFbAwIAKwPoAE3/sgBoBLz7MAJxBI8EPP5m/68A+QKp/IMAk/8UA/n5RQDn/lEC8vxeACoAHP/9+Pj/5P+g/6L/1v11/mr7n/kL/sn+rvh2+PD8Uf5L+ZnykP1Q/gb1UfFr/VP/NfZ/7Pf8Jv7Ix/nuJP9x+2XNF/nmAyr/qQDRCWz3A//9+rP6o/mdAxL3EPyH+MkEGfbM/Mz6igbw9PH8o/qmBnr0WP1e+l0CzfNY/dr4Igfn9c3+s/+LB//zrv0t/a4H8vNn/iUBYwfA9G/+rQDxBvb12v5A/7IJtfuR/4kBnwuR84z9H/uLCXD5RAB7ACwK8PXR/oIAjQkJ9RP+VP+WCuf1Bf4gAo4LLu9N/RMCdAGA+6QAzP+0/jztyf25AP/8z+7M/p0CSPyD7zL+OwP3+rTxV/8aBan5Pvh1/SQFqiHo2s4B3QZq+JjrcwTNBrb78u/MBvoFWv4m94kFAQfjAIH5eAViB1YC//t4AfMN9QIm/ikFFf8nADj8mwMx/wIAbvqiAlcAXf4c/pgCHP8w/xr/oQHs/lX/8f8AA4H+tP5f/1oEbv0S/iX92wMvAPv+lgCWA4X/gv8o/o0ELf+Z/hb/sAXH/gb/Jf8jBYf/bP5P/xIFMv4+/hj/FwTs/sj/8P19BGj/VP8R/hoEn//P/jL+2gPPAPT9oP8cA84B1fvh/dcF5NJf/175wwCh+xUN3AdJ9qX1kvGS/cAA8voR/v7+5wCK/K/8GwBaAW7+3/6HAe0BW///ADcCHgM0AJYBAAMKAysB0P45AGcDIwGoAlIA3AJzAtIBvQBgAvcDCgG0APUCnAKmAe8AYgMRAxUCYADrAjsCHgA9AMcDyQKzBhUACgKXARsAm/88AhUBCADP/m4CCwKuAKP9/gEVAMb/af7dAOIA5wLu/VL+NgDm/xH+0/9eAAAC2/zm/nsArAIT/Xz77//TALn8pfgF/ocAGALX92T66/on8rrcZQNoAoMBUgKBAbYCGwJYAvgAegN5ArEDhQELAyQDlgWmAXMDcQLcBwICSQHjAt4GlANeAg0FZAVhBW8AiQSbB7UG2/78AwsA7QZQ/r8EHgBUBkT+ZAN+/vwGd/5XAMUA/QM7AdcD9QY/BBT/fgCo//sCgv1k/4v/wwFd/agAfQBdAd78LQC0//3/Ef6sAKf+pf/u/EX+af+G/FT7gP1W/YD6kvec/fD9EvXb87L9Nv407SnzXv26/Y3oTPCj/Nb+Qc9w4+ECav9v07f5J/m2AgIDBwn++e75IPwk+f73r/wQ/y/7MfkmAKYASvxe+n0C1wEX/XP8VARBAgX+t/zi/7AETf+z+1oAFgISALj/f/+jA3wAtwBDAGkDVgE/AsAAXgKPAB8BOwGDAYIAMgIqAGUADADMAKUAcgHJAMn+vf8SAdUBxv7j/x8BlQHG/57/XgDw/9f/lf/0AAAAaP+a/jz95AA4/rr/sAAP/6T/kv4z/iX/4/2Y/fX8vP55/QL97ft4/pb+NfwP+eP9Kf8P/Tb6/P7o/H7z7/V5BG/+5ATS/7EBdP5dAzwAkv+u/JsDMQIb/nr7xQFTAtb+cfld/4P/mf9x+6j9NQHR/mH8h/5y/Zf9QP2K/ev9zP3a/HT93v+g/Tv8I/wHAH79CPzz/A4AOv0y/YYAY/9V/cz74f13+1z+WftwANL/pP4F+5b+MwEH/+n6r/3E/+r+UvzM/6sAMf+u/1z/NwENAe7+Rv8/AFgBFgNSAiQE9wIeB3QDjANsBS8K7gLrAWQGMgyGAusAmAYvCE8FowB7DV3obhK26/MQ6AA6/gL7HgFID5P5SP9U+KrwauWq9uP2d+9U7bDzX/X28iH0xfOs9Yj1NPtz8RPzXfjK/ILvpfiH+c36ifhD/k7/7/5I90L94PzC/Q/3xv6kAIb+5/aO//v+UwCu+Cn+SP+G/4X5Z/9aAAT/W/pv/Tv/Jv5a+7f/wf/l/x36tv7o/+3+wflB/pv+IgBp+tL92v4n/035+/4o/7n+UPps/VH/LQDW+u/+7/5Q/576kP7t/z8AhPoM/Yv+uP5k+mn/tP1XAJ/5T/3D/07/WukIEQwDZgLDAxIHjgLFAogFvwa5AbgD6gX4B3cCcgL4BL0IdAP/AIEFlQgxBT0BKwQpBygGxgAoBT4D3AOFANMEtAOBBBkCVAEDAN4DnQBlAHIBIAI0AnwBcf8KAs0BJADYAN0EI/5ZAZ4B/wQbAH8AOABmAXD+3P7P/jj/dP9L/0EA8f+y/k/+1/9Y/XP+Av9c/zr9Vvd+APz/6/zL+D7/dAFR+/T+pP+l/zz7r/6s/4oAiwSn/07/1/93Bxr9lwDE/18BDeB24pfQlQWGBZn6OwHT9XX32gEWAtsEtftk/mID3wPa+zz+RAXvAmj+qgCQBNwCEv8bAkoF/AEZAagBvgLzA2UDgAPUA4QBxQAGADoEUgHgAAQCAgQ/AeMA/v+OAz8BfQDf/vAC/wCJAAX/zQGmAMX/zf6WAUcBfwCkAC//tQAqAFoAof66/6D/AQD+/Z8Acv/m/sn7+v6gAJ7/fPxsAIz+/P39/H3+5f5l/4D9agFm+/v8cP2R/zL7x/wN/P38ufo//Wr71/cN+yj+qv3F+4j7sv1X+dztBgFD/BMAcf9LAOP+lwHtAeL+WP9KAR0Be/4S/kQA9gGM/lX9BgC8AXP/pvyx/u0C9f0rBncBCQGD/IYHKQIFBF/98AXpAREBnf5jBKYCBgFe/9gHNgKTAOoBOgFpAFD/Uv8RDgcFngpOADwGlv/qAOkAFgVyAAUBGAH5A8UBlgHMAhf/lwB9AHACJ/zFAooA6wAd/E7/IQGK/0XyFAC8Aob/ifL2AKABm//X8EL+XQHE/3PvT/13ApL/bvWf+ggCrgK/57Ltauy2AcL+9v7Z/nICwfzJ/SD9jQWkA3EEUf7IAygCOwSV/m0CJgEG/wT+UQHtAHD8Iv2yAEUAdPwy/q0AJgBA/pL/1gD//gMC3f5u/pX+SgPH/nH+DwBxAdb+8f7n/5EAtv4h/0oBhAAHAJMAVgE8AREAuAB3/sv/3P+ZASMAxABHAR4D8gHzAJoCyQQAAv3/KwNrA4AAFgE9BdQGegDCAAUEQQNnAFUAkwTBAlsAfgMDBP4AvP/wAlsCvf46AMMCawCv/tz+hwG//Aj/Yf+K/1n46fXv/pf/zv7V/hH+UADw/9/+A/48AJ8B9/+5/d0AEwJYAVD9EgLYAmYBAvr+AlYD2/5993UI5QARAIP2igg2AbH9kPVDCPsAWwE19HEIqAG0AE7zPwfhAbf+a/WNAjUBJADH9LIDtQAh/Fr44QFe//z/lvgwAlgAC/8S+m8AdACm/s/6JABCAHQAbfzG/pj/CgBT/IL/hP6N/xD89QDx/Xb9ifvY/2j97P1p+539U/68/gX7eP65/DX9nfrH++n60/4e/twEQf5MCcHlVAXAA9YAFAKb/WL9UAUxBkoDaQHi/3MDmwIGAnL/5QLVAJwENQDgA/760wUZ/5ICV/VlAM36kPsx9OP8yP2y/9L+aACn/tX7aP3kAIf+xvv5/y0AWPpb/OgAWQA4+iP8zP9fAK75Iv6M/zP/vPvV+Gz+4/6s+Xr+oP7+/jr46/tMAMT+lvbj+43+lv7a9wz77/2Q/zr1J/ni/3MAaviF/GD9R//x9m36Cv5k/+P3Y/po/SP+4/p++RP+PP3F/KX7B/w1/mD7gfqx+tz9LPMxCO/+oQJwAWQA2vyxA3MB3ACW/NIDeQEbAuv7UQIxAQEDTfydAAsANAIm+7v8jgDa/qUAxQJ2AioCiADOAAQCNwQQASEB7gHA/zcBqgAcAjIAPQE/AC4CDQCiAesCTgDaAEUEVQJ/AJ8D8wSkAncBzABaBZIDLAFiAeAFGALgAScBTQbLAhoCdP+bB4IBTAMMATUEc/9O/wUB//8E+9D+rf+p/Gr9Zv5T/ij8e/0z/mv/sfbm+SL+nP5C+X76yP4U/2L1SfZK+0/R9fxb8zH3FgLEAZn98/pO+JH9yftA+yr8Pv8d/CP9Sfxv/0D+Zv2C/RQAiP4f/s/8KQED/qL8df8XAioA6fx1/YwAk/+F/2f84QC4/wUAwvzg/wIArwF//noAwwB9AKAA7v7JAK//bv+dAJ//+v/U/eMABQHm/38Atf93/8z+nQCb/6sAp/4ZAGUAYAC+AJv/hP+N/3D/VP81/vr/jwANASP/hP6FAIwBwQLM/iv/ZADwAFL/Ef9K/rX/D/7c/lj8+fw6/iAACfsy/BL+8/5iBWoIvfsb+rH7R/gH+rf9wP1G+zf7SP7//Dj8svwq/t/80/u4+4n+w/we/ZEHlgj1/+j6+vxnALf9eP24+4b/Ff2j/CD8bf2I/gv/zfsF/ov+5v7e/K/9Sv8oABP+MP8j/7X+pvv3/0v8iPvd/Ib/ZP8f/8H95f45AEoAa/3K/koAL/9d/df/yP9P/+z9sP+j/5//xP3i/rv/EP8YAdoBVP+6/sf/IgKn/p3/Bv5ZAdj/B/65/I//cwAX/vb6/P5rAMX/vgaADSgGHfi39Fv/t/1o/7j/8AEL/Dv+5gLBA9//9/xpBfcC2AA9+wQGzAOUAaT7PgXMAk4CZfxUA3IA8gLh/Jn+T/88AaD9D/0g/zMAoP0H/ggAif/N/gj9lgKb/z4ACf2tAcIAvQCn/M0A/P66Acn9TP+i/zQDPfzf/6z+5QKz/VIAdgC5A+L+Hf+e/xQEYP9DAAAAkgPV/6MAQP5qBRUARQA8/ggAgP/c/4T/Cv8Z/0f/M/3j/W77Df7I/K74iPrJ/QL+7/NP/Gj+eP1y6q/4Uf35/Cjqgf6C/a0Cmf+c/+v+rAGTACf/fgBoAbYAawDXANsBoAC1A8oB2ACY/9sDiAGN/+f/AQFY/VEG6wAiAqf+Uv8aARsCd/9d/ncBQAA8ADD80ACx//P/pPvU/7QBfADq/L8B5wCX/4b1Sf61/9v+UP1S/3v/Yf7e+tkAPgF6/Zn8BgF/AFn9DP5LAXT/hfze/N0B6gBr+xT/dABZAEv5UwLWAroBpfqYA7oCrQLd+ggFuQG1Aar6fQNxAPgBdPpNAQH+Vf8zBXr1Yfj33n4AxRYzC3sAuwNbBJT9RwShAvT/3AHABKYBWwC2A0UEtgKjALsBjQRSA9IBVwEGBOcDQgIiAsABKAVoAQMDtgGj/9n6CP6DALD+xvxR/Wr/Ev6X/kH+a/6O/iIAYv6W/nT9CADK/msADP9K/6v/kP0r/cP+gP7J/iL9TP5F/wn/RPuK/gj+Yv6U+Zr/1v26APP3eP5P/5n/Y/U9/+r9gf8a+/b8pv6r/7X2MfzP/Or/5vQY+ij98QJS8XH6Mv5SBOvsOvkx/XgBi/ST+mP9Htrq7PcDlwDd/JoFhwWX/wQAJASFBdcA/AGOA6sE4QI8A0sGUQUlA7UErAhLBbEEyQazBbAGzwC8BZkGjAVGAr4EfwayBOUBFgYGA2IEWwLjBJcCiAVYADEEowCjA3oCTgKL/3YB6wNGBdQABAGiAzIChQBAAN0CmAE4AJP/7QHjAccAGP/IAd0CiQGK/AQBNgFCA1f5a/0LAvoAt/XYBF0BnQTo9FYD/gBlBOLyZ/2YAdME2O3Q8gf95QMN6QjlCPRnAsgle8425JvK0xCoDy34cAFvBDf8kPRR+S4B7fgG+Hv8qAFI+tL3K/7HAq778vlY/0oD9v3A+ef/nQM3/xr7Cv+9BBwAR//jAlAFDwJ+BIkD+wNMAxcGwQP0AmAEZARiBdkC7ATgAqUFYAJRBTwCBwcsA/MBNwEiB1kAzgXHCQoHNwQEA8IBOwfIAhEEcAHbBgMC/wMKA8QGJQGoA5UC3gYV/dEFqwJDAWT+YwHGAZ3/DgL0A0QDLP2+/s0CQAIA+b721P75AN/x+/JS+4EBoPGe8CH5oAD1+R7gtwa8/gYBNv2OBT3+LAHe/+4E1v4pAW4BKwOR/6IAawRYA6X/AAALBVUFsf9uAE0DrgR9AO8CkgI7A1cCdQM9BmoCWwItArn/twEVAmcB4v0jAvwApgF+/pABTAEIAEEAHACaApABpwV9ANEBcwDfAPv/CwGyAC0AC/+WABEA+v5h/fv+Nf7O/iP6vQCm//f+o/uA/qr+CP8x+Dj9cv4e/0r0qPv6/J7+vezm9YH9FQCk5RX0i/3O/pXrj/K7/Z0Ajd7P7pjvNAfD0d65xfis//YBnAUPCEH68v9I/rv61fi+ATD/+vsA+FsA8wFw/WT5n/5zASIAnfpZ/egBwAE1+vf6DwEd/iT7NvttAZwAafif9gn/p//F+Hn6tgAgAE74jPpCAUD/TvZA+14AvQAX+Nf9MwFx/7T1+/QM/eb9/PjI++z+UAAp+dT6BgB4/2n5cfvM/rIAe/qs+5j+PQAV+1j4V/+U/oX2V/1z/jf/L/i2/Gn/Jv9r+cv6QP+7/cP8tfkq/9b9R//b+2n+bPyuAFX9Pfsm/hYDeBRz+08Hkv63A+n9OAOp/mcFAP6wAyX/AARp/sQDJABQAYj9PAJZABX/Tf8qAgIAOP8mAbz+U/7FAUAB5f8K/F8B1QAyADcAYAG+AFIA0QA+ANv/EQCbAAwAIf9yAE7/4ACB/4P+qvzu/mP/PQCV/xoAWv9B/3kAcv8g/0sAdP8lAab+ff9w/9j/dP+iARMBEwEGAVUAAAFZAXwDpf6Q/+7/KwP6/WP9DAHZAR//of1/ACD/0ADV/fj/eP4GBKv+PABy8+v+exx12EL6wADu/LgDZP5S/4//+wFiAkMBDAPvAeMAQQB+A7gAwQDs/2oCXQAvAZYAdgKQAFAC5ABbA8QBCgXCALQChQCmAlsAugLxAXIC1wHKAhoCpwLFAUQBSQJVArMBJwLJAjACXgGrAbUB7QMBA9UBlQNtBDcClAP0Ao4FBgLDARcDxQQNA1QAGwLuBKEDYAA8AagEeAPzAB8BYwQpBI0CUgYVBbUD2QH7BhgDWQXlAZYFawLDA5YCYwPeANwB2AA4AqH6Hv7H//0BxvHV+O0AivbL/L0Ckv+5AIsBhwLaAR8C3QNTA/kB6wNzB24FXQGaBMkJ6weZ/+sFZAqUCbf/xgVeCmACivcA/KD8MgCD95L6Pfy2/j3ynPsU/yn8GvMb/FL/IPim9o79l/9m9b745/2nABn1/e2a+/P93u29+WX+c/+U7Yj4ZP7MAMvrzPiP/Q3/1+UD+Ez/YP8f30P3XP6l/57dDPmj/sIAmN2m98z+Hv5D5XD3i/1q/8XoZvgf/l3+j+v/94L+Ov677Tv3H/0XADnWgigDplsUipQLlgjuqwCsAuMHngJeA1P+U/yvA8QEPv7Q/hUBbgWr/nIABQCTBDsATQIHA8sFm/9nA90GlwfY/0sFGgTfB0v9qQMMBKIGUf9kA4cDdQZY/iUDEAIvBjH/NwN0AiYHoP1AAjwBEQaz/owB2f+6BTb+2gPEAPkFbP5NAh4B6QR3/uYBRAHBBPD8hgF4/ysGdP04ATcC6QQS+q0BmwFu/LX8nv+fAED6EgDHAcACPvfB/7wBNAHS8vb8TQEoAuHqEPio/xICwOc47Yb6mgFNI5HaxQQNBF0Bvv9HBjcDiwBNAycFdQUpAXIDJQa+BroBqQOHBicHsAFKBEoHmQVqAHwFwAVi+j79D/7ZAh7+LP5a/9AAYP12AC3/i/8f/zgB3/4m//L9Lv/K/4AAFvxk/SYALv3E/tQAZ/2H/uz8Kf9oADj/DvuN/t7/qP7m+Wz+ZwCzAKj4xf5f/5kANfVa/9j/sgGd/IUAlv73/vr3OP3Z/qn+1PbV+/r9iAAb9cn8kf5FABLyqftW/+3+9/TF/Cr+KNIM7zDUCQq5zi3qDQqNBaD/fvwJ9Wf+ygRg/uAC2v6TArb+ZQOC/4wCjP8UA64BBAIPAJAB/gBxAEkA7/0XABEArQDN/88A7f6N/kAADAEQAFb91/70AM3/2P/OANoACwDZ/yj/OgCk/5//8/+y/4YA9f9wAeL/if2K/Ab84f9//zcBuv9b/13/wgCN/zL/dv8w/wYBBf4z/lAA9f4j/sP/lv/kAI8A1P/XAEIAEwFaAAn+Tv8SALkAcv06/+3/uv8I/dz+4PzV/l79Of+n/aEB2v4D/lj+pP/Y+LYBh//Q+sv5pABe/7L7lfjv/+0AC/3T+HT+z/9BAMX39/2h/hsB1PYA+h35fv+N+Pb9lgBLAOL1afiZ/VYA+faZ/BYAG/8g98L8HP+3/hn3Kv17/mj/fPld/j0APf/Q+K72J/6B/n/6MP2K/uv+iPo1+2T+9/8A+2/8wf7u/8T6CPyu/hAAiPs9+7v+Yv9u97T8Pf4u/875uPwA/n3+5vp0+3f+HQAY/Mn5mv5c/yT+vfp9/Xn+iP+O+//7Mv9zAL8RXx9n+ELaqvz9A1IACAG//HL9Nv3s/Uf+Pfyr/QUAVv3I/D3+RwFA/Uj+Yv7NAjz+b/4N/1oDLv9MAJb/0ALj/+L9b/7wABD+/P7c/3YAHv+U/m4ASwAN/7r/kgDWAI7/HgFIAFIB2P+0AAj/OQBI//UAVP9BALb/+f5q/o8AsADS/+r9Cv+n//P/AP1Y/kn/T//w/DsAQADUAAz9xf3e/wQA5f2f/qj/EQDp/XX+4P1g/xD/if7b/RIA//5U/739pQCy/sMAcP2BADD/HQPj/pv/2wICBN/6AAIC/o39OvsPA8L+Zf3V+zQDLP+W/cj9KwJA/2j9kP4VAVj/Kf8z/HP/sv9F/qz9ewD0/5z+pP84/tH/jv5sAUT82f6VABEC6Pue/+3/GAIF/Fr/nv/DAKD+ZwDOAJv/NP4E/xn/af+8/lkA9//x/sD+qv+1/7L9V//aAD8B2/0Y//f/lQBz/fr/EP+p/6P8LP92/g3/bPvEAp3+Rv/Y+gQB2P7q/nf7vf0l/nf+9/vy/V79jP6e/MX/Z/0d/VoA6QaDB4z5hvCyCKUCOQEkAK4Bwv8sAQwFcwO/CUwE+gNmBDEKFAMoBFgEXAqnArsDXwNbCnoCxgO9AxsIagRjA+cD1QdrA2sCdgJLAYgDeALiAZ4CKwSVA7AAFAFsA28D9AE8AUYD8wNKA04AsAPYAqUA5gDUAkoCoAD9ArMCYALRAKwAQQMWA4YCpQAmA8oBXAIJAiMCcgN1AYQCqQBrA2MFXAJ4AhQBMQNeAZj+FABLAFMAn/7F/y8CQACy/kP+ngDSAdr+Rvr0At3+if6Q++L+1/9E8n/kMwBYAoj/gwQs/wwDSgHNBnQBywGa/3oIiAP+/jr+lAQKAvb8Wv0n/NX+1fnq+pf7cvhU+mT95P3m+Jr31/xo/sn1Dv2o/jX/aPPO/Wr+hf5f7/D8P//J/vHw5v+h/03/8e3v+aP92/yG8Mn8if7NAGvvwPwEAI0Ake/g/IP+6f838YH8pP9rAP/w6Pun/gwAfe0i/Br/DQBN9GP8eP8bAPr3SPru/XYAi/jW+Uj+NP8p+uP5oP2l/mv3qfdU/UMArdO6E4rDNw6Cs6fh1/nI/vMCv/2A+4YE1ATp99fuvQbfBd77fvMgCG8GGP8x+WgHHQfYAbb64gawCAgEpP0pBhILxwRUAfIE6AFJASH88wRIAXgAiPwABAcCYP+R/vgDCAFp/2P9JAOtAIT/zP3nA2UADACH/+8E6P+a/nH8/gOhAS//5/6eBC4BKADU/SQFBQGj/wX+kQXAAaP+af7WBbkAFf/k/TQFmv9t/hn/MgXy/oX/zfs9Beb/JP+V+8QEHQBH/h78AAOxAXb9tP0lAuAA+f3C/tAC7s76/Cr7GPrd+NwAQPiH++D4SwJv9zX8nvrZA2D2yPx0+gcEivVy/bH6CwHl87j9ufj0BVr2Mf5p/w4HjfN2/Yb82Af38vH9xABhB8jzsf6R/yoHH/T+/l3/UQki+nYAMACQCSj0Pv3v+XAIwvei/3gAkQhu9QUARwH2B+b0Qf/I/y0JuvVt/hMBawor8IL9MQFMBNP1o/8RAJkFyuco/w0B2ATL5iX/HwObBB3lSP5WBLgBeOizAPYHrP6u77sC8AnaGFjdPgIsAE30HBBnAaD4QQfX9DT1VgBc/w0AGf9eAD3/Nf8q/6n/uv/S/lz95P5d/gEBR/s7/vX8/QDe+Zr+Rf5D/u73dfsRAIQAs/7n/Fj/Uv4O/zL8bv0f/8z/o/yq/FQAsP65+0T8w/93ADD8KvxW/4z+G/zf+iv9Cv2p+5z8AgB1/hP9H/zK/vz/Cv7l/Mr+bADN/FD6NP/B/qP+bPxc//X+bvtv+zj+fv/k/9D7lv70/lT+VPnl/j3/ufz/+Hz+k/5+/GX4Afy8/a0AQPhC/Er+x/MzDKUBzAIiA+UA0P7cBOoCYAFX/mQE8AJoBgn/JQPgAXUJPACgAkwBUgphABgERwN4CsEEN/sPBdYDmwTNAmQFMwVCBGgClwTnAEwEGgGUAq4A1AMbAZQCL/8mBJwCQgBM/1QEN/5NA04CLAKDAqv/dAB9Ar8CAwERAd4CNQJmAY4AAQH2AmQBmf9xAnQBTwBL/6r7HABuADr/O/t+/iL/8/8C+sP9cv8QAOL2j/5UABH/avRS/FT+gAHC9r/+pf8JAATeHPMb9AbYZPPt8lIO1gTE/1X6qPuzBPb/2wLTAHcBowGLAdMABQBbATsDKgOH/xoADAO1BOD9uQGDAkoDJwDT/aAAFwS9AZwCwgKMAv4BNwJnAysEJQCVAa0Cx/8pAEsAlgLYAOIB0AEEAYb/XwIvALoBOABjAfYBPgNGChMBdAAcAeX/1f+i/twBMwB9/zL+nQFC/+8ATf1a/6f/BABx+h//rQGzADcEbQEaAFX/QPymAggDewHn+hoCdwEYAxj9BwFOAcECHv9RAKcCSQCgBpf9wgE457jz9vg7/oj35PfR+pv8JPg/+N34WvtN+HT5NvYa/Sf91vts95MAYP/c/An9BQKt/xP5Nvg8CpUA8f3y/F4FDP8B+nn98wK6/yD/jP0zAbL/n/5cAOH+vv5YAFf7XACv/l4Ak/vrA7j+1/kd+hACFACx/2D6NwGO/qf/FfwkAWf/Q//n+Zj+FQCsAGf+GwR0/1IAtPc9/YP+lgBp/BQH1f1c/pL9jwI0/Z7+QPr3/L/9xv4G/mX46vzV/uoB6vuu/Wf+YPPGDKXsMQZU4p//2gFX/hQAif0a+Sv8DwSi+3r7Ff4JBF/9dPvY/+cDnP0i+mMAHwSc/0j6qQBjBYcBY/1PA4EImgLmAWYC0gZ0AjcEWQKoBU4DnAUiAkkF8gMpBH0CywWTA0UFuAJMBcIDBgPdBEkCEQKa/6UDPwN9BDUFCAP7AwYDLgC6AgcDRQN8/7sCYQFqAtUAWQNDAKoB/f8dAVL7+P/i/9z+1P9+/wQALv1V+8v/q/6p+hr7pv5f/hz58fep/IH+pPZH8y38wf+9+MPzTvyZ/mPgDPKCApn7h/uJ+9sBKv4b/7/8JQEV/noAp/8HAaH+wwATAcQAC//jAMgCpQBIAnsAHgO4Ak78dgFhARwDJP5xAc0CVgK9/ej/SQEqAi/9+f/QARsBHP1qADMCVwFeAXYAqgBxAUP95QBhAzIAPACzAQAA4v75/o8BbP/M/a0ANgLE/2/85wPPAbUAFvyeBaIDegH2+28BvP/n/2/6lwpSAaYA7fkTC6wA2f1k+fkKzAAX/KX4KgyG/fP4i/sUA8L7Dfnd9qzuTwdK53n4K//7AY/9ZwQp/uX1n/74ANUBWgLk/rAAEgGKAvD+7//l/30CCf8BAGv+BAI+/9z+Qf5wAQv8RPym/g/8kf1EBZz/JwHR+y7/Mv36/aL6x/0dALz/u/qj/XP/rADs+iz9iABj/zf71P7sAPkBIvvN/Vv8K/+p+tv+xP8UANP6BP2CAGwAh/pX/WP/HwHU+mT9cACPAB/8Df2C/okAyfoB/y8BiP/4/agBXwTeA0H+wwIiBPIEiP+uBJQEJgSAAs0F3wAZA+sEPwUqAXoFFQ9c78QAdgGPAxoA6vowBW4EHwHA+sQDrQUsA+v7fAASBTYFnPw//RYEAQWa/a76PgNUA84BR/cc/k/+JAJk9wr+2f1FAgv5tP9S/ksCTPqg/5r+wwFp+sX/fgAoAFz95/7YALr7C/ll/S//ovvt/BQAs/5J+578H/7dAID6EP4dABL/E/q//db/yv95+yEAkf5LAHj5Fv4M/3AAkPgj/mn+//3C9478sP64/6/1nfzW/gz/0PIg+oj9cv637Xv5T/1u/53sDP8gBRoOktMH55oEg/9l/h4BMQiJ/vcDTP+fADP/ZgPu/7YA+/7+Arn/KABc/xoC2f/n/X7/6gGU/2b9m/+dBLb/DP8A/5EAh/5r/jf+NQBr/2H/H/0rAID+E/+V/Jr/yv4kAAn8n/7P/RYB2fp9/b4AZv9S+s79MPwf+Lf3e/z+/gT/3vZA+3AA8P/k9QX6/f4wAAD2e/x8AMz/3/NZ/N3/kAC39hf/VgA8AUL0hfvDAEcD+/da/uMBpwQj/uUBngMNB3EE6gJIA7IHOAmbBU8EPAmu/t/ubPnQ8dz68vti+4D3FPU99Lr3RP8y9onxJfRbBYr4QfFC9NgGlPml8uT3QQR3+rvv5vauFvX7Nvdm/RL/zftg93T9d/wv/MD8ef6N+S38+/8r/4j4zPxu/j//If2f/xf/PwAH+8r5IPr2ABL/A/87AMMAB/6K/jn/9gBw/iz/kwARAdP+xf/T/08Bk/6p/hP/7v5h/ZD9OwAZAIb+xv25/H8A8P5J/rn8+v/3/3H+MP2OAHsBY/9J/0wAlQBy/53+9w/DALMHffzo64EEUAAN/jMEpwS+HwT/UP3I9Vz3NP86+uX63/jS+3H7U/xo+2H8Rv56+xn+FP0iAGf8tf1A+/UA8P3c+7jyAPdy/Xf/BPqx9/j8qf61+v/76/5vAFD8hP1//6kACf0//tj/OwAZ+/v++P/E/jX1Fv2q/5sBcvq0/8L/iv+7++n/fv68APb7x/4IAKH/pfxMAAIAgf/b/sX+pwBWAHj8kf3P/5UAkv69/5f/Sf6f/zX/Y/9+/gj+rfwr/hv/CPpj/bb+bAD+/KL9rv7y/Yn50iJTA6z5y/ua9uj2WPzq/tv35vgi/Vv9lvpz+f/+1ft3+Pf7VgBg/Lf5LgeWAuX/c/pd9xf5A/yX/ZT1I/nC+pD+ePdZ/P39UQB79bP9GwDg/nr2L/2A/7T+cvXT/7z/P/+a9Mr76/3iAPf4Wf5W/kAAt/gE/qT/jQBF+lj/xf6h/mv6m/1h/n0A7PrY/ZgATv9X/LP9Wv+H/3X7jv90/+b+Nfst/5j+QP9C+lj+P//W/tb5xP58/5P+nQCj/Zn9s/96AowlO/Ze5NHiWfs2/S/9mP3v/wj8nf39/6z/g/zP/FkBEf1X+4v9YgBE/LL8h/0J/4b81vsS/BP/9vu4+/b6sP1Y+tD7Rvo1/kn/qADr/Dr9Kf60/0z/Vf6r/+AAIP4J/jv/y/5S/sz+swAn/4X+RwC9/8r/l/3U/er+3f7c/0z/U/9LAPH+YQCJ/nIAHv4nAFP//f82/1wANwBx/y/9dv89AOP/Af97/24ARP/XAVj/LgDPANsCyP7u/gb/yQAL/pr/DgAp/1n+pv/r/jwB5P+2AScA8wDAB4j9NPoK/BL78vr+/SX88Pq0/O7+ffyy+xEAqAPo/NX5PgfNCTH+OPmWBLYCZ/xV/Jj7j/yg/O7/+Pr3+0z7Zv9J+pf9MP87AHT7Af+w/mv/iPuA/979Nf+j+ooAYQCf/9z4q/tZ/jcAAvze/2cAlf6//Gr9p//oAH/85v06AFQASvy2/vf/xf6K+wj/5v/9/pf+Qv0RAOT+svzk/3MAyP5t/DT/k/40/yr7+/6B/xj/HPnC/rf/JwC3+y0AOAC//00B2g4L+Mb2LOtn8yQC8wFe/oz/Ov31+5P94f0c/Aj9qf2H/b/7RP1s/qT79fg5/Mr+3fvM9kT7iAAa/fH3LvsVAq/9X/iL/Ev/I/0W+mr8qf4k/Tn6OPw//sv97Po8/G3+/vzy+1780f3w/H39rPzT/Nj8Rf7g+7/9MP4F+j78iv0Y/bT+AvzP/Z/97f0H/OP9+PxdAET8Qv2n/rX+cPt7/Qf+b/6I+Kv9AwC9/lX5if7//RT+d/hi/Wn+sv929yP8ov9zAAH2jfwb//b+/vWA+679m//P5gj7ygCuAHn+OAHzANcAagCT/ggBrQBMAVf/KgEoAGoBCAE6AWEAvgDcAGX9fwWKAHAAHQLg/h0CtwE1AoH/RAHiARsCRf8HAeH/IQFn/ncB5P/CAMz96gKyAfr/WAGfAWL/VwDF/dr/DAPQ/2gDMAEgAKf/BwOXAgUAnv+oBEkDqAA3AOEE9wKz/8gAZQniBS4BFQAaA8kB/ACEATAHkgR/BJUCaQbLBBAEkgS9BbQEngYABgYG8wEzCWoHNwRYAmcNcg/Iy68H18jWM2gBH/9AAgEAzQg0ACoBPQLFAIoFSwL6AYkClwc+A6//9QGzC8ADAv9o/xMLXwIw/s7+qgbQADD6y/5pAHr+Rfac+lb96f3e8vL54ftE/KnzP/7Z/uX5qfOg/Tb/YvXS9Un/jf7e8KD5U/0s/2/sNfid+xX9Au0a+r7+wv/867H5i/51/ojp2fmc/m/+uOq5+6H/ewDM66X7R/41/tTq8ft1/7gAo+xo/Cv/7P9l7kL8l/0+/3zuJv1M//D/Pe/9/ej/J//A7Ib8TP6/AE7WAhZIAW8EYgM3CZICAgRVBHwJOgIQBBkEfAn8AcADCQN3CgYCyAOtAoIHCwPoAtYCCQZ7AW8EpAL3AnUBPQJaAYEBewE0A/QAKgBRAYoCzQBIADsBrAFQAeoA6wEIA0QCJv8aA9//cP9OATQC0AMsAbf/YQLnAgYC3/9+Ag0CCQP1AewBBQS7Aq4BQADmAyMEyv/mAg4DCgRrAVcBrgJwAR4B3v6qAmD/MgES+2oFCQJSAkL6nwGDAIX/hvd0/8H6gQFG+uTlxMEQqm8ROv/WAFADX/9ZB5L9PQGaAJYB+QNvAjQBIgJAAlgDGwCaAQQAWgP7/jgBZgEZA1r+sgEXAZgB5v69AM8AHgL9/+gBuwFeAd/+MgNtALsABv9A/64Ah/76/iMAMAAE/H7/ogBdAWP6oP/iADQB8f0D/+gB2v/+/EX9VAFk/5f63P0y/4T/9/kQ/hf/fwE4+nj69f4d/3L5YvpK/IkA3PuyAD8EyP+B/zkEGwT4AMgA8gSqA1MCywFiBb8DHwJ9A6wCHAOzAOkDzADv/7QA3xbK5+rwtAO0+k71P/hQ/qL47fZk92D9PPjz+ff4B/uD9n38I/b09933C/wj+ML14/kh/M/6gv8//y/+LvlF/2r/Ev8I+psAbAAVAAP7u/8qAJoALPvK/qEAuv8M/cn//P+v/4H68v0q/vX/r/lu/1j//gDF+aEAwv5g//b5cP6o/0gAL/lSAJL/U/+69vv+rf7+/hX7rv+H/6H/IfsvAK7+hP90+R/+2f7+/4b6DP67/wcALPvZ/JL+ef6w+MT8kv1T/3buDAgR9zYS09W29cD6qPwaAFb/0wAV/zH+SP7vARkAev5IAKkDYgAcALb/xgNLAAYBVgDCAiUCMgCnAakBLv9N/tsBif4tBPkCawQdA1wEFgM5AykFJwXoAsgDoQJDBbcDDQWaAWgFYwNSBeEBxgPSAhACBADXBQoISgdmDCsGwgRiAagBOwW0BPgB4gGOBIQEpwElAWQCCAQnAQABFgMDAhYEkgKN/UoAdv86/5YBNPzqAL4AE/93+FH+OgC5+3749v1a/3D6p/bY/FQAsfUL+IH8PwDE2uHvgf33/F38nvvD/m3+ovxy+oz+1f6o/OP8IQDf/kT9KP5wANQAx/yQ/Qf/GQER/oL7VwCvBd3+qgBzA7kDe/7z/T8AYQIZALsAGwDmAFn/xwBn/zYB+P8yAA7+kwF4/+P/Wf3tBKr+kfxH+ygDEACGAKT67ALH/oT/nvn5A/L/nv+2+8UAOP/ZAEv6awEx/zAAnPfn/e39cP4z+NkA6v0h/jv6Gv7c/Sb+iPow+CL9xf4/9vr10/1P/0319/T4/U7/9ew8B8f1Zflm2Z7wHw48/nb/XP9B+d8Def8SBd0AgQEKAh4FzQFW/0ECLgbDA+b+uv5jBlMGFgA/+rkFCgZdAYn1ggRSBcoAePhO/4H/RgEu97f/5f2QAff3Zf/a/l4BWvjGAKr+VACa+JwAkf4C/+H9yv/m/iL7+vmW/gf7m/rh/Vr/xADo+RX8vv6x/wr5of3p/tX+o/lU/VD/0P4o+TD9J/4G/3X5v/zs/lH/+veJ/bP/8v5x92P9q/2J/XH1avwk/2H+F/ES/Rr/Vv6w7br6Pf4P/5flGP/K/UMB+AG6AmD9ygGQALADkPzBAeP/agQS/AoCDf5cAqv7ygF9/mgCafj8/aD+V/sl/NEIYv/wAKD6VAKa/GH+GvrX/xYAn/8q+rr/Hf/MAF76tP4OAK4AYvp5/9H/8ACn+rAALPtMAAL59P5lAFD/Kvl1/3cAQgD0+JQAjP9NAEr5Nf4nARwBCfyZ//7+wv4T+0QBXwJCAb7/uwMMBzcFEQCEAl4FQAa1AqoBWQRwBoUFLgR8/3cFWggbAZ3/9QYsB2HtygV3ziQQG/8t/d0Aw/6JBE8GKwHGADwC1gDc/nwCgAKrAJT9bwMNAmgBSP2kAQcBHwLB/XYAof+BAY38PvyX/53+UgA8A64D6QKtAL4ACgIJA1YBxgC0AmIBhQEFAHIBuAFBAQn/XgLOAW4B9wHBAYUAewJWAaUAyAKsAkQBfQNAAMkCkQGxA3ECJwJ3AtwBFQCmAqQC4gEcABMC2AErA8wBjAKDAsMBGgGzAZP/EQKuAU8BPf5C/84Byf26/BEBHAHM+mH4JwDs/3P6gvOw/tP/BPzC71kBBgZqAtUCnv0tBqUBbwOl/EgFwABLBb/7vwR0/YkG0/zTAW343v/4+a721PjJAHT59v0H/4/+OPiU+mP9MP8J+MT8P/7MAAz2DPxRAC0AKPbg/S//5f4/9g/+nf+B/5by+vz1/OH9OPAT/vv/nP918f39M//Q/57usf30/9YA+O8z/cD/AAC27Y78Gv67AJH0XP5U/+IAOvGF/eD/4/4o8Gj8cf+S/9jxY/wnALX/ifIV/BP+PwBn9H35lv7U/jjubA0L9JIHycLe1RLy0gI+AaD59gAUAygCCwKbA30ChgKfAqgE1gICAvoCsgiJAv8ADwNZCv4CdwGjAhcL6QO9/6UC2AfZA8QE/gNaBT8E1QH4AjwChwTjAKkCXwHDBPn/wgM/AmAEvP+ZAawABQSRAj4BhAGZA2j/AgEHBBoDqQHxAUMBHgPWAFQBEQJYAnYBygFoAQMCqwJKA6ICvgH3ANoEnwENAUcBugIIAfn/4f6iATACsQA7/HYA8gJG/9L71/9PAXL9cvuT/WYAVPpJ+Q37xv48367qMACZBGcEgwJKAn4E1APdBDAACQMIBL4Iqf5nBP0BXgpt/xICDAGwCcz+gP2vAt0Emv3R/Fr/Cv9N/L/4dgDN/6v8zPZWAJb/nPsV97D+HwDi+cH3HgABAGP3nPvt//r+sPfZ7rP9LP1y9fn5+P9vAA72SvcKAP7/3/Rs+BL+cgBB9X35oP60AC72c/aG/2wABfeK/Pj/lAAr9b/1M//3/lz0CvW+/SP+9vOt8zn+OP/09ML0tv69/57yz/Jt/Ab/oMPCEHn7m/6KqGIK2fIAAmsCFABrAaYCX//pAgcD8gIHAc0CMwRsARoEHQTFBWwC6QS9A7YHzwMRBawE4wq5AyUFAAXNDMcC+wRQA9EB5wK4AigCaABnAkcA/wA//3ICuv+S//D/8gGp/pL+lP4HAYr+wv1C/yD/rf6W+pz6Yf2a+kD78/0a/df4jvtx/gb8wvbr+lj98/rL9jn75P0j+azy4fpr/iP6hPf6+wj+JPiN82L+uv4n+kfwZP7z/uP6Ye3f/sL+V/xC6Qb+2/wO/SbmMviT/fbw+BAGAg8H2gI+CHUBPwgrA0UL1AGKCJwClQ2jA3YIAwLuC8MDjAZ7AX4HFwRwBJcBzAcXBqEClQTOAnYFIwHHBTEE0gSH//8AVQC3BNP+L//vAGkERf0B/28A4QTz/oYAxf7eBEcB4vok/m4Dtf6h/pz/zwNB/zv/nv5AA73+aP1f/pcCa/yf/tH+pAEs+AL90f6e/+b5gvssALv9xvO5/AL+Sf2R8br+Uf4J/p/si/2w/SUA9udZ/n7+gAFh6PX74v5h0qIF4PIswtbSH+Ms8XwGOwOm9Kf0Xvv7/aX83Pt9/Kn9ivuM+ij7BPyZ9RT55/kX9pr11/o59Rfzxfda+2PzBfXj+L75hvf9/Nz+Nf42+KT8Q/+5/mb2Av31AP7+DPe2/ev/WABA9579Lv9m/6z20f0PAK7/gPer/RP/vf1D9wz9Rv4iAD33If4q/kb/w/cV/ob/Df/C9oP+bQCG/2T2nf2A/rH/aPjZ/bP/6f5B+df8mP7v/xj7uf0Q/yz/z/rx/aP9/f55+uX+3v5x/8D4bf20/Yn+hPHGFOYERwMgAgsDTQJEA/oA1gKJAbYBfgHKAkoA1QFxAZ4EtACiABgCeASc/q/59/2dA1gC8AJ7AqUCywGi/5gCSAKxALgAVwDgAIL/zwCWATwBIAAVASIBbQBr/94A2//fAP4BJ/9EAVICyAFtAXIB0/+3//UAxv+wAMr+dADdACj/yv7t/rIAggCh/R79AP+/AED+2ACLAeH/AwLN/pwBawANAhD/hgIUAioC0/9dAWYBegM//yAA0QBr/2j/8/9bAiT7pe+j9RXOKQeX/YL+vv/R+Gr9EABA+rYC1eRj5pr7tO5v8v77LfRj7vj7hwaA6tHwSABZBHjtL/YLBWkIce5b9hwCiQXbCmP7TwDdAl8GFfdH/n0AjQvk/57/pwAVDUABPQHPAicGXgLl//oAQgZHBKYCyP//A23/0P3O/9AJBgLwAN7/mgWKBHkCFQGEBfQB5gCeAN8B5QATAQoBl/92AJABGwAW/T4AfQHP/9L+yQFMAMwBC/0pAg0AcwCo+uj+qgBFAc72DP3k/vQAGvt7+bP+ZgHM3MRGwj7n9jv0muYq9HT3fvKY6Cb2fff4873pevYA+c/1FetN9oj4A/YB7AP19vWz9Fftcuw7/Gj8J/xw8ZP4HPxk/XHwWPwK/sv+MvPA+of+gv7X8Bv5Xv4RACn2D/12/oYA+/Be9SX8Wf1W+qP81/xF/+nwr/hb/yMA+O38+Yv/vv/0+jX6Jv6k/uH2m/km/f3/nOzy+az/lP/38875of1PADD3rPgx/mEAo/ek+xT/1f+7+vv4Yv30/gD9gPbM/XoA1ubmcAq0w/JMqzzbIffE+JL05/+T9EAC+wHNAMYDWQN8AjICbAVrBeYBnwRoCM0GfQGZBU0KmAh+AZIGPgydCX0AYgYkDUwE3f9r/oX6UwIP/Q7/B/oaAff0i/5w/V3/4PLj/Sf8svy98039dP5i+Xz1F/3e/mr4peuD+6P9p/La9Wz+hf+b8fby+v5R/izv4fX6/YH+xeoV+LD9D/795NX4Wf4t/sXkfvkF/l0AZN749xL+p/9/3uX30/00AOHhE/rG/7H+NeNZ+dv/PP+j5hf73v05AMfULB9JAzICwgLCA/4C/wEOAh8E2QLTATkBbQITAkoCgAHTAnMBpgOkARIFEgBWBbkBQQW8AXEESAAlAooCnQOrAjgCCANlAygDPgErAx8DlQNtAOUClgNqAy8BwQKtBT4CcADQA0oFuQHPAogDhATCAab/1AMnBXYCz/+IA6sE6QJLAS0D/wX4AtP/kgNVBF8FbQFbBHsDWgSnApMBKwhDBEsE2v9zBdwCHwT1/lYAef+zAy/7kfxT/u0CPPfU9g/+zgKw1yz1fbn1mSsJt+dTAe8BywJv/9YFIP82+Rv9SPQP9UQAe/m29vX6a/tK+cf4K/p0++f53/sM+Iz+lPoy+tX1nPtE+pr1ufVO9Qr+fP6v+ub3F/ps/wT5iPu6/08BFvrb/LL/7gD5+Vr+wgDB/lP8RP+O/yv/8Pjy++D9JwBM/p4AlACrANv7TgCy/kT/8P2RAIEASP+2AGn/SP99AEz/j/x+ABn/if5NAOH/Vv+OAmcA3v/N/80Bzv4YALcAHwGw/GT/Kv/q/Uj9hADj/tr8aP0dAFD/QPobL6AEcQDV/MT0lvwt/if8kfhn+gD+Nf35+Gv6KP7V/Q77yvp//Nf+Dvx7+tb7/f5n/J/4P/pE/cr+ofdj+UH9L/7Y+dj9mv93/i34Pf31/ocANPiM/hcAl/5t99L/9f8Z/5r2s/sK/noAo/tG/1T+7P+y+on9MgDyABP8qP52/tn/af7t/WAAF/8R/tr+yP4I/234Av6U/q3+Tfto/WH/GP/W+i/9G/7v/if5of2C/wz/s/cz/lz/LP4//H/98P6E/in93S7876fnvt4g+kn84v3g+wz+7P9f+HDySPkb/PT6KPjP81rzm/mC/bb1ffBv+mkAP/j272f7TgFS+UDxKvo9AGr6fu89/0MPUfww+OT9cv4b/Af4fv3k/Kj8JP3g/Yj6bPw3/9P+mfka/TkA5P46/g//tv4RACb8mvl9+vMATwAk/w4A/gBM/8v+NwBoAUX/AwBJAKsBsf/jAHv/KwJX///+QQBd/1T9bv+J/hwB3/38/bf+uAGR/db9Gf4HARr+Ev4U/lcBqP+N/3H+wgEI/1j+C/4eET0C9P3zBCv/7wA3/68Drf8nAeD+XAOG/1UAR/+bAuD/2P2h/iQDi/8w/WH+0Qa2/2//q/4NAdD+W//Q/e0A4/8MAGD8+QCx/qsA5/stAG3/EAGY+7b+Mv7l/xT6Nv6E//H+OfnA/rT7T/py9Tn+hv77/kb01vwF/wgA0PMC+wP/F/8U9Ef9OAAK/xvyB/zB/5H/x/o+/ZYAuQDv8z775gCEAlv4Iv1eA6gCCv/6AeUEogYfBikDEQQ0CBYMjQVdBNkLGf1y7IL9yu6C/Hz9y/9PBT39fRv+BTAB4/24AMD/3P9t/oAAjP/U/nH+KQA9Acr+Ff4m/w8BI/8Q/k/+7wCy/5T8M/1w/jwBfv7c/1wADACK/Eb+DQDyAcH82v40/xABK/1A/2X/fgFN/Ez/k//IAXH+uP8XAKIA5vyx/cP+CwEt/l7/m/8RAXn96f+nAYEBQvy8/kgBGAG/+/3+fwDfAcj6tvyzAIH7AQCIAvr/E/cg+7IBLAIS9Sf8TAKLBNr1K/zcAoAIGfc+/SwF0AuO+NcBvgkFDlgIpeHw9lENp/cU9pb4Bwqs+Zn0JvnmBnH7q/fQ+ooFMf3p+Rz7ZQef/Uf8Lv/gB6P9Bv35/iv5Yf/h/Fr/yfzg/er6g/47/5H9FgCj/07+mf41AJkASv8j/9X+BAGBAAP/bQDrAWP/qv0y+6IBWf8Z/rL/uwE8/4f+bf+YAXf/2P3RADMBs/9A/pz+mACn/3r/Qf6SAET+7P9f/qX/if8//dL+cwCU/+L9mf7uAJP/bfwJ/k8CLP2O/Uz+VgP8AOP8cP5X/GXu8fl1C1/yMPY8AIsH5v1i+PoS/QeE/yMCSwAqCMf/TwGVAIIGjQHAAR4BDge3An0DeQDlBncC0gR1BfkHfgJgBmsIUPpA62H9pP2I8k3ydfpN/hrx1vUv/8P/N+zd+c79rP1y58b6rf+2/zLj2/wx/zf+q925+VP+yP3R3qT9R/5o/zriOPqV/pP/feRq+1T9T/475oH6Tf4xAGvqFfpk/s7+y/Ch/F79awDh7rf67P0b/7HyX/qz/M7/8PRJ+Vf/fQB59Nb4OP5OABT1y/no/Wr+nOahIGj/tfrU82/0c/nA9rb+bf4+9tb8rgBAAV31QAE1/3YE2/dGApwBMAQ2+TwIyALJAjACIPxNAB0Cyvsr+l78a/9b/5EAcQCU/03/cgGFABEBy/3dANkAJv9R/i8C3wHT/5f5jf2O/fgAEwG6A4IA7f6+ARUBRACMANcBLQJmAN//FgLs/9P//P8mAP0BTgAx/3T93v41ADH/gv/QAZIAVwG3+woBnwAAAE/5SgBw/1MA0ve0/n3+YQH++Az9hgD+/wjvCQaX0Vml7fGd/bD/lv5WAqP9vv6PAbv3xv1R/KIA1PjB/N38+f+5+Yb8NP2G/675Ffzw/UH+QPo2/En8wf+s+Av7mvqH/Sb86PuL/tv9ovrX+339Cv7o+4H7x/9Q/o78C/zL/4/9rPwK/EMAJP3w/AT/IQAx/ZD84fqM/Fz9ivvZ/9j/Bv24+af9TwF8/Cr5IfxOAGn7NPmK/nwALPqt+BD9jAGq/xL7aP8PANj+ffQP/1YFZP+98//+TAnQ/wD0JgEDCvwBGfp1CfUINQYsDOsLBgZGNDHipfd7CFX7GvgY9D0NLf7l9tHytBCs/zL6efUDEWL/4vqB+FwR5f/n+mD+kBN0/7b8qPo2Br7/uvol/ZEA0/5W/X7/bv1k/nP97f+u/R7+4v4jAOr+kv40/5v/tQB3/lUA+P2fAuD+Wfnu/cABO/58/vL98gLW/uP/0P3+AmD+tv5H/DgDxP1C/wD8IAYd/v79hf4GAAb+mgBd/K0D8P1U+zb8NQL0/Wf8k/y4AD39ov01/b//J/4t/kf+uP6e/7j9tQFd6RwRgRZg7WgKjAdbDkn4lfvoAGoAHgQsAccDLQEOA1MC8wPEALwDSQLXAkUAAwSfAmQANgCSBFsEKQIHATgGUQURBDsErASHBHgBkAQ5BH0EXQIjBEIDbAMeAkwD1gKtA7ACXQMnAy4DTwGGAYYCbAGH/7gBLwJkARoEAwIiALMAH/6zAOAAvAB1/jcBXgA+AeL+0v+h/7//n/7b/VL8mgCR/ln8Mf+Q/ov+mvov/jkCCPwu+xP9nP8G/Q36KvhZ/sT8U/Pp9Kb6Yfyc7i7ra/rX/UfhBPYs/4gDyAK1BPv9hwPLAxQF4PzvA7kDAwXQ/IsD1AJtBW/6JQNEAm4FZfts+/4BswN2+7AFdAOoA4D83wKTAkkCmvyBAnkBSAG++mICGwG1ATL6IQLZAGkBePklASsAdwCI+QUAzP+bBJX6hwDoARYAkvmK/kEBlwD++tj+bgFWAXn8of6fAU0AB/7g/XcBogLX+6v+Dv9BAGT7df+kArUDuf1z/hgDkgNE/w4AZQNEA04COP++AQwC9gF6/2wAk/17BG3sHQkh2+cG5f4x/k0BSgMIBGv6mPvvBSj/0QH/+yQGLAATABP8RAZ5AOwAzfwHBXYAYAEf/qUDnwBEAhAAYwFGAM8Ad//HATMAlABa/7gALACHAYL+X/+pAG4AF/3//+j/WQCi+y8A7f5eAaj7cf8AAev/jPsM+kz7b/yS+mj93gDMAJH7P/wj/xgAefzI+2X/e/9P/U/8aQB/Abb+1foI/i8AF/0c/8oA/f9S/3791/7+ARwAt/2O/0sCOgA4AHT/yP/u/nQCfgAT/7T8AAVs/SoAIQQf9W3+FQFl/zj98v7B/+P+yf2C/wr/Uf/s/tb/F/8O/xwAqACF/57+5/9NAFn/ef5n/xz/t/cXAJr/0gBh/sv+P/+NAWr+jgBk/5EBG/9jAU4AoAEgAP4A6P4yAgkA3AB0/isFc/4I/tT+DgVN/Ev+2P/TBWL85v+j/jIGGPxI/1QARAY7/Lf+b/7EB038UP96/zYCJP4p/s/+hQBhAAMDIv7j/GMCqwH8/Xv35gKJAPj+mfClBXEBif5j7V8E2gCh/UXcsfzXC1b4FeRPxYsCkQAEBiUIggVjAgMEXv/YAPgBbQODAC0AgP9dBDkAdf91/w4DVQFdAJb/CwQeAykAJwGKAlMCZQFxAG3/s/94/g0Ay/3D/6X/6f4v/ioAiv6u/cb8XwCb/+r8zPsPAWX+1vxH/cH+1v9K/Kr3Tf1t/GL8qftq/gIA1/vC+6P+f//v+xz8fP8S/wn8RvzO/cD/hfue/Bj/EwAX/Gf8Yf7O/yH9cvpK/Lr9+f3X+on94f0E/038F/2b/c7/rPu8+6n9a/9B+gb8OP/u+Jr7GwJ8AikEMgEfAw0AvQJmAowBBf2uAlYCxwEV+mkAdgKKAXv3o/7OBDcB7fEh/koBrfv8/pUBWwFl+6n+rgArArP7h/9+ABcBtvpJ/gYAUAFu+6n+MQDwABH89P/vAcoAjPzS/SMA4gQk/UsBzgAJADj9vADgAbkAfv7xAvEACwAm/3IBzgBAANv/CQXxAYYAdwNxArEArAD/Ay8E9wBPApsBjwOFAE4CxwCoAisBOAP4ATsBf/8YBXYCFPye/McCfxXi6+b98t1rF84CjfmY+3UCAQpk8lL+gf1l+8n1aQBv+wT7FfiY/qD7Sfoi+Qj+Cv08+Bn48PzI+0j2Lveh/FL9bfh39Ub23f1U/z0Ar/by+zz94P2k9Xj9Xf+QADj2Ff69/sf/ufWr/Eb/c/7w9ab9yP/u/4L3IvzK/mv+F/X9/S//lv8l9aL9e/+1/+LzTv5d/5gAyvTg/O//9f5Y8w79rf75/1j39v0nAL0AAfm8/UH+F/6m+MH9qf0P/7j35/1M/4cAoPht/5H+uv6Q+HD8Av/m/r3fZhTpAFwBtQHlA0YFi/7PAtcDJQZK/cABMgLLBf79twGQAIkEIv7yAnQA1wf8AbEDFQMvAnQAaQE3AKMBLwDlA30BuwHk/14ARP+kAGcApACr/1j/VgAAAFL/Pf0iAUEBqP+L/n8AxQLcAVz8Rv9o//H/6/wQ/yMBu/5D/GP/v/6HAE/7sv79/j7/0viW/Nj9m//2/b4B6wKwACr+igSRBKwBEv9fBF0DdQIrAQMD3QEzAooCqAGXAn4ClAXG/qH/5wFIEk7pL9jCwnESE/lE+XL+6fyU/dQAgfb/BFj6q/Y++UkDEvoa87X98wEo++n2sf/AAcz7bPnDAW4C3/s6+0MAPQVy/GH5DAEr+5D93Pu2ANX7Q/2t+w0B7Pz8/OL/owEN/kP94P4wAmX+C/5YAKoC+//u/9P+9wTK/+D8Nf7eAz7/L/7J/pYEYP+o/wz+8AQq/1z+uv/4BOT+5P+4/rMG/QHH/zX++gS9AIX+2f7cBCUCFAP//P8DVQKMA8f8oQLaAVgClP0LAdcDjgOx/Bj+pQXR/r37O+Ys9BX7zwWj/0sBWPxdAwIAvQCe/HgD4P4wAMz8HgSj/jD/6PwpBAH/vf1PAEgBsP4p+14C2fkG/yIAFgJn92f+qv7xART4Z/1HAd4AE/nK/YoBZgAg97r+i//7/3n6YQB9AJUAjfMN+gD69P5D924Abf/5/tb1CP91AGD/mPPA/v7/Ov4999n/fAD1/Vj0EP3v//77/v6qAE4Aq/dLBP/+JAPe9b0FvwBvA1bzYQmyALIEi/IgC7IB9gRj9BQQNQWoB58WoOiVBWzuiAPxFGgEkQTyA+kIcP1A+1z94f2i+pH8mfx//Bz7JvxO/gf8Cf1t/Aj+vvyH/fD8l/5A/G/+4vyZAV388/sv/nX/hv6e/0v+IP9A/zH+Iv5r/4D/wADY/hP/Zv9l//n+//+z/2//Qv9rAI7/W/8AABMBrf+FAT4AyAFhAbgAegAOAXgA8P5qACkBIgBPAIsBMgD4//sARQJYAokBpADH/6L/K/+W/nYBmACvAFr+xgCUAHz/o/+EAAb/8/5z/xAA1vxb/rP9WACKAc/7rf+rDNcKiPpz/L395PjY/If7Lfoo+538Cv0n+x397fxD/X78kv3O/RH+WfxT/nb72f9M/CD7jf67/lz+Kv+l/rj+a/8//Vf+L/8P/8IA5P4A/3j/8v8w/6j/4f+jANf+8/9F/yQAMP/DADsAygBN/6ACZwAP/xn/JQF7AHsAFv8PAS8A6QCg/zkBXf/E/qMA/QF2AH//mQGr/1EAdQBvASYAP/9x/3MB8/6c/u7/RQF5/av9WP8bARX7//25/kwBwv/F/c//QQrdDHQPRP9y/X4DWgMo/mb+OP0O/YsC+frLANf8cABv/q0BPgLS/jf/ngHsAFf9kv4gAN8AJv3r/cX/BQEjAHT7Xf6vAtj+mQXvAf4AWP7ZBUkCRwTj/psE+wG/AOD/PwOsAkgAsAHoBfkCbwBLAy8Civ+CABoDPQwMBgULzwPlA24A4QCiBL8B2QCZADsEkAGFAesBfgMu/78BrQHLATf8vAIVAjz+Cf2y/hgBm/tH9GAAIgTk++Hz8gE2BAr7WfI9/zgDzvwF76f8VANp/mv0r/ltAKoASebXAB8GL/lE++gAVQYM+qz8fAJyBhj9Iv8AAgoGEP6j/lEDUgRoAIf+fQBJCL0C2wGSAygBjv+Q/p0DIQCEAHMAHQRT/6H/OP8UA/D/Kv8I/+UBlQAR//P+oAAS/xj/1P8zAMgC+v+x/+D8wgKe//n/2PyOATwAcQAA/fYC3v7h/nH79AEg/+n+MPybAW39jf+A+lP+rf+1/tn9HQHU+rr99P2U/n36J/54/Kv6EPuE/6v7LfWJ+zgArf0H+7H8gP8A/ynwvu5ZAXHrrP79+0EF6vx5/cr6vgN/ALgAaQNoBKYAoAF7A4oERAGKAoAD6ARZAScDkARQBfEBXgMkBY8FiAKKA0gHNAbABBMEwQncBtwDvgTbCdcGpgPoBF4JWQf2AtIFxwihB68CawZwBv4GtwIvBcoAxwdoAmkGDwznBwUC9AY+AWoHbwB9BwEBaAaM/60HSgElBSX/mQZS/4UCDf7SB9cCOv4W/Vv9w/2s+YUCZwTL/nv10AOmAwz+Ju+OBmEAF/1e6T4KRv8O++jpfQhR/sr6JK16/CsDBQEXATYE3AMlAYYBPgRhBJgBKALNA/YErgGjAswERQZLASEDlgUIBh8CPgODBjkHBAPlA8AHXwflApgEmAibBvQC/wRDBbQGDQNhBbYFhQbvAt4FlgNnBSUEQgIxAFgGqAKkBeUKuwRKBCUFUwDMAwoDzAYIAIoC4wEFB/r/8ACQAkIFkf8S/zD/8QZTAZT5/P+A/Kj+wwEM+JID4fpKAJ72ewOw+hb+7PXTAMj5Z/1C9Wv/OPnG/pjy0vr5+cHCvf14u+3mbuRR4KX19gFUANz8M/9UAxsB7QIyApACSP9fAvIChwEu/fkBGwNUAQL8wP+bAysBYPob/ogD9//T9Nr9ngEU/NUBCQLXAan8Tv83AegBI/1jABkA9f+z/L7+LgDLAMv8cv+9/wsBu/1a/n0BDwEN/SX/awC2BLP+uf+JALEBB/4l/zoBUQAd/pEAiQDdACT/6P4UAGoBz/0/ATcBGwIhAYwA3gAPAVoA2wIHAQMDoAC8AZYBrgIDAbwBcQFgA3kC7v+C/8gBRAK1++P84f5wEILpN/9VBwwB9gBq/uEG7QHdAP77vwc0AVAAyPuqBmMBLwDf++4GZAJJAX79IgQUAp0D/gALADkAr/4PAPz/5gCBAMD/TP/EAGL/8v53/rEAtf8F/779fABQAND9GQBeALD/Gv6N+gMAfwE4/qb95f7F/4v9mv1R/6X+3/16/TT/Vv/8/Pf9r/5f/+X8rv72/tz9fPt4/W3+n//M/V/7bv7r+7H+gPsI/n3+k/78+tL9r/72/Hb4JfxZ/sX64vXK+13+LPBp93wDMhAa3/Xwwf7dBTT7AfWXCfEDR/39BREEtgFQ/5n/OgT0/6wB6/1hA7f9MQRj/O4CNv7GBXb87ALi//X+yf3D+8T9RQK9/jkAk//b/839l/5DAQUAdv+qAXQChABBAFwA5AOj/2cAef9yBZYB4wCdAS0H9P8L/5r/cQYNAZsAYf+DBgkBXgDmAMAGygApAVgAfQYzAssAXgEEBv//wwFNARgCoQGL/qoA7wTi/+gALAKRBO7/ggCGArQDff/k/04CvwES/9IAkABRALj92P+y/5/l0/Ie/7n86Pya+pP/Rvzu/fT6B/6g/iz+QPw2/aD/Gv9D/l/89QAk/6b9r/uHAEL/Rf3/99gFWv9U//741gUN/1f+ZfiWBSYAhAAY+OEF8//iAJn5IgShAM8ALvd7AyX/IwCW9RsJtP8n/Yf2uwVwAC0B5/XPBUMAjf/v9G4HxQBy/xv2LgYgAQ7/NPZ+B1cAGP4t+Uj/e/88APf3QgXL/rf+vvrXAPH/rv2V/On9j/5m/5j9xPqJ/qT/0P7Z+jj+Ef5vCaoDt/sgBejwkRQG/sr9dwHO+Iz9Y/oZCNH6yfmu/L0Fhvtc93H8CgbZ/Jj5GPxWBkb97vq1+0UGJ/2M/WX/qgTn/G//ZfwTABn+gfys/DYAr/6D/mT8v//5/dD9gv06AI7+xf/k/q//nP9Q/5wA2QDj/4H+cP+XARL/W/6KAMkAhf+h/2P/RAAe/xz+5v48AKf/QABl/k0A3P4bAJf9qP71/uj+MQHC/rv/l/6MABD7F/5j/UoBQPw4/l/7uwEa/tP+d/1LA/YAqPw8/AUGHgbL+kj86BaF9G8IRfXPAzT/KQhT84IBPP5UByj0AAEfAJEJIvM//5cBDwoo9P/9DQFjB9bzsv0A/XMDdfzz/poASQJe+lb9rvyJAkz7Wf4CAIkCH/sAAP7/igIF/Kv+SQBwA0P+7ADP/5UFd/l1/PX74wVY+n4ArADaBVP4Xv8oAAcFxfhz/1b/fAT29wD/0AAdBaf0Xv0QAVb/MP1P/xYAmv1B/SwBXQSn/sr9egArBhQAW/xJACIISAEP+VgDYgkOA7D6ZAaDCZgMlex9/Wn8nQuE/sEF8vMhBpEH5/TuAzMCywOpAgwCawM+A4YDtQFvA8cDowftARsDqAIfCzkCTgN1AWkMXAJQBIIC1gqGBlkB0waLCfUG3QISCGULiwYAA0QHNANZBkwCNgY3AWsGYALSBPn/mAbyAzUBFAExCHoCQAmCB4oH2AX7AEIBjAd8BYABBAKTB8YFJANAAXQHNwXwAysAMggYA6wEYQAyAfT6Z/0CAbj6LPUY+sf/Yvff86z8Nf8L8WP0Y/wJAMTqYPR//IwASuzv78D+ZP/qzD7kgwAT/+P/bf0A/yb/HP/L/Yz/jv+j/uD9PP/d/8X/s/ot/z7/K/9G+67/hP4k/PH3CP4vAB7/Vf4T/3X82/xu/zkACPwU/64A3wAH/HUA1f5HAFP9Zf/P/hP/YP4RAOP+Df/+/Mn96fxc/kQAOv91/2D+PP/u/9D+Sf+c/8n/+AAd/sr9Av7b/in9SPtT/pr/+vdX/Or+0P+4+1z6WP5o/uT7Nvug/jj+6/rJ/ej/RP/w+cr8wf/9/kr9Evmt+7H/N+IfAen6o+XN06wCGPTy/woCrP7v++v+fP4v/qL9S/8M/gEAVP0u/qP/3gBy/iD9yACGAdb/p/wHAvMBrP9o+6L/nQLB/qv80wPoAIgAcf0kBGMBfv5g/HsCogGDAer6/gJoAQYCi/qbAX4B9/8X+TX+tgBH/zL4JAEuAjb+bfoU/70AwgCM+cf/0QBvAAH5RABdAQQAHfhRAAUAZgAD+TsFf/+c/1P95/+j/lr/gvsmBID94/xE+9gBPv2h/qn7U/5V/Mz9oPwX+j39SP0s/F72Bvz9/UQEhwgkAHwA4AapBK/8VAIMAqQEE/1lAXD/KgJa/PUASf4PATX9CAFC/VMARQK++7z9m/yN/nEBcv7vAWoA8ft1/tsBtgG7/OH/pQDbAQD+/gARALoCkv17AdgAzQP8/mwAAgHJA8QAp//HAbQD2QGWAP7+mQOIBBMBJwCQBMwFTAEtADkG7QOaAEX/RAYxB/EBZwE5BP4BSAHy/6sEtQKTAM8EUgUjAAMA/wO0A3f95ABfBN4ABPvP/gQAk/tw+4D+OgAi+8b47/t/6RoQNf4/BQcAC/9J/Hv6CQPVBVECpgZPAjkGRwNhCdkCGQZVA/kL1QQ0Bq0CRwuxBX4EEwL7BzAHcAMSAqYHGgUNBDMEuwXCBO4CsQSNB4UElwH5AqUBkwSmACsBOAFTBA4AnwA0AIEESwDLADcAqARmAW3/z/zJAz8AOgBIAG4DkgAg/xQAvwLC/7T+cf4CAn3+Xv16/h4B3/qY/ab/j/8/+9z8vf2C/67yav8P/gr/p/HCADf+e/6g8JAB6P5o/wXwMwEw/mcAEvS9/qD+LMLn/yECZf9aAnsCMALLAKYC8wP1ALIDwwNkBbcBIwQ5A6sHXAMwBE0ELQqJA7YELQX9CoEB1gOSAsH/fQFeAo8BIAAzAQcAsADs/i0BlP+r/zEAcQBU/0b+OwA7AIv+uv8s/+D90P7G+mH7dPyq+xH/AQE7/M76VvxQABX71/hh/Wv/J/vx91L8lv8W+XH0k/vh/635kvkT+8n+B/g/9XT7AP2a+tjvs/1t/236we2C/Bv/6/n56tz8Mf1f+vrpP/m7/ULzbg3R8MTWJcio+6v4+gPnBIf56fb0/jz+pf38/V8AX/5i/u7/NgI4/VT+AAFRAef8EP7I/iwAnfz+/fn80v9V+3n7iPn8+hz++/5l/vD4rPxY/kT+PPfI/D4AXgCz9/v80P9fALj3HPzOAMT+C/Zl/fH/SQCe96r8vvwd/pzzUP21/5D/HPQS/qL+fv8J9PP8YQAY/030LP65/pgAlvMB/YcAsf6d+KP+G/56//n1Dv6h/5H/E/bZ/Wv+YP9I9n38T/7r/pj1cf0F/0P+JPQw/C/+Kf8z6MkJiANdAe0ClwTwA8cAdQJJA2UCpAA4AsUA9wKZ/7MBn//lAtb/bgLvAAIDkQAvAoECNwOc/dQDEQMUBF/+7gNlA4MEYf8WAkgBwQTw/38B9QB4BW3/IgAIAIYEgwHQ/04A9AIdAowEIgT3ARsDiwA7ABQDLQIQAj0AtAEFADYCVgDh/yYBUwCY/3D+0fwyAcv/IAEvAxYCjAChA5/9XgFUAVcFXf5wAYUCuARi/LIAjgCJAhL8uAHWAP/8DP+A/5sBe/VZ6NTcC8lEC88KBf72/sf99f4XBKAPJ+e92TTj8b1xCMr5CRMcwg3hhPsjBez3AYApHUTiNcb/HPXZHM3i8B3Wx/f2zuyi1MHc2A3ZIti69yXyXQJX7aLCic3p/cQRyc2E/ir81e4zpSD0yfYu3mjlXdTNHaP/dr+W8Fjf/O0H493tWvBXCjPtz25ZA9oyfdZvyfj9NMAc6bfmYeWD5zzOzwcE1kEKIeCj8Sfdh98w//cD0+RT368EG/pV+k33RSmZ+RLziRce2qfj7BtOZv8Dhgz2C7UObgSgCecE3gkR9ej/1PNq/NLzTAsIFwwG4/gkFHQCxApvBSnzVw0P+rX6TPGr/yv21AStF5TwgAQJ8/rg9Pq2BVjwXwyK+y3wIQxa5wP34v6SGm4Apgim/iMc6Pi/Ay36cgSK9CQG9xzaCCX/D/sAATv3cffJAxTgAwceAGwXKOdxC3Xy/+oI9sflUePWwCERLvny8m35+UdsYDW88wJCCyPRpxGTBxL/w/VMBFgBNv9IBnMCNByNDIvkWQqj6ssGbgVi/n4Eps/L/mbO3Ono+8UOxglS6iL1Q/Iz5XXNq+HUC2MccATq86wJM/B1+Xr3aw4BgEAdWMm9Bxb3SP3i+x7/veiLAS8G5wOo8Ov3rdgZ5n704ASp6BoEI+BCHUHuS57i9tPz3vb1+iP5GfXw8Of7r/qy8T4lSBvJ8SAFbwjV/vT4twh5+/30Vsc4AIcCdwIYB7AisfhC7IrwxADnAZ//PvmnDKrvCv/k8EH7BvzSDyH8we+98Jf0k/Rc/kD/0hGkEL76cu06DwT3Mfqh9IYZVeryAqfwvAVS+ir8GfzR+r7tkPu0LFIGXfZg+azhPu3f8fMFAvBw/8foQBIS+Mj35PUL/AgBm/bRBqsErASMDlkc4fCc9fv44foK74EMUtr17cj78uuRASLm+QmgDGEFm/X18hT37wKf6PTnGu54/iYNBsscIkEGvADO+1saUwCR5VwWzPU2CzoJ6tkI6CoNwPtMEpgWGfTeESUJqeTt634AHtR1xTvnzQtFsPYHSPhFApXpzvDr8xzzBwr808UA3QaH/HAN7/Bo9YDylvF99sTwivtLBOz5bB5h84L55Bl7CHj5ePtt9n8G1fHDEYf8a/Wr/Zv1KAX8/PkEGQ4O9i/0jvhc+Iz/hu8v/dPyKf6L+OvrYwn9/+AEtAVaDI4Dm/DEB9X5mBGCBknyrf0pDYn22iI59J35PfdDAofrvfVhAGruMfiN9ooIfus9Cd/2HAEn8vz1V/as96/3Z+PA9pkGSPsE2KbvmPbT9TP/UtwBgNDc5IE=", [0.0003151303517551779,0.00016669194997457487,0.00032075594461596866,0.00015842024340716746]);
     </script>
 
     <script>
@@ -1837,6 +2121,55 @@
             // header, buttons and badges
             "Classic Wooden Backgammon": "Table clasice din lemn",
             "Initializing Game...": "Se pregătește jocul...",
+            // the coach
+            "Coach": "Antrenor",
+            "Coach:": "Antrenor:",
+            "After each of your turns against the computer: how your move compares with the best one, and why": "După fiecare tură a ta cu calculatorul: cum se compară mutarea ta cu cea mai bună și de ce",
+            "Checking your move...": "Îți verific mutarea...",
+            "Details": "Detalii",
+            "Top moves": "Cele mai bune mutări",
+            "Show best move": "Arată cea mai bună mutare",
+            "Show your move": "Arată mutarea ta",
+            "Undo and try again": "Anulează și încearcă din nou",
+            "The best move is shown on the board": "Cea mai bună mutare e arătată pe tablă",
+            "Your move is shown on the board": "Mutarea ta e arătată pe tablă",
+            "Back": "Înapoi",
+            "Your move is rated as soon as your turn is over.": "Mutarea ta e evaluată imediat ce se termină tura.",
+            "yours": "a ta",
+            "Best move": "Cea mai bună mutare",
+            "Blunder": "Gafă",
+            "Small mistake": "Greșeală mică",
+            "Coach: checking your move...": "Antrenor: îți verific mutarea...",
+            "Coach: try again.": "Antrenor: încearcă din nou.",
+            "Undo and try again, or continue.": "Anulează și încearcă din nou, sau continuă.",
+            "Bears off efficiently": "Scoate piesele eficient",
+            "Maximizes racing efficiency": "Cea mai eficientă în cursă",
+            "Hits safely": "Lovește în siguranță",
+            "Hits and attacks": "Lovește și atacă",
+            "Builds the key point": "Închide căsuța-cheie",
+            "Builds a prime": "Construiește un zid",
+            "Makes an anchor": "Face o ancoră",
+            "Escapes safely": "Scapă în siguranță",
+            "Escapes a back checker": "Scoate o piesă din spate",
+            "Bears off safely": "Scoate piese în siguranță",
+            "Makes a new point": "Închide o căsuță nouă",
+            "Plays it safe": "Joacă sigur",
+            "Strongest play": "Cea mai puternică variantă",
+            "Minor optimization": "Optimizare minoră",
+            "Racing inefficiency": "Ineficiență în cursă",
+            "Missed attacking opportunity": "Ocazie de atac ratată",
+            "Safety error": "Greșeală de siguranță",
+            "Structural miss": "Greșeală de structură",
+            "Passive error": "Joc prea pasiv",
+            "Positional error": "Greșeală de poziție",
+            "It leaves no shots.": "Nu lasă nicio piesă expusă.",
+            "It avoids piling checkers on one point.": "Evită să îngrămădească piesele pe o singură căsuță.",
+            "It brings a back checker out.": "Scoate o piesă din spate.",
+            "Hitting is not worth it here: the best move plays without hitting.": "Aici nu merită să lovești: cea mai bună mutare joacă fără să lovească.",
+            "Running with a back checker can wait: the best move keeps it back.": "Fuga cu piesa din spate mai poate aștepta: cea mai bună mutare o ține pe loc.",
+            "In the race, the best move leaves your checkers better spread for bearing off.": "În cursă, cea mai bună mutare îți lasă piesele mai bine așezate pentru scos.",
+            "your 5 point (the golden point)": "căsuța ta 5 (căsuța de aur)",
+            "your bar point (7)": "căsuța ta 7 (cea de lângă bară)",
             "Play the computer or a friend": "Joacă cu calculatorul sau cu un prieten",
             "Start Match": "Începe meciul",
             "Play Online": "Joacă online",
@@ -1996,7 +2329,7 @@
             "Hard": "Greu",
             "Expert": "Expert",
             "Master": "Maestru",
-            "Master (thinks a little longer)": "Maestru (se gândește puțin mai mult)",
+            "Master (judges like the coach)": "Maestru (judecă precum antrenorul)",
             "Home Board Orientation": "Poziția casei",
             "RIGHT": "DREAPTA",
             "LEFT": "STÂNGA",
@@ -2040,9 +2373,9 @@
             "Who starts:": "Cine începe:",
             "Only at the start of a match: each player rolls both dice (online, each player clicks Roll Dice for their own). A double wins; if both roll doubles the higher double wins; otherwise the higher total wins. A tie is rolled again. The winner starts by playing the dice they just rolled (a double is played four times), so nobody rolls again. Every later game of the match starts with the winner of the previous game, who simply rolls and plays.": "Doar la începutul meciului: fiecare jucător aruncă ambele zaruri (online, fiecare apasă „Dă cu zarul” pentru zarurile lui). Câștigă o dublă; dacă amândoi dau dublă, câștigă dubla mai mare; altfel câștigă totalul mai mare. La egalitate se aruncă din nou. Câștigătorul începe jucând chiar zarurile pe care le-a dat (o dublă se joacă de patru ori), așa că nimeni nu mai aruncă încă o dată. Fiecare partidă următoare a meciului o începe câștigătorul partidei anterioare, care pur și simplu dă cu zarul și mută.",
             "Hint:": "Sugestie:",
-            "The lightbulb button works out a good way to play your roll and pulses the first checker to move and where it goes. Hints are only available against the computer, not in online games.": "Butonul cu bec găsește o mutare bună pentru zarurile tale și face să pulseze prima piesă de mutat și locul unde ajunge. Sugestiile există doar în jocul cu calculatorul, nu și online.",
+            "The lightbulb button works out the best way to play your roll (the move the coach would call best) and pulses the first checker to move and where it goes. Hints are only available against the computer, not in online games.": "Butonul cu bec găsește cea mai bună mutare pentru zarurile tale (cea pe care antrenorul ar numi-o cea mai bună) și face să pulseze prima piesă de mutat și locul unde ajunge. Sugestiile există doar în jocul cu calculatorul, nu și online.",
             "Computer levels:": "Nivelurile calculatorului:",
-            "Easy to Master, in Settings. Master tries out its best few moves by playing each of them out many times, so it takes a moment longer; the hint button uses it too.": "De la Ușor la Maestru, în Setări. Maestrul își încearcă cele mai bune câteva mutări jucând fiecare variantă de multe ori până la capăt, așa că durează puțin mai mult; butonul de sugestie îl folosește și el.",
+            "Easy to Master, in Settings. Master judges every move with the coach's neural network, looking one roll ahead: the strongest level. The hint button uses the same judgement.": "De la Ușor la Maestru, în Setări. Maestrul judecă fiecare mutare cu rețeaua neuronală a antrenorului, privind o aruncare înainte: cel mai puternic nivel. Butonul de sugestie folosește aceeași judecată.",
             "Win chance:": "Șanse de câștig:",
             "The switch above the board shows each side's chance to win this game. It plays the position out 1,000 times with a quick computer player and updates each time a player finishes a turn (not during a turn, so it never hints at a move). It is an estimate (usually within a few percent); hovering over it with a mouse also shows the chances of a gammon.": "Comutatorul de deasupra tablei arată șansele fiecărei părți de a câștiga partida. Joacă poziția până la capăt de 1.000 de ori cu un jucător-calculator rapid și se actualizează de fiecare dată când un jucător își termină tura (nu în timpul turei, deci nu sugerează nicio mutare). E o estimare (de obicei cu o marjă de câteva procente); dacă ții mouse-ul deasupra, vezi și șansele de marț.",
             "Saved:": "Salvare:",
@@ -2067,6 +2400,7 @@
             "A win scores 1 point. A gammon (the loser has borne off no checkers) scores 2. A backgammon (a gammon where the loser still has a checker on the bar or in your home board) scores 3. The first player to reach the match target wins the match.": "O victorie aduce 1 punct. Un marț (învinsul nu a scos nicio piesă) aduce 2. Un backgammon (un marț în care învinsul mai are o piesă pe bară sau în casa câștigătorului) aduce 3. Primul jucător care atinge ținta meciului câștigă meciul.",
             "Language:": "Limba:",
             "English or Romanian, in Settings.": "Engleză sau română, în Setări.",
+            "The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits: show the best move on the board (with arrows), undo and try again, or continue. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.": "Comutatorul Antrenor de deasupra tablei (în jocul cu calculatorul) îți evaluează fiecare tură imediat ce se termină, ca un program de antrenament: cea mai bună mutare, excelentă (pierde mai puțin de 0,02 puncte pe partidă), greșeală mică (până la 0,08) sau gafă. Spune ce fel de greșeală a fost sau ce face bine cea mai bună mutare, explică de ce și arată cele mai bune mutări, cu cât pierde fiecare. După o greșeală jocul așteaptă: vezi cea mai bună mutare pe tablă (cu săgeți), anulează și încearcă din nou, sau continuă. Evaluarea o face o mică rețea neuronală antrenată pentru acest joc jucând cu ea însăși și privind o aruncare înainte: un ghid bun, nu unul perfect.",
             // titles and labels for screen readers
             "New game or leave": "Joc nou sau ieșire",
             "New Game": "Joc nou",
@@ -2323,6 +2657,33 @@
             ["Others can watch with the code {0}: they open the same game file, press Play Online, type the code and press Watch.", "Alții pot urmări cu codul {0}: deschid același fișier, apasă „Joacă online”, scriu codul și apasă „Urmărește”."],
             ["Send this link, or the code {0}, to anyone who wants to watch. They can join at any time and see the game live, but can't play.", "Trimite acest link sau codul {0} oricui vrea să urmărească. Pot intra oricând și văd jocul în direct, dar nu pot juca."],
             ["Watching now: {0}.", "Urmăresc acum: {0}."],
+            // the coach
+            ["Excellent move ({0})", "Mutare excelentă ({0})"],
+            ["Small mistake ({0})", "Greșeală mică ({0})"],
+            ["Blunder ({0})", "Gafă ({0})"],
+            ["Coach: {t0}.", "Antrenor: {t0}."],
+            ["your {#0} point", "căsuța ta {0}"],
+            ["the opponent's {#0} point", "căsuța {0} a adversarului"],
+            ["It hits, putting {#0} checker(s) on the bar.", "Lovește și trimite {p0:piesă:piese} pe bară."],
+            ["It makes an anchor on {t0}.", "Face o ancoră pe {t0}."],
+            ["It makes {t0}.", "Închide {t0}."],
+            ["Your move gives up {t0}.", "Mutarea ta lasă liberă {t0}."],
+            ["It can be hit by {#0} of 36 rolls, a risk worth taking here.", "Poate fi lovită cu {0} din 36 de aruncări, un risc care merită aici."],
+            ["It bears off {#0} checker(s).", "Scoate {p0:piesă:piese} de pe tablă."],
+            ["It bears off {#0} more checker(s).", "Scoate cu {p0:piesă:piese} mai mult."],
+            ["It wins {0} of the time; the next best ({1}) {2}.", "Câștigă în {0} din cazuri; următoarea ({1}) în {2}."],
+            ["The best move hits {#0} checker(s); yours hits {#1}.", "Cea mai bună mutare lovește {p0:piesă:piese}; a ta lovește {p1:piesă:piese}."],
+            ["The best move hits {#0} checker(s); yours doesn't hit.", "Cea mai bună mutare lovește {p0:piesă:piese}; a ta nu lovește."],
+            ["Your move leaves a blot that {#0} of 36 rolls can hit; the best move leaves no shots.", "Mutarea ta lasă o piesă singură pe care o lovesc {0} din 36 de aruncări; cea mai bună nu lasă nicio piesă expusă."],
+            ["Your move can be hit by {#0} of 36 rolls, the best move by only {#1}.", "Mutarea ta poate fi lovită cu {0} din 36 de aruncări, cea mai bună doar cu {1}."],
+            ["The best move takes more risk ({#0} of 36 rolls can hit it, {#1} yours), and it is worth it.", "Cea mai bună mutare riscă mai mult ({0} din 36 de aruncări o pot lovi, pe a ta {1}), și merită."],
+            ["It keeps a block of {#0} points in a row.", "Păstrează un zid de {p0:căsuță:căsuțe} la rând."],
+            ["It leaves fewer gaps in your home board ({#0} against {#1}), so fewer rolls are wasted later.", "Lasă mai puține goluri în casa ta ({0} față de {1}), deci mai târziu se irosesc mai puține aruncări."],
+            ["The next best ({0}) is close: {1}.", "Următoarea ({0}) e aproape: {1}."],
+            ["Both win about {0} of the time; the difference is in the gammons and the details.", "Amândouă câștigă în aproximativ {0} din cazuri; diferența e la marțuri și la detalii."],
+            ["It wins more gammons ({0} against {1}).", "Câștigă mai multe marțuri ({0} față de {1})."],
+            ["It loses fewer gammons ({0} against {1}).", "Pierde mai puține marțuri ({0} față de {1})."],
+            ["The best move wins {0} of the time, yours {1}.", "Cea mai bună mutare câștigă în {0} din cazuri, a ta în {1}."],
             // last: the most general ones
             ["{0} scores {#1} point(s) ({t2}).", "{n0} primește {p1:punct:puncte} ({t2})."],
             ["Waiting for {0}...", "Se așteaptă {n0}..."],
@@ -2587,6 +2948,7 @@
             if (phone) root.setAttribute('data-phone', '1'); else { root.removeAttribute('data-phone'); phoneMenu(false); }
             phonePlaceDice(phone && upright);
             if (phone) phoneSync();
+            coachLayout();
         }
 
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2720,7 +3082,7 @@
 
             clearInterval(rollInterval); clearTimeout(rollTimeout); clearTimeout(endTurnTimer);
             stopWinAnimation(true);
-            gameGen++; clearHint();   // delayed AI actions of the previous game are cancelled
+            gameGen++; clearHint(); coachDrop();   // delayed AI actions of the previous game are cancelled
             aiPlan = null;
             isRolling = false;
             rolledThisTurn = false;
@@ -2798,6 +3160,7 @@
 
         // Resets everything back to the start screen: fresh board, no match, Start Match button visible
         function enterStartScreen() {
+            coachDrop();
             matchActive = false;
             matchLength = 0;
             matchScore = { w: 0, r: 0 };
@@ -3108,6 +3471,7 @@
         }
 
         function renderCheckers() {
+            const view = boardView || state;      // (the coach can show the best move instead of the real position)
             const layer = document.getElementById('checkers-layer');
             const lw = layer.offsetWidth, lh = layer.offsetHeight;   // the board's own size (unaffected by rotation)
             if (lw === 0) return; // Hidden/not layout out yet
@@ -3180,7 +3544,7 @@
             };
 
             // Render Board Points
-            state.board.forEach((stack, idx) => {
+            view.board.forEach((stack, idx) => {
                 if (stack.length === 0) return;
                 const rect = rectOf(pointElements[idx]);
                 const qName = getPhysicalQuadrant(vi(idx));
@@ -3189,8 +3553,8 @@
             });
 
             // Render Bar
-            positionStack(state.bar[oppColor()], rectOf(document.getElementById('bar-top')), true);
-            positionStack(state.bar[myColor], rectOf(document.getElementById('bar-bottom')), false);
+            positionStack(view.bar[oppColor()], rectOf(document.getElementById('bar-top')), true);
+            positionStack(view.bar[myColor], rectOf(document.getElementById('bar-bottom')), false);
 
             // Render Off Trays
             const leftTrayTopRect = rectOf(document.getElementById('tray-left-top'));
@@ -3199,12 +3563,13 @@
             const rightTrayBotRect = rectOf(document.getElementById('tray-right-bottom'));
 
             if (homeOrientation === 'RIGHT') {
-                positionStack(state.off[oppColor()], leftTrayTopRect, true, true);
-                positionStack(state.off[myColor], rightTrayBotRect, false, true);
+                positionStack(view.off[oppColor()], leftTrayTopRect, true, true);
+                positionStack(view.off[myColor], rightTrayBotRect, false, true);
             } else {
-                positionStack(state.off[myColor], leftTrayBotRect, false, true);
-                positionStack(state.off[oppColor()], rightTrayTopRect, true, true);
+                positionStack(view.off[myColor], leftTrayBotRect, false, true);
+                positionStack(view.off[oppColor()], rightTrayTopRect, true, true);
             }
+            if (coach.hold) coachArrows();     // (the arrows follow the board when it is resized)
         }
 
         // Keyboard play: only the points you can act on right now are in the Tab order, and every point is labelled
@@ -3723,6 +4088,7 @@
         // Shows a roll of d1 and d2 for the current player and gives them the dice to play
         function playRoll(d1, d2) {
             const roller = currentPlayer;
+            if (roller === myColor) coachHide();     // your next turn: the last tip goes away
             histRoll(roller, d1, d2);
             const rollerName = roller === myColor ? 'You' : opponentName;
 
@@ -3783,6 +4149,7 @@
 
         function checkTurnState() {
             if (diceValues.length === 0) {
+                if (coachHold()) return;      // the coach rates your turn first (and may wait for you)
                 endTurn();
                 return;
             }
@@ -3861,7 +4228,7 @@
                 const previousStatus = statusMsg;
                 setStatus(`${opponentName} is thinking...`);
                 const g = gameGen, sig = fastSig(), key = diceValues.join();
-                const search = aiDifficulty === 'master' ? masterPickPlan(state, ai, diceValues.slice()) : E.expertPickPlanAsync(state, ai, diceValues.slice());
+                const search = aiDifficulty === 'master' ? nnBestPlan(state, ai, diceValues.slice()) : E.expertPickPlanAsync(state, ai, diceValues.slice());   // (Master: the coach's judgement)
                 search.catch(() => null).then(plan => {
                     aiThinking = false;
                     if (g !== gameGen) return;                                            // a new game started meanwhile
@@ -3894,6 +4261,7 @@
 
         // Takes back the last move of the current turn (used for your own undo and to mirror the opponent's)
         function doUndo() {
+            if (coach.hold || coach.busy) coachDrop();
             clearTimeout(endTurnTimer); // cancel a pending "no legal moves" turn pass
             clearHint();
             let snapshot = turnHistory.pop();
@@ -3926,12 +4294,15 @@
         const hintsAllowed = () => opponentKind === 'ai' && !online.active && !watch.on;
         function syncHintButtons() {
             const off = !hintsAllowed();
+            document.getElementById('coach-toggle').classList.toggle('hidden', off);     // (the coach too: only against the computer)
+            if (off && (coach.open || coach.hold)) coachDrop();
+            coachLayout(); coachRender();
             document.getElementById('hint-btn').classList.toggle('hidden', off);
             document.getElementById('ph-hint').classList.toggle('hidden', off);
             document.getElementById('phone-actions').classList.toggle('ph-nohint', off);
         }
 
-        // Works out the best way to play the whole roll (the Master search) and pulses the first checker to move and where it goes
+        // Works out the best way to play the whole roll (the coach's network) and pulses the first checker to move and where it goes
         async function showHint() {
             if (!hintsAllowed()) return;
             if (hintBusy || !gameActive || currentPlayer !== myColor || diceValues.length === 0 || isAnimating || isRolling || inputBlocked()) return;
@@ -3942,7 +4313,7 @@
             const sig = fastSig(), diceKey = diceValues.join();
             setStatus('Hint: thinking...');
             let plan = null;
-            try { plan = await masterPickPlan(state, myColor, diceValues.slice()); } catch (e) { plan = null; }
+            try { plan = await nnBestPlan(state, myColor, diceValues.slice()); } catch (e) { plan = null; }     // (the coach's judgement)
             if (!plan) { try { plan = await E.expertPickPlanAsync(state, myColor, diceValues.slice()); } catch (e) { plan = null; } }
             hintBusy = false;
             if (!hintsAllowed() || !gameActive || currentPlayer !== myColor || fastSig() !== sig || diceValues.join() !== diceKey) return;   // the position changed meanwhile (or an online game began)
@@ -4245,7 +4616,7 @@
                 localStorage.setItem(SETTINGS_KEY, JSON.stringify({
                     difficulty: aiDifficulty, orientation: homeOrientation,
                     color: online.active ? online.prevColor : myColor,
-                    sound: soundEnabled, volume: Math.round(soundVolume * 100), flat: flatBoard, winChance: winChanceOn, lang: I18N.lang
+                    sound: soundEnabled, volume: Math.round(soundVolume * 100), flat: flatBoard, winChance: winChanceOn, coach: coachOn, lang: I18N.lang
                 }));
             } catch (e) {}
         }
@@ -4270,6 +4641,9 @@
             updateBoardButtons();
             winChanceOn = c.winChance === true;
             wpRender();
+            coachOn = c.coach === true;
+            coachLayout();
+            coachRender();
             if (c.orientation === 'LEFT' || c.orientation === 'RIGHT') setHomeOrientation(c.orientation);
         }
         function updateBoardButtons() {
@@ -4389,6 +4763,7 @@
             const ph = turnPhase();
             const firstTurn = watch.on ? !!(watch.last && watch.last.ft) : turnSerial === openingTurn;
             if (ph === 'opening' || firstTurn) return { kind: 'even' };   // nobody has finished a turn yet: exactly even
+            if (ph === 'done' && coach.hold && turnHistory.length) return { kind: 'est', mover: currentPlayer, st: turnHistory[0].state };   // (the coach is looking at it: you may still play it again)
             if (ph === 'done') return { kind: 'est', mover: other(currentPlayer), st: state };     // (the turn is over: the other side is next)
             if (ph === 'toRoll') return { kind: 'est', mover: currentPlayer, st: state };
             // rolling or moving: the position the turn began with (a spectator is told it by the host)
@@ -4465,84 +4840,380 @@
             } catch (e) { wp.noWorker = true; }
             return wp.worker;
         }
-        // ---------- the Master level (and hints): candidate moves played out ----------
-        // Master looks at the few most promising ways to play the roll (by the computer's quick judgement) and plays
-        // every one of them out MASTER_GAMES times with the quick player of the win-chance meter, the same dice for
-        // each (so the comparison is fair), then plays the one that scores best in match points. This takes a second or
-        // two, in a background worker of its own, and is clearly stronger than Expert. The hint button uses it too.
-        const MASTER_CANDIDATES = 6, MASTER_GAMES = 144;
-        const master = { worker: null, noWorker: false, next: 1, waiting: {} };
-        function masterWorkerMain() {      // runs inside the worker (BGWin's script text is put in front of it)
-            self.onmessage = (e) => {
-                const m = e.data;
-                if (!m || !m.id || !Array.isArray(m.cands)) return;
-                const res = m.cands.map(c => BGWin.run({ a: Int8Array.from(c.a), b: Int8Array.from(c.b), dice: null }, 0, m.n, BGWin.newAcc()));
-                self.postMessage({ id: m.id, res: res });
-            };
-        }
-        function masterGetWorker() {
-            if (master.worker || master.noWorker) return master.worker;
-            try {
-                const src = document.getElementById('bg-win').textContent + '\n(' + masterWorkerMain.toString() + ')();\n';
-                const w = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
-                w.onmessage = (e) => { const d = e.data, f = d && master.waiting[d.id]; if (f) { delete master.waiting[d.id]; f(d.res); } };
-                w.onerror = (e) => {               // no worker after all: whatever was asked is worked out here instead
-                    if (e && e.preventDefault) e.preventDefault();
-                    try { w.terminate(); } catch (x) {}
-                    master.worker = null; master.noWorker = true;
-                    const jobs = master.waiting; master.waiting = {};
-                    Object.keys(jobs).forEach(id => masterLocal(jobs[id].job).then(jobs[id]));
-                };
-                master.worker = w;
-            } catch (e) { master.noWorker = true; }
-            return master.worker;
-        }
-        // Without a worker: the same games, a few at a time so the page stays responsive
-        function masterLocal(job) {
-            return new Promise(resolve => {
-                const res = job.cands.map(() => BGWin.newAcc()), runs = job.cands.map(c => ({ a: Int8Array.from(c.a), b: Int8Array.from(c.b), dice: null }));
-                let i = 0;
-                const step = () => {
-                    const t0 = performance.now();
-                    while (i < job.n && performance.now() - t0 < 12) { const to = Math.min(job.n, i + 4); runs.forEach((r, k) => BGWin.run(r, i, to, res[k])); i = to; }
-                    if (i < job.n) setTimeout(step, 0); else resolve(res);
-                };
-                step();
-            });
-        }
-        function masterPlayOut(job) {
-            const w = masterGetWorker();
-            if (!w) return masterLocal(job);
-            return new Promise(resolve => { const id = master.next++; resolve.job = job; master.waiting[id] = resolve; w.postMessage(Object.assign({ id: id }, job)); });
-        }
-        // The best way for player to play the dice from st: a Promise of the list of moves (null if nothing can be played)
-        function masterPickPlan(st, player, dice) {
+        // All the different ways to play the roll from st, one per resulting position: { key, moves, a: the opponent's side, b: the player's }
+        function playCandidates(st, player, dice) {
             const turns = E.enumerateTurns(st, player, dice);
-            if (turns.length <= 1) return Promise.resolve(turns.length ? turns[0].moves : null);
-            const opp = other(player), sign = player === R ? 1 : -1, seen = new Set(), cands = [];
+            const opp = other(player), seen = new Set(), cands = [];
             for (const t of turns) {
                 const undo = E.applySequence(st, player, t.moves);
                 const c = wpCompact(st), key = c.w.join() + '|' + c.r.join();
-                if (!seen.has(key)) { seen.add(key); cands.push({ moves: t.moves, quick: sign * E.evaluatePosition(st, opp), a: Array.from(opp === W ? c.w : c.r), b: Array.from(opp === W ? c.r : c.w) }); }
+                if (!seen.has(key)) { seen.add(key); cands.push({ key: key, moves: t.moves, a: Array.from(opp === W ? c.w : c.r), b: Array.from(opp === W ? c.r : c.w) }); }
                 undo();
             }
-            if (cands.length === 1) return Promise.resolve(cands[0].moves);
-            cands.sort((x, y) => y.quick - x.quick);
-            const top = cands.slice(0, MASTER_CANDIDATES);
-            // match points: a win of k points is worth no more than the points still needed
+            return cands;
+        }
+        // ---------- Coach: after each of your turns against the computer, your move against the best one ----------
+        // Like a backgammon trainer: once your last checker of the turn has moved (and the roll could be played more than
+        // one way), the coach judges every way to play the roll with the evaluation network (BGNet), looking one roll of
+        // the computer's ahead for the most promising ones and yours, and rates your move by what it gave away against the
+        // best one, in points per game (equity, at this match score): best, excellent (under 0.02), small mistake (up to
+        // 0.08) or blunder. It names the kind of error or what the best move does well, explains why from simple facts
+        // about the positions (hits, shots, points made, blocks, anchors, escapes, bearing off, the race, gammons) and
+        // lists the top moves. After a good move the game goes on; after a mistake it waits: show the best move on the
+        // board (with arrows), undo and try again, or go on. Only in games against the computer.
+        const COACH_DEEP = 10, COACH_EXCELLENT = 0.02, COACH_BLUNDER = 0.08;
+        let coachOn = false;
+        let boardView = null;      // a position the board shows instead of the real one (the coach's "Show best move")
+        const coach = { token: 0, hold: false, busy: false, res: null, open: false, expanded: false, view: 'mine', mini: false };
+        // Wide screens: the coach is a panel beside the board (the board makes room for it); otherwise a card at the bottom
+        const coachDocked = () => document.documentElement.classList.contains('coach-dock');
+        function coachLayout() {
+            const root = document.documentElement;
+            const dock = coachOn && hintsAllowed() && !root.hasAttribute('data-phone') && !root.hasAttribute('data-compact') && window.innerWidth >= 1100;
+            if (dock !== root.classList.contains('coach-dock')) { root.classList.toggle('coach-dock', dock); coach.mini = false; coachRender(); }
+        }
+
+        const posKey = st => { const c = wpCompact(st); return c.w.join() + '|' + c.r.join(); };
+        // Simple facts about a position, from player p's side (BGWin's arrays: [0] off, [1..24] points, [25] bar)
+        function coachFacts(st, p) {
+            const c = wpCompact(st), a = p === W ? c.w : c.r, b = p === W ? c.r : c.w;
+            const made = new Set();
+            let run = 0, prime = 0, back = a[25], blots = 0, pip = 25 * a[25];
+            for (let q = 1; q <= 24; q++) {
+                if (a[q] >= 2) { made.add(q); run++; prime = Math.max(prime, run); } else run = 0;
+                if (a[q] === 1) blots++;
+                if (q >= 19) back += a[q];
+                pip += q * a[q];
+            }
+            let top = 0, gaps = 0, stack = 0;
+            for (let q = 1; q <= 6; q++) if (a[q]) top = q;
+            for (let q = 1; q < top; q++) if (!a[q]) gaps++;
+            for (let q = 1; q <= 24; q++) stack = Math.max(stack, a[q]);
+            return { made, prime, back, blots, pip, off: a[0], onBar: b[25], shots: BGWin.anyHitRolls(a, b), contact: BGWin.contact(a, b), gaps, stack };
+        }
+        // Each checker's journey in a turn (to name the move and draw its arrows)
+        function coachPaths(start, p, moves) {
+            const s = JSON.parse(JSON.stringify(start)), paths = [];
+            for (const m of moves) {
+                const u = E.applyRaw(s, p, m);
+                let path = null;
+                for (let i = paths.length - 1; i >= 0; i--) if (paths[i].id === u.id && paths[i].to === m.from) { path = paths[i]; break; }
+                if (!path) { path = { id: u.id, from: m.from, to: m.target, steps: [] }; paths.push(path); }
+                path.steps.push({ to: m.target, hit: !!u.hit });
+                path.to = m.target;
+            }
+            return { paths, end: s };
+        }
+        // The move written the usual way, counted from the player's side: "24/18 13/11", "8/5(2)", "bar/20*", "6/off"
+        function coachNotation(p, paths) {
+            const val = x => x === 'bar' ? 25 : x === 'off' ? 0 : (p === W ? x + 1 : 24 - x);
+            const name = x => x === 'bar' ? 'bar' : x === 'off' ? 'off' : String(val(x));
+            const parts = paths.map(pa => ({
+                v: val(pa.from),
+                t: name(pa.from) + pa.steps.map((s, i) => (i < pa.steps.length - 1 && !s.hit) ? '' : '/' + name(s.to) + (s.hit ? '*' : '')).join('')
+            })).sort((x, y) => y.v - x.v);
+            const counts = new Map();
+            parts.forEach(x => counts.set(x.t, (counts.get(x.t) || 0) + 1));
+            return [...counts].map(([t, n]) => n > 1 ? `${t}(${n})` : t).join(' ');
+        }
+        function coachPoint(q) {           // one of the player's points (1..24, counted from their side)
+            if (q >= 19) return `the opponent's ${25 - q} point`;
+            if (q === 5) return 'your 5 point (the golden point)';
+            if (q === 7) return 'your bar point (7)';
+            return `your ${q} point`;
+        }
+        const COACH_KEY_POINTS = [5, 4, 7, 20, 6, 3, 21, 8, 9, 2, 19, 22, 10, 11, 1, 23, 24, 12, 13, 14, 15, 16, 17, 18];
+        const pctOf = x => Math.round(100 * x) + '%';
+        const eqText = x => '−' + Math.abs(x).toFixed(3);
+
+        // What the best move does well (a short phrase, like a trainer's)
+        function coachPraise(S, B) {
+            const newMade = [...B.made].filter(q => !S.made.has(q));
+            if (!B.contact) return B.off > S.off ? 'Bears off efficiently' : 'Maximizes racing efficiency';
+            if (B.onBar > S.onBar) return B.shots <= 6 ? 'Hits safely' : 'Hits and attacks';
+            if (newMade.some(q => q === 4 || q === 5 || q === 7 || q === 20)) return 'Builds the key point';
+            if (B.prime >= 4 && B.prime > S.prime) return 'Builds a prime';
+            if (newMade.some(q => q >= 19)) return 'Makes an anchor';
+            if (B.back < S.back) return B.shots <= 6 ? 'Escapes safely' : 'Escapes a back checker';
+            if (B.off > S.off) return 'Bears off safely';
+            if (newMade.length) return 'Makes a new point';
+            if (B.shots === 0) return 'Plays it safe';
+            return 'Strongest play';
+        }
+        // The kind of error (the same families as the trainers use)
+        function coachCategory(S, B, P, loss) {
+            const broken = [...S.made].some(q => B.made.has(q) && !P.made.has(q));
+            const madeMore = [...B.made].some(q => !P.made.has(q) && q <= 21);
+            if (loss < COACH_EXCELLENT) return 'Minor optimization';
+            if (!B.contact && !P.contact) return 'Racing inefficiency';
+            if (B.onBar > P.onBar) return 'Missed attacking opportunity';
+            if (P.shots >= B.shots + 4) return 'Safety error';
+            if (madeMore || broken || B.prime > P.prime) return 'Structural miss';
+            if (B.shots >= P.shots + 4 || B.back < P.back) return 'Passive error';
+            if (P.onBar > B.onBar) return 'Safety error';
+            return 'Positional error';
+        }
+        // Why: up to three facts where the best move differs from yours, then the play-out numbers
+        function coachReasons(r) {
+            const S = r.S, B = r.best.f, P = r.mine.f, out = [];
+            const n = (k, w) => k + ' ' + w + (k === 1 ? '' : 's');
+            const race = !B.contact && !P.contact;
+            if (r.verdict === 'best') {
+                const nx = r.ranked[1];
+                if (B.onBar > S.onBar) out.push(`It hits, putting ${n(B.onBar - S.onBar, 'checker')} on the bar.`);
+                const nm = COACH_KEY_POINTS.filter(q => B.made.has(q) && !S.made.has(q));
+                if (nm.length && !race) out.push(nm[0] >= 19 ? `It makes an anchor on ${coachPoint(nm[0])}.` : `It makes ${coachPoint(nm[0])}.`);
+                if (B.contact && B.shots === 0 && S.blots > 0) out.push('It leaves no shots.');
+                else if (B.contact && B.shots > 0 && out.length < 2) out.push(`It can be hit by ${B.shots} of 36 rolls, a risk worth taking here.`);
+                if (B.back < S.back && out.length < 2) out.push('It brings a back checker out.');
+                if (B.off > S.off && out.length < 2) out.push(`It bears off ${n(B.off - S.off, 'checker')}.`);
+                if (nx && Math.round(100 * r.best.win) !== Math.round(100 * nx.win)) out.push(`It wins ${pctOf(r.best.win)} of the time; the next best (${nx.note}) ${pctOf(nx.win)}.`);
+                else if (nx) out.push(`The next best (${nx.note}) is close: ${eqText(r.best.eq - nx.eq)}.`);
+                return out;
+            }
+            if (B.onBar > P.onBar) out.push(P.onBar > S.onBar ? `The best move hits ${n(B.onBar - S.onBar, 'checker')}; yours hits ${P.onBar - S.onBar}.` : `The best move hits ${n(B.onBar - S.onBar, 'checker')}; yours doesn't hit.`);
+            else if (P.onBar > B.onBar) out.push('Hitting is not worth it here: the best move plays without hitting.');
+            if (!race) {
+                if (P.shots >= B.shots + 4) out.push(B.shots === 0 ? `Your move leaves a blot that ${P.shots} of 36 rolls can hit; the best move leaves no shots.` : `Your move can be hit by ${P.shots} of 36 rolls, the best move by only ${B.shots}.`);
+                else if (B.shots >= P.shots + 4) out.push(`The best move takes more risk (${B.shots} of 36 rolls can hit it, ${P.shots} yours), and it is worth it.`);
+                const made = COACH_KEY_POINTS.filter(q => B.made.has(q) && !P.made.has(q) && !S.made.has(q));       // new points
+                if (made.length && out.length < 3) out.push(made[0] >= 19 ? `It makes an anchor on ${coachPoint(made[0])}.` : `It makes ${coachPoint(made[0])}.`);
+                const lost = COACH_KEY_POINTS.filter(q => S.made.has(q) && B.made.has(q) && !P.made.has(q));       // points yours gives up
+                if (lost.length && out.length < 3) out.push(`Your move gives up ${coachPoint(lost[0])}.`);
+                if (B.prime >= 3 && B.prime > P.prime && out.length < 3) out.push(`It keeps a block of ${B.prime} points in a row.`);
+                if (B.back < P.back && out.length < 3) out.push('It brings a back checker out.');
+                else if (P.back < B.back && out.length < 3) out.push('Running with a back checker can wait: the best move keeps it back.');
+            }
+            if (B.off > P.off && out.length < 3) out.push(`It bears off ${n(B.off - P.off, 'more checker')}.`);
+            if (race && B.gaps < P.gaps && out.length < 3) out.push(`It leaves fewer gaps in your home board (${B.gaps} against ${P.gaps}), so fewer rolls are wasted later.`);
+            if (race && P.stack - B.stack >= 2 && out.length < 3) out.push('It avoids piling checkers on one point.');
+            if (race && !out.length) out.push('In the race, the best move leaves your checkers better spread for bearing off.');
+            if (r.best.gWin - r.mine.gWin >= 0.05 && out.length < 3) out.push(`It wins more gammons (${pctOf(r.best.gWin)} against ${pctOf(r.mine.gWin)}).`);
+            if (r.mine.gLose - r.best.gLose >= 0.05 && out.length < 3) out.push(`It loses fewer gammons (${pctOf(r.best.gLose)} against ${pctOf(r.mine.gLose)}).`);
+            if (Math.round(100 * r.best.win) !== Math.round(100 * r.mine.win)) out.push(`The best move wins ${pctOf(r.best.win)} of the time, yours ${pctOf(r.mine.win)}.`);
+            else out.push(`Both win about ${pctOf(r.best.win)} of the time; the difference is in the gammons and the details.`);
+            return out;
+        }
+
+        // Every way for player to play the dice from st, judged by the network at this match score, best first: the
+        // most promising COACH_DEEP (and the one with key 'keep') looking one roll of the opponent's ahead. Each entry:
+        // { key, moves, a, b, y: the player's chances [win, win g, win bg, lose g, lose bg], eq, win, gWin, gLose }
+        async function nnRank(st, player, dice, keep) {
+            const cands = playCandidates(st, player, dice);
+            if (!cands.length) return [];
+            const opp = other(player);
             const need = c => matchLength > 0 ? Math.max(1, matchLength - matchScore[c]) : 3;
-            const mine = k => Math.min(k, need(player)), theirs = k => Math.min(k, need(opp));
-            return masterPlayOut({ n: MASTER_GAMES, cands: top.map(c => ({ a: c.a, b: c.b })) }).then(res => {
-                let best = top[0], bestEq = -Infinity;
-                res.forEach((acc, i) => {      // (the games start with the opponent to move: acc counts from their side)
-                    const oppSingle = acc.w - acc.wg, oppGammon = acc.wg - acc.wb, oppBg = acc.wb;
-                    const myWins = acc.n - acc.w, mySingle = myWins - acc.lg, myGammon = acc.lg - acc.lb, myBg = acc.lb;
-                    const eq = (mySingle * mine(1) + myGammon * mine(2) + myBg * mine(3) - oppSingle * theirs(1) - oppGammon * theirs(2) - oppBg * theirs(3)) / acc.n;
-                    top[i].eq = eq; top[i].win = myWins / acc.n;
-                    if (eq > bestEq) { bestEq = eq; best = top[i]; }
-                });
-                return best.moves;
+            const worth = (mine, theirs) => y => Math.min(1, mine) * (y[0] - y[1]) + Math.min(2, mine) * (y[1] - y[2]) + Math.min(3, mine) * y[2]
+                                             - Math.min(1, theirs) * (1 - y[0] - y[3]) - Math.min(2, theirs) * (y[3] - y[4]) - Math.min(3, theirs) * y[4];
+            const mineVal = worth(need(player), need(opp)), theirVal = worth(need(opp), need(player));
+            const set = (c, y) => { c.y = y; c.eq = mineVal(y); c.win = y[0]; c.gWin = y[1]; c.gLose = y[3]; };
+            cands.forEach(c => set(c, BGNet.after(c.b, c.a)));          // (c.b is the player's side, c.a the opponent's)
+            cands.sort((x, y) => y.eq - x.eq);
+            const deep = cands.slice(0, COACH_DEEP), extra = cands.find(c => c.key === keep);
+            if (extra && !deep.includes(extra)) deep.push(extra);
+            for (const c of deep) {
+                set(c, BGNet.after2(c.b, c.a, theirVal));
+                await new Promise(r => setTimeout(r, 0));               // (a breath for the page between candidates)
+            }
+            return deep.sort((x, y) => y.eq - x.eq);
+        }
+        // The best way to play (the hint and the Master level): a Promise of the list of moves (null: nothing to play)
+        function nnBestPlan(st, player, dice) {
+            return nnRank(JSON.parse(JSON.stringify(st)), player, dice, null).then(r => r.length ? r[0].moves : null);
+        }
+
+        // Rates your turn: { verdict, loss, title, sub, why[], ranked[], best, mine, ... } (or { forced } with one way to play)
+        async function coachAnalyze(job) {
+            const p = job.player, st = JSON.parse(JSON.stringify(job.start));
+            const mineKey = posKey(job.end);
+            const ranked = await nnRank(st, p, job.dice, mineKey);
+            const mine = ranked.find(c => c.key === mineKey);
+            if (!mine || ranked.length < 2) return { forced: true };
+            for (const c of ranked) {
+                const pa = coachPaths(job.start, p, c.moves);
+                c.paths = pa.paths; c.end = pa.end; c.note = coachNotation(p, pa.paths); c.f = coachFacts(pa.end, p);
+            }
+            const best = ranked[0], loss = Math.max(0, best.eq - mine.eq);
+            const verdict = mine === best ? 'best' : loss < COACH_EXCELLENT ? 'excellent' : loss <= COACH_BLUNDER ? 'mistake' : 'blunder';
+            const r = { verdict, loss, ranked, best, mine, S: coachFacts(job.start, p), start: job.start };
+            r.title = verdict === 'best' ? 'Best move' : verdict === 'excellent' ? `Excellent move (${eqText(loss)})` : verdict === 'mistake' ? `Small mistake (${eqText(loss)})` : `Blunder (${eqText(loss)})`;
+            r.sub = verdict === 'best' ? coachPraise(r.S, best.f) : coachCategory(r.S, best.f, mine.f, loss);
+            r.why = coachReasons(r);
+            return r;
+        }
+
+        function coachApplies() {
+            return coachOn && hintsAllowed() && matchActive && gameActive && !openingRoll && currentPlayer === myColor && diceValues.length === 0 && turnHistory.length > 0;
+        }
+        // Called when your dice are used up: rates the turn before it passes. True if the coach took over.
+        function coachHold() {
+            if (!coachApplies()) return false;
+            const job = { start: turnHistory[0].state, dice: turnHistory[0].dice.slice(), end: JSON.parse(JSON.stringify(state)), player: myColor };
+            const t = ++coach.token, g = gameGen;
+            coach.hold = true; coach.busy = true; coach.res = null; coach.open = true; coach.expanded = false; coach.view = 'mine';
+            coachRender();
+            setStatus('Coach: checking your move...');
+            updateUI();
+            coachAnalyze(job).then(res => {
+                if (t !== coach.token || g !== gameGen) return;
+                coach.busy = false;
+                if (!res || res.forced) { coach.open = false; coach.res = null; coachRelease(); return; }
+                coach.res = res;
+                const good = res.verdict === 'best' || res.verdict === 'excellent';
+                coach.expanded = !good;
+                coachRender();
+                if (good) coachRelease();
+                else setStatus(`Coach: ${res.verdict === 'blunder' ? 'Blunder' : 'Small mistake'}. Undo and try again, or continue.`);
+            }).catch(() => { if (t === coach.token && g === gameGen) { coach.busy = false; coach.open = false; coachRelease(); } });
+            return true;
+        }
+        // On with the game: your turn passes to the computer (the card stays up until your next roll)
+        function coachRelease() {
+            if (!coach.hold) { coachRender(); return; }
+            coach.hold = false;
+            coachShow('mine');
+            coachRender();
+            if (gameActive && currentPlayer === myColor && diceValues.length === 0 && rolledThisTurn) endTurn();
+        }
+        function coachContinue() { coach.expanded = false; coachRelease(); }
+        // Back to the start of the turn, to play the roll again
+        function coachRetry() {
+            if (!coach.hold || !turnHistory.length) return;
+            coachDrop();
+            while (turnHistory.length) doUndo();
+            setStatus('Coach: try again.');
+        }
+        // The turn changed under the coach (an undo, a new game...): forget what it was doing
+        function coachDrop() {
+            coach.token++;
+            const was = coach.hold;
+            coach.hold = false; coach.busy = false; coach.open = false; coach.res = null;
+            if (boardView) { boardView = null; renderCheckers(); }
+            coachRender();
+            return was;
+        }
+        function coachHide() { if (coach.hold || coachDocked()) return; coach.open = false; coachRender(); }      // (the panel keeps the last tip)
+        function coachClose() { if (coach.hold) { if (coach.busy) return; coach.open = false; coachRelease(); } else coachHide(); }
+        function coachToggleDetails() { coach.expanded = !coach.expanded; coachRender(); }
+        function toggleCoach() {
+            coachOn = !coachOn;
+            if (!coachOn && coach.hold) { coach.token++; coach.busy = false; coach.open = false; coach.res = null; coachRelease(); }
+            if (!coachOn) coachDrop();
+            coachLayout();
+            coachRender();
+            saveSettings();
+        }
+        // The board shows your move ('mine') or, while the game waits, the best one ('best')
+        function coachShow(v) {
+            coach.view = v;
+            coach.mini = v === 'best' && !coachDocked();          // (a small screen folds the card away to show the board)
+            const want = v === 'best' && coach.hold && coach.res ? coach.res.best.end : null;
+            if (want !== boardView) { boardView = want; renderCheckers(); }
+            coachArrows();
+            coachRender();
+        }
+        function coachTogglePreview() { coachShow(coach.view === 'best' ? 'mine' : 'best'); }
+
+        // Arrows for the move on show (gold: the best move; blue: yours), drawn in the board's own coordinates
+        function coachArrows() {
+            const svg = document.getElementById('coach-arrows');
+            if (!svg) return;
+            const r = coach.res;
+            if (!(coachOn && coach.hold && coach.open && r && !coach.busy && r.mine !== r.best)) { if (svg.firstChild) svg.innerHTML = ''; return; }
+            const layer = document.getElementById('checkers-layer'), lw = layer.offsetWidth, lh = layer.offsetHeight;
+            if (!lw) return;
+            const LR = layer.getBoundingClientRect(), lcx = LR.left + LR.width / 2, lcy = LR.top + LR.height / 2, rot = boardRot;
+            const rectOf = el => {
+                const q = el.getBoundingClientRect(), ex = q.left + q.width / 2 - lcx, ey = q.top + q.height / 2 - lcy;
+                let lx = ex, ly = ey, w = q.width, h = q.height;
+                if (rot === 90) { lx = ey; ly = -ex; w = q.height; h = q.width; } else if (rot === -90) { lx = -ey; ly = ex; w = q.height; h = q.width; }
+                return { left: lw / 2 + lx - w / 2, top: lh / 2 + ly - h / 2, width: w, height: h };
+            };
+            const ptW = rectOf(pointElements[0]).width, ch = ptW * 0.85;
+            // where the i-th checker of a stack of n sits (as renderCheckers places it)
+            const spot = (loc, i, n) => {
+                if (loc === 'off') { const t = rectOf(document.getElementById(homeOrientation === 'RIGHT' ? 'tray-right-bottom' : 'tray-left-bottom')); return { x: t.left + t.width / 2, y: t.top + t.height - ch * 0.5 }; }
+                const el = loc === 'bar' ? document.getElementById('bar-bottom') : pointElements[loc];
+                const q = rectOf(el), top = loc !== 'bar' && getPhysicalQuadrant(vi(loc)).startsWith('top');
+                const stride = n > 5 ? (ch * 4) / (n - 1) : ch;
+                const y = top ? q.top + i * stride + ch / 2 : q.top + q.height - ch / 2 - i * stride;
+                return { x: q.left + q.width / 2, y };
+            };
+            const move = coach.view === 'best' ? r.best : r.mine, colour = coach.view === 'best' ? '#facc15' : '#38bdf8';
+            const start = r.start, p = myColor;
+            const stackLen = (s, loc) => loc === 'bar' ? s.bar[p].length : loc === 'off' ? 0 : s.board[loc].length;
+            let html = `<defs><marker id="coach-head" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${colour}"/></marker></defs>`;
+            const taken = new Map(), arrived = new Map();   // several checkers leaving or reaching the same point
+            for (const pa of move.paths) {
+                const n0 = stackLen(start, pa.from), t = taken.get(pa.from) || 0;
+                taken.set(pa.from, t + 1);
+                const a = spot(pa.from, Math.max(0, n0 - 1 - t), n0);
+                const n1 = stackLen(move.end, pa.to), u = arrived.get(pa.to) || 0;
+                arrived.set(pa.to, u + 1);
+                const b = spot(pa.to, Math.max(0, n1 - 1 - u), n1);
+                const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+                const bend = Math.min(len * 0.25, ch * 1.6), cx = (a.x + b.x) / 2 - dy / len * bend, cy = (a.y + b.y) / 2 + dx / len * bend;
+                const sw = Math.max(2.5, ch * 0.16);
+                html += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="${(sw + 3).toFixed(1)}" stroke-linecap="round"/>` +
+                        `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}" fill="none" stroke="${colour}" stroke-width="${sw.toFixed(1)}" stroke-linecap="round" marker-end="url(#coach-head)"/>`;
+            }
+            svg.setAttribute('viewBox', `0 0 ${lw} ${lh}`);
+            svg.innerHTML = html;
+        }
+
+        function coachRender() {
+            const $ = id => document.getElementById(id);
+            const tg = $('coach-toggle');
+            if (tg) tg.setAttribute('aria-checked', String(coachOn));
+            const card = $('coach-card');
+            if (!card) return;
+            const r = coach.res, idle = !(coach.open && (coach.busy || !!r));
+            const show = coachOn && hintsAllowed() && (!idle || (coachDocked() && matchActive));
+            card.classList.toggle('hidden', !show);
+            if (!show) { coachArrows(); return; }
+            card.classList.toggle('cc-mini', !idle && coach.mini && !coach.busy);
+            if (idle) {               // the panel waits for your move
+                card.dataset.verdict = 'idle'; card.classList.remove('cc-open');
+                $('coach-badge').textContent = '?';
+                $('coach-title').textContent = 'Coach';
+                $('coach-sub').textContent = 'Your move is rated as soon as your turn is over.';
+                ['coach-more', 'coach-close'].forEach(id => $(id).classList.add('hidden'));
+                coachArrows();
+                return;
+            }
+            card.dataset.verdict = coach.busy ? 'busy' : r.verdict;
+            card.dataset.view = coach.view;
+            card.classList.toggle('cc-open', !coach.busy && coach.expanded);
+            $('coach-badge').textContent = coach.busy ? '' : (r.verdict === 'best' || r.verdict === 'excellent') ? '✓' : r.verdict === 'mistake' ? '!' : '✕';
+            $('coach-title').textContent = coach.busy ? 'Checking your move...' : r.title;
+            $('coach-sub').textContent = coach.busy ? '' : r.sub;
+            $('coach-more').classList.toggle('hidden', coach.busy);
+            $('coach-more').setAttribute('aria-expanded', String(!coach.busy && coach.expanded));
+            $('coach-close').classList.toggle('hidden', coach.busy || coachDocked());
+            if (coach.busy) { coachArrows(); return; }
+            const why = $('coach-why');
+            why.innerHTML = '';
+            r.why.forEach(t => { const li = document.createElement('li'); li.textContent = t; why.appendChild(li); });
+            // the top moves (yours always among them), with how much each gives away against the best
+            const rows = r.ranked.slice(0, 3);
+            if (!rows.includes(r.mine)) rows.push(r.mine);
+            const tb = $('coach-moves');
+            tb.innerHTML = '';
+            rows.forEach(c => {
+                const tr = document.createElement('tr');
+                if (c === r.mine) tr.className = 'cm-mine';
+                const rank = r.ranked.indexOf(c) + 1;
+                const cells = [rank + '.', c.note, pctOf(c.win), c === r.best ? '' : eqText(r.best.eq - c.eq), c === r.mine ? 'yours' : ''];
+                cells.forEach((t, i) => { const td = document.createElement('td'); td.textContent = t; if (i === 1) td.setAttribute('translate', 'no'); tr.appendChild(td); });
+                tb.appendChild(tr);
             });
+            $('coach-mini-t').textContent = coach.view === 'best' ? 'The best move is shown on the board' : 'Your move is shown on the board';
+            const canPreview = coach.hold && r.mine !== r.best;
+            $('coach-show').classList.toggle('hidden', !canPreview);
+            $('coach-show').textContent = coach.view === 'best' ? 'Show your move' : 'Show best move';
+            $('coach-retry').classList.toggle('hidden', !coach.hold);
+            $('coach-go').classList.toggle('hidden', !coach.hold);
+            coachArrows();
         }
 
         function wpStart(job) {
@@ -6974,7 +7645,7 @@
         function restoreAIMatch(s, how) {
             const p = s.snap;
             starterFlip = !!s.flip; lastWinner = (s.lw === W || s.lw === R) ? s.lw : null;
-            gameGen++; stateEpoch++; clearInterval(rollInterval); clearTimeout(rollTimeout); clearTimeout(endTurnTimer); clearHint();
+            gameGen++; stateEpoch++; clearInterval(rollInterval); clearTimeout(rollTimeout); clearTimeout(endTurnTimer); clearHint(); coachDrop();
             myColor = s.myColor; updatePlayAsButtons();
             if (['easy', 'medium', 'hard', 'expert', 'master'].includes(s.difficulty)) { aiDifficulty = s.difficulty; document.getElementById('setting-ai-diff').value = aiDifficulty; }
             matchLength = s.matchLength; matchScore = { w: s.matchScore.w, r: s.matchScore.r };
