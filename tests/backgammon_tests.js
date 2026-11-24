@@ -138,6 +138,23 @@ test('combined move never offers a route through a blocked point', () => {
     assert(!sel.some(x => x.target === 14));
 });
 
+test('combined move goes through a blot on the way and hits it (whichever die comes first in the roll)', () => {
+    // White on 23 (its 24 point) with 6-4; a Red blot on 19 (4 away) and the 6-stop 17 open: the 4 is played first
+    for (const dice of [[6, 4], [4, 6]]) {
+        const st = pos({ w: { 23: 1, 0: 14 }, r: { 19: 1, 5: 14 } });
+        const far = E.getSelectableMoves(st, W, 23, dice).find(x => x.target === 13);
+        assert(far && far.path.map(s => s.target).join() === '19,13' && far.diceUsed === 4, JSON.stringify(far && far.path));
+    }
+    // the blot 6 away instead: the 6 goes first
+    const st2 = pos({ w: { 23: 1, 0: 14 }, r: { 17: 1, 5: 14 } });
+    const far2 = E.getSelectableMoves(st2, W, 23, [4, 6]).find(x => x.target === 13);
+    assert(far2.path.map(s => s.target).join() === '17,13' && far2.diceUsed === 6);
+    // the same for Red (mirror image)
+    const st3 = pos({ r: { 0: 1, 23: 14 }, w: { 4: 1, 18: 14 } });
+    const far3 = E.getSelectableMoves(st3, R, 0, [6, 4]).find(x => x.target === 10);
+    assert(far3.path.map(s => s.target).join() === '4,10' && far3.diceUsed === 4);
+});
+
 section('Scoring');
 test('win / gammon / backgammon', () => {
     const win = pos({ offW: 15, w: {}, r: { 20: 14 }, offR: 1 });

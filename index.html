@@ -989,7 +989,7 @@
                                 <p>• <strong>Win chance:</strong> The switch above the board shows each side's chance to win this game. It plays the position out 1,000 times with a quick computer player and updates each time a player finishes a turn (not during a turn, so it never hints at a move). It is an estimate (usually within a few percent); hovering over it with a mouse also shows the chances of a gammon.</p>
                 <p>• <strong>Saved:</strong> Your settings, and an unfinished match against the computer, are remembered if you close the page.</p>
                 <p>• <strong>History:</strong> The chart button lists the matches played on this device, with your results against each opponent. Export turns any match into a .mat file that GNU Backgammon and other analysis programs can open.</p>
-                <p>• <strong>Both dice at once:</strong> Select a checker and click a point that needs both dice (or several dice on doubles). The checker travels there in one move, as long as every step along the way is legal. Undo takes the whole move back.</p>
+                <p>• <strong>Both dice at once:</strong> Select a checker and click a point that needs both dice (or several dice on doubles). The checker travels there in one move, as long as every step along the way is legal. If an opponent's lone checker sits where one of the dice would stop on the way, that die is played first, so the blot is hit. (To pass it by, play the dice one at a time.) Undo takes the whole move back.</p>
                 <p>• <strong>Animation:</strong> Checkers glide smoothly from point to point.</p>
                 <p>• <strong>Rules:</strong> Full rules apply including doubles (4 moves), hitting blots, and mandatory bar re-entry.</p>
                 <p>• <strong>Online:</strong> Press Play Online, create a game and send the link (or the 6-character code) to a friend. Once you are connected you both choose the match length and turn timer, and the game starts when you confirm the same settings; colours are drawn at random. The dice are fair: before the match each browser locks in its own secret half of the dice with a code, and every roll combines both halves, so neither player can choose or change a roll. Everything sent between you is encrypted, also when the game runs through the backup relay. If the connection drops, the game pauses and reconnects by itself (you can even reload the page and resume). An optional turn timer skips the turn of a player who runs out of time, and when a match ends either player can ask for a rematch.</p>
@@ -1375,9 +1375,10 @@
                     const isHit = m.target !== 'off' && getCheckerColor(st.board[m.target]) === opp && st.board[m.target].length === 1;
                     const nh = hits + (isHit ? 1 : 0);
                     if (np.length >= 2 && !singleTargets.has(m.target)) {
-                        // several routes to the same point: fewest dice first, then the route that hits nothing on the way
+                        // several routes to the same point: fewest dice first, then the route that hits a blot on the way
+                        // (e.g. 6-4 with a blot 4 away: the 4 is played first, so the checker hits it on its way to the 10)
                         const cur = best.get(m.target);
-                        if (!cur || np.length < cur.path.length || (np.length === cur.path.length && nh < cur.hits)) {
+                        if (!cur || np.length < cur.path.length || (np.length === cur.path.length && nh > cur.hits)) {
                             best.set(m.target, { target: m.target, diceUsed: np[0].diceUsed, path: np, hits: nh });
                         }
                     }
@@ -2383,7 +2384,7 @@
             "History:": "Istoric:",
             "The chart button lists the matches played on this device, with your results against each opponent. Export turns any match into a .mat file that GNU Backgammon and other analysis programs can open.": "Butonul cu grafic arată meciurile jucate pe acest dispozitiv și rezultatele tale cu fiecare adversar. „Exportă” transformă orice meci într-un fișier .mat pe care îl pot deschide GNU Backgammon și alte programe de analiză.",
             "Both dice at once:": "Ambele zaruri deodată:",
-            "Select a checker and click a point that needs both dice (or several dice on doubles). The checker travels there in one move, as long as every step along the way is legal. Undo takes the whole move back.": "Selectează o piesă și dă clic pe o căsuță pentru care îți trebuie ambele zaruri (sau mai multe, la dublă). Piesa ajunge acolo dintr-o singură mutare, dacă fiecare pas de pe drum e permis. Anularea retrage toată mutarea.",
+            "Select a checker and click a point that needs both dice (or several dice on doubles). The checker travels there in one move, as long as every step along the way is legal. If an opponent's lone checker sits where one of the dice would stop on the way, that die is played first, so the blot is hit. (To pass it by, play the dice one at a time.) Undo takes the whole move back.": "Selectează o piesă și dă clic pe o căsuță pentru care îți trebuie ambele zaruri (sau mai multe, la dublă). Piesa ajunge acolo dintr-o singură mutare, dacă fiecare pas de pe drum e permis. Dacă o piesă singură a adversarului se află acolo unde s-ar opri unul dintre zaruri pe drum, acel zar se joacă primul, așa că piesa e lovită. (Ca s-o ocolești, joacă zarurile pe rând.) Anularea retrage toată mutarea.",
             "Animation:": "Animație:",
             "Checkers glide smoothly from point to point.": "Piesele alunecă lin dintr-o căsuță în alta.",
             "Rules:": "Reguli:",

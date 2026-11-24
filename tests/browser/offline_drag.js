@@ -1,4 +1,5 @@
-// Dragging checkers with the mouse or a finger (as well as tap-then-tap), on a PC screen and on the upright phone board
+// Dragging checkers with the mouse or a finger (as well as tap-then-tap), on a PC screen and on the upright phone board;
+// a move with both dice at once hits a blot on the way
 const { chromium } = require('playwright'); require('./sandbox')(chromium);
 const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../index.html');
 (async () => {
@@ -78,6 +79,22 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
     const off1 = await p.evaluate(() => state.off[myColor].length);
     if (off1 !== off0 + 1) console.log('   ', JSON.stringify(await p.evaluate(() => ({ dice: diceValues, sel: selectedSource, vt: validTargets.map(m => m.target), anim: isAnimating, cp: currentPlayer, me: myColor }))));
     ok(off1 === off0 + 1, label + ': dragging a checker onto the tray' + (mobile ? ' with a finger' : '') + ' bears it off (' + off0 + ' -> ' + off1 + ')');
+    // 6) both dice at once with an opponent's blot on the way: it is hit (6-4 rolled with the 6 first, the blot 4 away)
+    await p.evaluate(() => { const c = myColor, o = c === 'w' ? 'r' : 'w', pt = n => c === 'w' ? n - 1 : 24 - n;
+      state = { board: Array.from({ length: 24 }, () => []), bar: { w: [], r: [] }, off: { w: [], r: [] } };
+      state.board[pt(24)].push('c_' + c + '_0'); for (let k = 1; k < 15; k++) state.board[pt(6)].push('c_' + c + '_' + k);
+      state.board[pt(20)].push('c_' + o + '_0'); for (let k = 1; k < 15; k++) state.board[pt(19)].push('c_' + o + '_' + k);
+      currentPlayer = c; diceValues = [6, 4]; rolledThisTurn = true; turnHistory = [];
+      renderCheckers(); updateUI(); updateHitboxCursors(); });
+    await p.waitForTimeout(1000);
+    const p24 = me === 'w' ? 23 : 0, p14 = me === 'w' ? 13 : 10;
+    if (mobile) {                                        // tap the checker, then the point 10 away
+      await p.evaluate(i => pointElements[i].querySelector('.hitbox').click(), p24); await p.waitForTimeout(200);
+      await p.evaluate(i => pointElements[i].querySelector('.hitbox').click(), p14);
+    } else await dragMouse(p, await pointCentre(p, p24), await emptyPointCentre(p, p14));
+    await p.waitForFunction(() => !isAnimating && diceValues.length === 0, null, { timeout: 5000 }).catch(() => {});   // (two steps of 0.75 s)
+    const hit = await p.evaluate(i => ({ bar: state.bar[myColor === 'w' ? 'r' : 'w'].length, there: state.board[i].length }), p14);
+    ok(hit.bar === 1 && hit.there === 1, label + ': moving 24 -> 14 with 6-4 in one go hits the blot on the 20 point on the way (' + (mobile ? 'tap, tap' : 'drag') + ')');
     await p.context().close();
   }
   ok(errs.length === 0, 'no page errors ' + JSON.stringify(errs.slice(0, 3)));
