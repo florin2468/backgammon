@@ -2,7 +2,7 @@ name: Engine tests
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -12,9 +12,10 @@ jobs:
 
   # The game in a real browser (Chromium through Playwright): play against the computer, the phone layout, and online
   # games between several pages (PeerJS and the relay brokers are replaced by in-test mocks, so no network is used).
-  # The suite is split in three groups that run side by side.
+  # The suite is split in three groups that run side by side. (Pinned to Ubuntu 24.04: the Playwright version used
+  # here cannot install Chromium on newer Ubuntu images.)
   browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       fail-fast: false
