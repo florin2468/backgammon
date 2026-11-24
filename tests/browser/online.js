@@ -848,14 +848,16 @@ const BOT = (opts) => `
       const h = handleGameEnd; handleGameEnd = function (w) { __log.push({ kind: 'end', winner: w }); return h.apply(this, arguments); };
       const ps = netSend; netSend = function (o2) { if (o2 && o2.t === 'openRoll') __log.push({ kind: 'openRollSent', p: o2.p }); return ps.apply(this, arguments); }; });
     await startBots([A, B], { rematch: 'false', next: 'true' });
-    await A.waitForFunction(() => __log.filter(e => e.kind === 'end').length >= 3, null, { timeout: 110000 }).catch(() => {});
+    // two later games, or fewer when the 5-point match is over sooner (two gammons or a backgammon and a gammon);
+    // random play with many hits can make a game long, so a generous time limit
+    await A.waitForFunction(() => __log.filter(e => e.kind === 'init').length >= 2 || matchOver, null, { timeout: 240000 }).catch(() => {});
     await A.waitForTimeout(1500);
-    const logs = await Promise.all([A, B].map(p => p.evaluate(() => __log)));
+    const logs = await Promise.all([A, B].map(p => p.evaluate(() => __log.concat([{ kind: 'over', over: matchOver }]))));
     let ok = true;
     for (const [i, lg] of logs.entries()) {
-      const inits = lg.filter(e => e.kind === 'init'), ends = lg.filter(e => e.kind === 'end');
-      out('   screen', i ? 'B' : 'A', 'games started:', JSON.stringify(inits.map(e => ({ st: e.starter, open: e.open, cp: e.cp }))), 'winners:', JSON.stringify(ends.map(e => e.winner)));
-      ok = ok && inits.length >= 2; if (inits.length) ok = ok && inits[0].open === false && inits[0].cp === ends[0].winner;
+      const inits = lg.filter(e => e.kind === 'init'), ends = lg.filter(e => e.kind === 'end'), over = lg[lg.length - 1].over;
+      out('   screen', i ? 'B' : 'A', 'games started:', JSON.stringify(inits.map(e => ({ st: e.starter, open: e.open, cp: e.cp }))), 'winners:', JSON.stringify(ends.map(e => e.winner)), over ? '(match over)' : '');
+      ok = ok && inits.length >= 1 && (inits.length >= 2 || over); if (inits.length) ok = ok && inits[0].open === false && inits[0].cp === ends[0].winner;
       for (let k = 0; k < inits.length; k++) ok = ok && inits[k].open === false && inits[k].cp === ends[k].winner && inits[k].starter === ends[k].winner;
     }
     const opens = logs.map(lg => lg.filter(e => e.kind === 'openRollSent').length);
