@@ -312,7 +312,10 @@ const BOT = (opts) => `
     const r = await settle(8000); check(r.same, 'the match finished with the same position on both screens');
   }
   check([A, B, C].every(p => p.errors.length === 0), 'no page errors ' + JSON.stringify([A, B, C].map(p => p.errors.slice(0, 2))));
-  check(A.desyncs.length === 0 && B.desyncs.length === 0, 'no desyncs ' + JSON.stringify([A.desyncs.slice(0, 2), B.desyncs.slice(0, 2)]));
+  // (when the brokers drop, a message can be lost on the way; the game then puts itself right with a resync, which the
+  // checks above cover, as for the drop and blackhole scenarios of online.js)
+  if (scenario === 'relaydrop') out('   desyncs (resynced):', JSON.stringify([A.desyncs.slice(0, 2), B.desyncs.slice(0, 2)]));
+  else check(A.desyncs.length === 0 && B.desyncs.length === 0, 'no desyncs ' + JSON.stringify([A.desyncs.slice(0, 2), B.desyncs.slice(0, 2)]));
   await browser.close();
   console.log(FAILS ? FAILS + ' FAILED' : 'ALL PASS');
   process.exit(FAILS ? 1 : 0);
