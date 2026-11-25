@@ -17,7 +17,8 @@ A single-file backgammon game: play against the computer (Easy to Master), or on
   blunder. It names the kind of error (safety error, missed attacking opportunity, structural miss, passive error, racing
   inefficiency...) or what the best move does well, explains why (shots, hits, points made, blocks, anchors, escapes,
   gammons), and lists the top moves with what each gives away. After a mistake the game waits, with
-  arrows on the board for your move (blue) and the best move (gold), no click needed: undo and try again, or continue
+  arrows on the board for your move (blue) and the best move (gold), no click needed, and the checkers' places
+  before the move shown faded: undo and try again, or continue
   (Preview best move shows the board after the best move). On wide screens it is a panel beside the board. The judging
   comes from a small neural network trained for this game by self-play (TD learning, as TD-Gammon), looking one roll
   ahead; the training program is in `tools/nn/`.

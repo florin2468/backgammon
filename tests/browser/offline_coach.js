@@ -30,6 +30,11 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
       executeMove(m.from, m.target, d);
     }
   }, list);
+  // where the top two checkers of my 13 point sit now, and where the faded copies (the coach's ghosts) sit
+  const xy = t => { const m = /translate3d\(([-\d.]+)px,\s*([-\d.]+)px/.exec(t); return m ? Math.round(+m[1]) + ',' + Math.round(+m[2]) : t; };
+  const top13 = pg => pg.evaluate(() => state.board[myColor === W ? 12 : 11].slice(-2).map(id => document.getElementById(id).style.transform)).then(a => a.map(xy).sort());
+  const ghosts = pg => pg.evaluate(() => [...document.querySelectorAll('#coach-ghosts .checker')].map(e => ({ t: e.style.transform, o: getComputedStyle(e).opacity, c: e.className })))
+    .then(a => ({ n: a.length, at: a.map(g => xy(g.t)).sort(), half: a.every(g => g.o === '0.5'), white: a.every(g => /checker-(white|red)/.test(g.c)) }));
   const result = p => p.waitForFunction(() => coach.token > window.__tok && !coach.busy && coach.res, null, { timeout: 30000 }).then(() => p.evaluate(() => ({
     v: coach.res.verdict, title: document.getElementById('coach-title').innerText, sub: document.getElementById('coach-sub').innerText,
     why: [...document.querySelectorAll('#coach-why li')].map(e => e.innerText), rows: [...document.querySelectorAll('#coach-moves tr')].map(t => t.innerText.replace(/\s+/g, ' ')),
@@ -43,6 +48,8 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
   await sixFour(p);
   ok(await p.evaluate(() => document.documentElement.classList.contains('coach-dock') && !document.getElementById('coach-card').classList.contains('hidden')),
      'on a wide screen the coach is a panel beside the board, waiting for your move');
+  await p.waitForTimeout(800);
+  const was13 = await top13(p);
   await play(p, [[13, 6], [13, 4]]);                     // 13/7 13/9: two blots
   let r = await result(p);
   ok(['mistake', 'blunder'].includes(r.v) && /\(−0\.\d{3}\)$/.test(r.title) && r.sub.length > 3, '13/7 13/9 is rated a mistake: "' + r.title + '" — ' + r.sub);
@@ -57,6 +64,8 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
     card: document.getElementById('coach-card').getBoundingClientRect().top, label: document.getElementById('coach-show').innerText }));
   let a = await arrows(p);
   ok(a.best === 2 && a.mine === 2 && a.gold && a.key && a.label === 'Preview best move', 'without a click, the board shows your move (blue) and the best one (gold) together, with a colour key');
+  let g = await ghosts(p);
+  ok(g.n === 2 && g.half && g.white && g.at.join(' ') === was13.join(' '), 'the two checkers that left the 13 point are shown faded (50%) where they stood: ' + g.at.join(' ') + ' / ' + was13.join(' '));
   await p.waitForTimeout(1500);
   ok(await p.evaluate(() => currentPlayer === myColor && !isAITurn()), 'the computer has not moved meanwhile');
   // show the best move on the board, with arrows
@@ -64,15 +73,16 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
   await p.click('#coach-show'); await p.waitForTimeout(900);
   let v = await p.evaluate(() => ({ view: coach.view, bv: !!boardView, arrows: document.querySelectorAll('#coach-arrows path').length, real: fastSig(), label: document.getElementById('coach-show').innerText }));
   ok(v.view === 'best' && v.bv && v.arrows >= 2 && v.real === before && v.label === 'Show your move', 'Preview best move: the board shows it with arrows (the real position is unchanged)');
-  a = await arrows(p);
-  ok(a.best === 2 && a.mine === 0, 'and only the best move\'s arrows then');
+  a = await arrows(p); g = await ghosts(p);
+  ok(a.best === 2 && a.mine === 0 && g.n === 2, 'and only the best move\'s arrows then, with its two checkers\' places (8 and 6) faded');
   await p.click('#coach-show'); await p.waitForTimeout(300);
   a = await arrows(p);
-  ok(await p.evaluate(() => !boardView && coach.view === 'mine') && a.best === 2 && a.mine === 2, 'and back to your move, with both again');
+  g = await ghosts(p);
+  ok(await p.evaluate(() => !boardView && coach.view === 'mine') && a.best === 2 && a.mine === 2 && g.at.join(' ') === was13.join(' '), 'and back to your move, with both again');
   // undo and try again, then play the best move: no waiting
   await p.click('#coach-retry'); await p.waitForTimeout(1200);
   v = await p.evaluate(() => ({ dice: diceValues.slice().sort().join(), hist: turnHistory.length, hold: coach.hold, hidden: document.getElementById('coach-card').getAttribute('data-verdict') }));
-  ok(v.dice === '4,6' && v.hist === 0 && !v.hold, 'Undo and try again: the whole turn is taken back, the 6-4 can be played again');
+  ok(v.dice === '4,6' && v.hist === 0 && !v.hold && (await ghosts(p)).n === 0, 'Undo and try again: the whole turn is taken back, the 6-4 can be played again (no faded checkers left)');
   await play(p, [[8, 6], [6, 4]]);                       // 8/2 6/2
   r = await result(p);
   ok(['best', 'excellent'].includes(r.v) && !r.hold, '8/2 6/2: "' + r.title + '" — ' + r.sub + ', and the game goes on');
@@ -128,7 +138,8 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
   const q = await open({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'ro-RO' });
   const misses = []; q.on('console', m => { if (m.text().startsWith('[i18n-miss] ')) misses.push(m.text().slice(12)); });
   await q.evaluate(() => { I18N.misses = new Set(); I18N.collect = true; if (!coachOn) toggleCoach(); });
-  await sixFour(q);
+  await sixFour(q); await q.waitForTimeout(800);
+  const was13q = await top13(q);
   await play(q, [[13, 6], [13, 4]]);
   r = await result(q); await q.waitForTimeout(200);
   ok(/^(Greșeală mică|Gafă) \(−0\.\d{3}\)$/.test(r.title) && r.why.every(t => /[ăâîșț]/.test(t) || /\d/.test(t)) && /a ta$/.test(r.rows[r.rows.length - 1]), 'in Romanian: "' + r.title + '" — ' + r.sub + ' / ' + r.why[0]);
@@ -138,6 +149,8 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
   const pc = await q.evaluate(() => ({ open: document.getElementById('coach-card').classList.contains('cc-open'), go: !!document.getElementById('coach-go').offsetParent, show: !!document.getElementById('coach-show').offsetParent, key: document.getElementById('coach-key').innerText.replace(/\s+/g, ' ') }));
   ok(!pc.open && pc.go && !pc.show && a.best === 2 && a.mine === 2 && a.bottom <= a.card + 1 && /Cea mai bună mutare/.test(pc.key),
      'folded while it waits, both moves\' arrows in view above it (' + pc.key + ')');
+  g = await ghosts(q);
+  ok(g.n === 2 && g.half && g.at.join(' ') === was13q.join(' '), 'on the upright phone board too, the faded checkers sit where the moved ones stood');
   await q.click('#coach-more'); await q.waitForTimeout(300);
   await q.click('#coach-show'); await q.waitForTimeout(600);
   ok(await q.evaluate(() => document.getElementById('coach-card').classList.contains('cc-mini') && document.getElementById('coach-mini-t').innerText === 'Cea mai bună mutare e arătată pe tablă'), 'showing the best move folds the card away');

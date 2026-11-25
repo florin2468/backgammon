@@ -443,6 +443,9 @@
 
         /* ---------- Coach: the card after your turn, and the arrows of a move on the board ---------- */
         #coach-arrows { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 25; overflow: visible; }   /* (above the checkers, below the coach card) */
+        /* where the checkers stood before the move on show, faded to half (just under the real checkers) */
+        #coach-ghosts { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 19; }
+        #coach-ghosts .checker { opacity: 0.5; transition: none; will-change: auto; box-shadow: none; }
         #coach-card { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(640px, calc(100vw - 24px)); z-index: 45;
                       background: rgba(15,23,42,0.97); border: 1px solid #334155; border-radius: 14px; box-shadow: 0 14px 36px rgba(0,0,0,0.55); color: #e2e8f0; font-size: 13px; line-height: 1.4; }
         #coach-card.hidden { display: none; }
@@ -690,6 +693,7 @@
 
             <!-- PERSISTENT CHECKERS LAYER -->
             <!-- ALL checkers live here. They move purely via transform: translate() -->
+            <div id="coach-ghosts" aria-hidden="true"></div>
             <div id="checkers-layer"></div>
             <svg id="coach-arrows" aria-hidden="true"></svg>
 
@@ -1005,7 +1009,7 @@
                 <p>• <strong>Who starts:</strong> Only at the start of a match: each player rolls both dice (online, each player clicks Roll Dice for their own). A double wins; if both roll doubles the higher double wins; otherwise the higher total wins. A tie is rolled again. The winner starts by playing the dice they just rolled (a double is played four times), so nobody rolls again. Every later game of the match starts with the winner of the previous game, who simply rolls and plays.</p>
                                 <p>• <strong>Hint:</strong> The lightbulb button works out the best way to play your roll (the move the coach would call best) and pulses the first checker to move and where it goes. Hints are only available against the computer, not in online games.</p>
                 <p>• <strong>Computer levels:</strong> Easy to Master, in Settings. Master judges every move with the coach's neural network, looking one roll ahead: the strongest level. The hint button uses the same judgement.</p>
-                <p>• <strong>Coach:</strong> The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits, and arrows on the board show your move (blue) and the best move (gold) without your having to click anything: undo and try again, or continue. Preview best move shows the board as it would be after the best move. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.</p>
+                <p>• <strong>Coach:</strong> The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits, and arrows on the board show your move (blue) and the best move (gold) without your having to click anything, with the checkers' places before the move shown faded: undo and try again, or continue. Preview best move shows the board as it would be after the best move. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.</p>
                                 <p>• <strong>Win chance:</strong> The switch above the board shows each side's chance to win this game. It plays the position out 1,000 times with a quick computer player and updates each time a player finishes a turn (not during a turn, so it never hints at a move). It is an estimate (usually within a few percent); hovering over it with a mouse also shows the chances of a gammon.</p>
                 <p>• <strong>Saved:</strong> Your settings, and an unfinished match against the computer, are remembered if you close the page.</p>
                 <p>• <strong>History:</strong> The chart button lists the matches played on this device, with your results against each opponent. Export turns any match into a .mat file that GNU Backgammon and other analysis programs can open.</p>
@@ -2422,7 +2426,7 @@
             "A win scores 1 point. A gammon (the loser has borne off no checkers) scores 2. A backgammon (a gammon where the loser still has a checker on the bar or in your home board) scores 3. The first player to reach the match target wins the match.": "O victorie aduce 1 punct. Un marț (învinsul nu a scos nicio piesă) aduce 2. Un backgammon (un marț în care învinsul mai are o piesă pe bară sau în casa câștigătorului) aduce 3. Primul jucător care atinge ținta meciului câștigă meciul.",
             "Language:": "Limba:",
             "English or Romanian, in Settings.": "Engleză sau română, în Setări.",
-            "The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits, and arrows on the board show your move (blue) and the best move (gold) without your having to click anything: undo and try again, or continue. Preview best move shows the board as it would be after the best move. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.": "Comutatorul Antrenor de deasupra tablei (în jocul cu calculatorul) îți evaluează fiecare tură imediat ce se termină, ca un program de antrenament: cea mai bună mutare, excelentă (pierde mai puțin de 0,02 puncte pe partidă), greșeală mică (până la 0,08) sau gafă. Spune ce fel de greșeală a fost sau ce face bine cea mai bună mutare, explică de ce și arată cele mai bune mutări, cu cât pierde fiecare. După o greșeală jocul așteaptă, iar săgețile de pe tablă arată mutarea ta (albastru) și cea mai bună mutare (auriu), fără să trebuiască să apeși ceva: anulează și încearcă din nou, sau continuă. „Previzualizează cea mai bună mutare” arată tabla așa cum ar fi după cea mai bună mutare. Evaluarea o face o mică rețea neuronală antrenată pentru acest joc jucând cu ea însăși și privind o aruncare înainte: un ghid bun, nu unul perfect.",
+            "The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits, and arrows on the board show your move (blue) and the best move (gold) without your having to click anything, with the checkers' places before the move shown faded: undo and try again, or continue. Preview best move shows the board as it would be after the best move. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.": "Comutatorul Antrenor de deasupra tablei (în jocul cu calculatorul) îți evaluează fiecare tură imediat ce se termină, ca un program de antrenament: cea mai bună mutare, excelentă (pierde mai puțin de 0,02 puncte pe partidă), greșeală mică (până la 0,08) sau gafă. Spune ce fel de greșeală a fost sau ce face bine cea mai bună mutare, explică de ce și arată cele mai bune mutări, cu cât pierde fiecare. După o greșeală jocul așteaptă, iar săgețile de pe tablă arată mutarea ta (albastru) și cea mai bună mutare (auriu), fără să trebuiască să apeși ceva, cu locurile pieselor dinainte de mutare arătate estompat: anulează și încearcă din nou, sau continuă. „Previzualizează cea mai bună mutare” arată tabla așa cum ar fi după cea mai bună mutare. Evaluarea o face o mică rețea neuronală antrenată pentru acest joc jucând cu ea însăși și privind o aruncare înainte: un ghid bun, nu unul perfect.",
             // titles and labels for screen readers
             "New game or leave": "Joc nou sau ieșire",
             "New Game": "Joc nou",
@@ -5138,12 +5142,13 @@
         }
         function coachTogglePreview() { coachShow(coach.view === 'best' ? 'mine' : 'best'); }
 
-        // Arrows for the moves on show (gold: the best move; blue: yours), drawn in the board's own coordinates
+        // Arrows for the moves on show (gold: the best move; blue: yours), drawn in the board's own coordinates, and the
+        // checkers' places at the start of the turn shown faded
         function coachArrows() {
             const svg = document.getElementById('coach-arrows');
             if (!svg) return;
-            const r = coach.res;
-            if (!(coachOn && coach.hold && coach.open && r && !coach.busy && r.mine !== r.best)) { if (svg.firstChild) svg.innerHTML = ''; return; }
+            const r = coach.res, ghosts = document.getElementById('coach-ghosts');
+            if (!(coachOn && coach.hold && coach.open && r && !coach.busy && r.mine !== r.best)) { if (svg.firstChild) svg.innerHTML = ''; if (ghosts && ghosts.firstChild) ghosts.innerHTML = ''; return; }
             const layer = document.getElementById('checkers-layer'), lw = layer.offsetWidth, lh = layer.offsetHeight;
             if (!lw) return;
             const LR = layer.getBoundingClientRect(), lcx = LR.left + LR.width / 2, lcy = LR.top + LR.height / 2, rot = boardRot;
@@ -5188,6 +5193,28 @@
                 }
             }
             html = `<defs>${defs}</defs>` + html;
+            // The checkers' places at the start of the turn, faded: wherever the board on show has fewer checkers of a
+            // colour than the start had (the checkers that moved away, one entered from the bar, a blot that was hit)
+            if (ghosts) {
+                const view = boardView || state, cnt = (stk, c) => stk.filter(id => id[2] === c).length;
+                let gh = '';
+                const ghost = (c, el, topDown, from, upto) => {
+                    const q = rectOf(el), stride = upto > 5 ? (ch * 4) / (upto - 1) : ch;
+                    for (let i = from; i < upto; i++) {
+                        const x = q.left + (q.width - ch) / 2, y = topDown ? q.top + i * stride : q.top + q.height - ch - i * stride;
+                        gh += `<div class="checker checker-${c === W ? 'white' : 'red'}" style="width:${ch.toFixed(1)}px;height:${ch.toFixed(1)}px;--z:${i + 1};transform:translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)"></div>`;
+                    }
+                };
+                for (const c of [W, R]) {
+                    for (let i = 0; i < 24; i++) {
+                        const n0 = cnt(start.board[i], c), n1 = cnt(view.board[i], c);
+                        if (n0 > n1) ghost(c, pointElements[i], getPhysicalQuadrant(vi(i)).startsWith('top'), n1, n0);
+                    }
+                    const b0 = start.bar[c].length, b1 = view.bar[c].length;
+                    if (b0 > b1) ghost(c, document.getElementById(c === myColor ? 'bar-bottom' : 'bar-top'), c !== myColor, b1, b0);
+                }
+                ghosts.innerHTML = gh;
+            }
             svg.setAttribute('viewBox', `0 0 ${lw} ${lh}`);
             svg.innerHTML = html;
         }
