@@ -480,6 +480,26 @@
         #coach-moves td:nth-child(4) { color: #94a3b8; text-align: right; }
         #coach-moves td:nth-child(5) { color: #38bdf8; font-weight: 700; font-size: 11px; }
         #coach-moves tr.cm-mine td:nth-child(2) { color: #7dd3fc; }
+        #coach-moves tr.cm-best td:nth-child(2) { color: #fde68a; }
+        /* the colour key for the arrows on the board (gold: the best move, blue: yours) */
+        #coach-key { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 4px; font-size: 11.5px; font-weight: 700; }
+        #coach-key.hidden, #coach-key .ck.hidden { display: none; }
+        #coach-key .ck { display: inline-flex; align-items: center; gap: 6px; }
+        #coach-key .ck::before { content: ''; flex: none; width: 18px; height: 4px; border-radius: 2px; background: var(--ck); box-shadow: 0 0 0 1px rgba(0,0,0,0.6); }
+        #coach-key .ck-best { --ck: #facc15; color: #fde68a; }
+        #coach-key .ck-mine { --ck: #38bdf8; color: #7dd3fc; }
+        /* waiting after a mistake on a smaller screen: folded, so the board and its arrows stay in view, with just the
+           buttons to go on (the reasons and the top moves are behind the Details arrow) */
+        html:not(.coach-dock) #coach-card.cc-hold:not(.cc-open):not(.cc-mini) #coach-body { display: block; border-top: 0; padding-top: 0; }
+        html:not(.coach-dock) #coach-card.cc-hold:not(.cc-open) #coach-why, html:not(.coach-dock) #coach-card.cc-hold:not(.cc-open) .coach-h,
+        html:not(.coach-dock) #coach-card.cc-hold:not(.cc-open) #coach-moves, html:not(.coach-dock) #coach-card.cc-hold:not(.cc-open) #coach-show { display: none; }
+        html:not(.coach-dock) #coach-card.cc-hold:not(.cc-open) #coach-actions { margin-top: 0; }
+        /* (a tablet or small laptop: the verdict and the buttons on one line, to cover as little of the board as possible) */
+        html:not(.coach-dock):not([data-phone]):not([data-compact]) #coach-card.cc-hold:not(.cc-open):not(.cc-mini) { display: flex; align-items: center; bottom: 6px; width: min(860px, calc(100vw - 24px)); }
+        html:not(.coach-dock):not([data-phone]):not([data-compact]) #coach-card.cc-hold:not(.cc-open):not(.cc-mini) #coach-title { display: inline; margin-right: 10px; }
+        html:not(.coach-dock):not([data-phone]):not([data-compact]) #coach-card.cc-hold:not(.cc-open):not(.cc-mini) #coach-head { flex: 1 1 auto; min-width: 0; padding-right: 4px; }
+        html:not(.coach-dock):not([data-phone]):not([data-compact]) #coach-card.cc-hold:not(.cc-open):not(.cc-mini) #coach-body { flex: none; padding: 0 12px 0 0; }
+        html:not(.coach-dock):not([data-phone]):not([data-compact]) #coach-card.cc-hold:not(.cc-open):not(.cc-mini) #coach-sub { display: inline; }
         #coach-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 12px; }
         #coach-actions button { height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 700; font-size: 13px; cursor: pointer; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; }
         #coach-actions button:hover { background: #273449; color: #fff; }
@@ -931,7 +951,7 @@
     <div id="coach-card" class="hidden" role="region" aria-live="polite" aria-label="Coach" data-verdict="busy" data-view="mine">
         <div id="coach-head">
             <span id="coach-badge" aria-hidden="true"></span>
-            <div id="coach-text"><div id="coach-title">Checking your move...</div><div id="coach-sub"></div></div>
+            <div id="coach-text"><div id="coach-title">Checking your move...</div><div id="coach-sub"></div><div id="coach-key" class="hidden"><span class="ck ck-best">Best move</span><span id="coach-key-mine" class="ck ck-mine">Yours</span></div></div>
             <button id="coach-more" type="button" class="coach-icon hidden" onclick="coachToggleDetails()" aria-expanded="false" title="Details" aria-label="Details"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"></polyline></svg></button>
             <button id="coach-close" type="button" class="coach-icon hidden" onclick="coachClose()" title="Close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
         </div>
@@ -941,7 +961,7 @@
             <div class="coach-h">Top moves</div>
             <table id="coach-moves"></table>
             <div id="coach-actions">
-                <button id="coach-show" type="button" class="hidden" onclick="coachTogglePreview()">Show best move</button>
+                <button id="coach-show" type="button" class="hidden" onclick="coachTogglePreview()">Preview best move</button>
                 <button id="coach-retry" type="button" class="hidden" onclick="coachRetry()">Undo and try again</button>
                 <button id="coach-go" type="button" class="hidden" onclick="coachContinue()">Continue</button>
             </div>
@@ -985,7 +1005,7 @@
                 <p>• <strong>Who starts:</strong> Only at the start of a match: each player rolls both dice (online, each player clicks Roll Dice for their own). A double wins; if both roll doubles the higher double wins; otherwise the higher total wins. A tie is rolled again. The winner starts by playing the dice they just rolled (a double is played four times), so nobody rolls again. Every later game of the match starts with the winner of the previous game, who simply rolls and plays.</p>
                                 <p>• <strong>Hint:</strong> The lightbulb button works out the best way to play your roll (the move the coach would call best) and pulses the first checker to move and where it goes. Hints are only available against the computer, not in online games.</p>
                 <p>• <strong>Computer levels:</strong> Easy to Master, in Settings. Master judges every move with the coach's neural network, looking one roll ahead: the strongest level. The hint button uses the same judgement.</p>
-                <p>• <strong>Coach:</strong> The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits: show the best move on the board (with arrows), undo and try again, or continue. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.</p>
+                <p>• <strong>Coach:</strong> The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits, and arrows on the board show your move (blue) and the best move (gold) without your having to click anything: undo and try again, or continue. Preview best move shows the board as it would be after the best move. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.</p>
                                 <p>• <strong>Win chance:</strong> The switch above the board shows each side's chance to win this game. It plays the position out 1,000 times with a quick computer player and updates each time a player finishes a turn (not during a turn, so it never hints at a move). It is an estimate (usually within a few percent); hovering over it with a mouse also shows the chances of a gammon.</p>
                 <p>• <strong>Saved:</strong> Your settings, and an unfinished match against the computer, are remembered if you close the page.</p>
                 <p>• <strong>History:</strong> The chart button lists the matches played on this device, with your results against each opponent. Export turns any match into a .mat file that GNU Backgammon and other analysis programs can open.</p>
@@ -2129,7 +2149,8 @@
             "Checking your move...": "Îți verific mutarea...",
             "Details": "Detalii",
             "Top moves": "Cele mai bune mutări",
-            "Show best move": "Arată cea mai bună mutare",
+            "Preview best move": "Previzualizează cea mai bună mutare",
+            "Yours": "A ta",
             "Show your move": "Arată mutarea ta",
             "Undo and try again": "Anulează și încearcă din nou",
             "The best move is shown on the board": "Cea mai bună mutare e arătată pe tablă",
@@ -2401,7 +2422,7 @@
             "A win scores 1 point. A gammon (the loser has borne off no checkers) scores 2. A backgammon (a gammon where the loser still has a checker on the bar or in your home board) scores 3. The first player to reach the match target wins the match.": "O victorie aduce 1 punct. Un marț (învinsul nu a scos nicio piesă) aduce 2. Un backgammon (un marț în care învinsul mai are o piesă pe bară sau în casa câștigătorului) aduce 3. Primul jucător care atinge ținta meciului câștigă meciul.",
             "Language:": "Limba:",
             "English or Romanian, in Settings.": "Engleză sau română, în Setări.",
-            "The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits: show the best move on the board (with arrows), undo and try again, or continue. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.": "Comutatorul Antrenor de deasupra tablei (în jocul cu calculatorul) îți evaluează fiecare tură imediat ce se termină, ca un program de antrenament: cea mai bună mutare, excelentă (pierde mai puțin de 0,02 puncte pe partidă), greșeală mică (până la 0,08) sau gafă. Spune ce fel de greșeală a fost sau ce face bine cea mai bună mutare, explică de ce și arată cele mai bune mutări, cu cât pierde fiecare. După o greșeală jocul așteaptă: vezi cea mai bună mutare pe tablă (cu săgeți), anulează și încearcă din nou, sau continuă. Evaluarea o face o mică rețea neuronală antrenată pentru acest joc jucând cu ea însăși și privind o aruncare înainte: un ghid bun, nu unul perfect.",
+            "The Coach switch above the board (games against the computer) rates each of your turns as soon as it is over, the way a backgammon trainer does: best move, excellent (it gives away less than 0.02 points per game), small mistake (up to 0.08) or blunder. It says what kind of error it was, or what the best move does well, explains why, and lists the top moves with what each one gives away. After a mistake the game waits, and arrows on the board show your move (blue) and the best move (gold) without your having to click anything: undo and try again, or continue. Preview best move shows the board as it would be after the best move. The judging is done by a small neural network trained for this game by playing itself, looking one roll ahead: a good guide, not a perfect one.": "Comutatorul Antrenor de deasupra tablei (în jocul cu calculatorul) îți evaluează fiecare tură imediat ce se termină, ca un program de antrenament: cea mai bună mutare, excelentă (pierde mai puțin de 0,02 puncte pe partidă), greșeală mică (până la 0,08) sau gafă. Spune ce fel de greșeală a fost sau ce face bine cea mai bună mutare, explică de ce și arată cele mai bune mutări, cu cât pierde fiecare. După o greșeală jocul așteaptă, iar săgețile de pe tablă arată mutarea ta (albastru) și cea mai bună mutare (auriu), fără să trebuiască să apeși ceva: anulează și încearcă din nou, sau continuă. „Previzualizează cea mai bună mutare” arată tabla așa cum ar fi după cea mai bună mutare. Evaluarea o face o mică rețea neuronală antrenată pentru acest joc jucând cu ea însăși și privind o aruncare înainte: un ghid bun, nu unul perfect.",
             // titles and labels for screen readers
             "New game or leave": "Joc nou sau ieșire",
             "New Game": "Joc nou",
@@ -4860,11 +4881,12 @@
         // best one, in points per game (equity, at this match score): best, excellent (under 0.02), small mistake (up to
         // 0.08) or blunder. It names the kind of error or what the best move does well, explains why from simple facts
         // about the positions (hits, shots, points made, blocks, anchors, escapes, bearing off, the race, gammons) and
-        // lists the top moves. After a good move the game goes on; after a mistake it waits: show the best move on the
-        // board (with arrows), undo and try again, or go on. Only in games against the computer.
+        // lists the top moves. After a good move the game goes on; after a mistake it waits, with arrows on the board for
+        // your move (blue) and the best one (gold): undo and try again, or go on ("Preview best move" shows the board after
+        // the best move). Only in games against the computer.
         const COACH_DEEP = 10, COACH_EXCELLENT = 0.02, COACH_BLUNDER = 0.08;
         let coachOn = false;
-        let boardView = null;      // a position the board shows instead of the real one (the coach's "Show best move")
+        let boardView = null;      // a position the board shows instead of the real one (the coach's "Preview best move")
         const coach = { token: 0, hold: false, busy: false, res: null, open: false, expanded: false, view: 'mine', mini: false };
         // Wide screens: the coach is a panel beside the board (the board makes room for it); otherwise a card at the bottom
         const coachDocked = () => document.documentElement.classList.contains('coach-dock');
@@ -5061,7 +5083,7 @@
                 if (!res || res.forced) { coach.open = false; coach.res = null; coachRelease(); return; }
                 coach.res = res;
                 const good = res.verdict === 'best' || res.verdict === 'excellent';
-                coach.expanded = !good;
+                coach.expanded = false;          // (after a mistake the arrows on the board show both moves; the card keeps out of their way)
                 coachRender();
                 if (good) coachRelease();
                 else setStatus(`Coach: ${res.verdict === 'blunder' ? 'Blunder' : 'Small mistake'}. Undo and try again, or continue.`);
@@ -5104,7 +5126,8 @@
             coachRender();
             saveSettings();
         }
-        // The board shows your move ('mine') or, while the game waits, the best one ('best')
+        // The board shows your move ('mine', with the best one's arrows over it) or, while the game waits, the position
+        // after the best move ('best')
         function coachShow(v) {
             coach.view = v;
             coach.mini = v === 'best' && !coachDocked();          // (a small screen folds the card away to show the board)
@@ -5115,7 +5138,7 @@
         }
         function coachTogglePreview() { coachShow(coach.view === 'best' ? 'mine' : 'best'); }
 
-        // Arrows for the move on show (gold: the best move; blue: yours), drawn in the board's own coordinates
+        // Arrows for the moves on show (gold: the best move; blue: yours), drawn in the board's own coordinates
         function coachArrows() {
             const svg = document.getElementById('coach-arrows');
             if (!svg) return;
@@ -5140,24 +5163,31 @@
                 const y = top ? q.top + i * stride + ch / 2 : q.top + q.height - ch / 2 - i * stride;
                 return { x: q.left + q.width / 2, y };
             };
-            const move = coach.view === 'best' ? r.best : r.mine, colour = coach.view === 'best' ? '#facc15' : '#38bdf8';
+            // your move (blue) and the best one (gold) together; previewing the best move, only its arrows. The two bend to
+            // opposite sides, so a checker that both moves play the same way shows both colours.
+            const shown = coach.view === 'best' ? [[r.best, 'best', '#facc15', 1]] : [[r.mine, 'mine', '#38bdf8', 1], [r.best, 'best', '#facc15', -1]];
             const start = r.start, p = myColor;
             const stackLen = (s, loc) => loc === 'bar' ? s.bar[p].length : loc === 'off' ? 0 : s.board[loc].length;
-            let html = `<defs><marker id="coach-head" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${colour}"/></marker></defs>`;
-            const taken = new Map(), arrived = new Map();   // several checkers leaving or reaching the same point
-            for (const pa of move.paths) {
-                const n0 = stackLen(start, pa.from), t = taken.get(pa.from) || 0;
-                taken.set(pa.from, t + 1);
-                const a = spot(pa.from, Math.max(0, n0 - 1 - t), n0);
-                const n1 = stackLen(move.end, pa.to), u = arrived.get(pa.to) || 0;
-                arrived.set(pa.to, u + 1);
-                const b = spot(pa.to, Math.max(0, n1 - 1 - u), n1);
-                const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-                const bend = Math.min(len * 0.25, ch * 1.6), cx = (a.x + b.x) / 2 - dy / len * bend, cy = (a.y + b.y) / 2 + dx / len * bend;
-                const sw = Math.max(2.5, ch * 0.16);
-                html += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="${(sw + 3).toFixed(1)}" stroke-linecap="round"/>` +
-                        `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}" fill="none" stroke="${colour}" stroke-width="${sw.toFixed(1)}" stroke-linecap="round" marker-end="url(#coach-head)"/>`;
+            const sw = Math.max(2.5, ch * 0.16);
+            let defs = '', html = '';
+            for (const [move, kind, colour, side] of shown) {
+                defs += `<marker id="coach-head-${kind}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${colour}"/></marker>`;
+                const taken = new Map(), arrived = new Map();   // several checkers leaving or reaching the same point
+                for (const pa of move.paths) {
+                    const n0 = stackLen(start, pa.from), t = taken.get(pa.from) || 0;
+                    taken.set(pa.from, t + 1);
+                    const a = spot(pa.from, Math.max(0, n0 - 1 - t), n0);
+                    const n1 = stackLen(move.end, pa.to), u = arrived.get(pa.to) || 0;
+                    arrived.set(pa.to, u + 1);
+                    const b = spot(pa.to, Math.max(0, n1 - 1 - u), n1);
+                    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+                    const bend = side * Math.min(len * 0.25, ch * 1.6), cx = (a.x + b.x) / 2 - dy / len * bend, cy = (a.y + b.y) / 2 + dx / len * bend;
+                    const d = `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+                    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="${(sw + 3).toFixed(1)}" stroke-linecap="round"/>` +
+                            `<path data-move="${kind}" d="${d}" fill="none" stroke="${colour}" stroke-width="${sw.toFixed(1)}" stroke-linecap="round" marker-end="url(#coach-head-${kind})"/>`;
+                }
             }
+            html = `<defs>${defs}</defs>` + html;
             svg.setAttribute('viewBox', `0 0 ${lw} ${lh}`);
             svg.innerHTML = html;
         }
@@ -5173,6 +5203,10 @@
             card.classList.toggle('hidden', !show);
             if (!show) { coachArrows(); return; }
             card.classList.toggle('cc-mini', !idle && coach.mini && !coach.busy);
+            card.classList.toggle('cc-hold', !idle && !coach.busy && coach.hold);
+            const arrowsOn = !idle && !coach.busy && coach.hold && r.mine !== r.best;    // (as coachArrows draws them)
+            $('coach-key').classList.toggle('hidden', !arrowsOn);
+            $('coach-key-mine').classList.toggle('hidden', coach.view === 'best');
             if (idle) {               // the panel waits for your move
                 card.dataset.verdict = 'idle'; card.classList.remove('cc-open');
                 $('coach-badge').textContent = '?';
@@ -5202,7 +5236,7 @@
             tb.innerHTML = '';
             rows.forEach(c => {
                 const tr = document.createElement('tr');
-                if (c === r.mine) tr.className = 'cm-mine';
+                if (c === r.mine) tr.className = 'cm-mine'; else if (c === r.best) tr.className = 'cm-best';
                 const rank = r.ranked.indexOf(c) + 1;
                 const cells = [rank + '.', c.note, pctOf(c.win), c === r.best ? '' : eqText(r.best.eq - c.eq), c === r.mine ? 'yours' : ''];
                 cells.forEach((t, i) => { const td = document.createElement('td'); td.textContent = t; if (i === 1) td.setAttribute('translate', 'no'); tr.appendChild(td); });
@@ -5211,7 +5245,7 @@
             $('coach-mini-t').textContent = coach.view === 'best' ? 'The best move is shown on the board' : 'Your move is shown on the board';
             const canPreview = coach.hold && r.mine !== r.best;
             $('coach-show').classList.toggle('hidden', !canPreview);
-            $('coach-show').textContent = coach.view === 'best' ? 'Show your move' : 'Show best move';
+            $('coach-show').textContent = coach.view === 'best' ? 'Show your move' : 'Preview best move';
             $('coach-retry').classList.toggle('hidden', !coach.hold);
             $('coach-go').classList.toggle('hidden', !coach.hold);
             coachArrows();

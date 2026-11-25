@@ -17,8 +17,8 @@ and lost races and finished games correctly, and know the standard opening moves
 
 ## Browser tests
 `tests/browser/` drives the real page in Chromium (Playwright): games against the computer on a PC-sized screen and in
-the phone layout, dragging checkers, Master and the hint button, the Coach (ratings, waiting after a mistake, the best move shown with
-arrows, undo and try again, the side panel and the phone card, Romanian), the match history and its `.mat` export (replayed move
+the phone layout, dragging checkers, Master and the hint button, the Coach (ratings, waiting after a mistake with arrows
+for your move and the best one at once, undo and try again, the side panel, the folded card on a tablet and a phone, Romanian), the match history and its `.mat` export (replayed move
 by move with the rules engine), the Romanian translation, and online games between several pages. The network is never
 used: PeerJS and the relay brokers are replaced by in-test mocks (`sandbox.js` refuses every other request). The online
 tests cover dropped and slow connections, reloads, the lobby, rematches, colour swaps, spectators and free seats, the

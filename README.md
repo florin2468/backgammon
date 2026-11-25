@@ -16,8 +16,9 @@ A single-file backgammon game: play against the computer (Easy to Master), or on
   way a backgammon trainer does: best, excellent (gives away under 0.02 points per game), small mistake (up to 0.08) or
   blunder. It names the kind of error (safety error, missed attacking opportunity, structural miss, passive error, racing
   inefficiency...) or what the best move does well, explains why (shots, hits, points made, blocks, anchors, escapes,
-  gammons), and lists the top moves with what each gives away. After a mistake the game waits: show the best move on
-  the board with arrows, undo and try again, or continue. On wide screens it is a panel beside the board. The judging
+  gammons), and lists the top moves with what each gives away. After a mistake the game waits, with
+  arrows on the board for your move (blue) and the best move (gold), no click needed: undo and try again, or continue
+  (Preview best move shows the board after the best move). On wide screens it is a panel beside the board. The judging
   comes from a small neural network trained for this game by self-play (TD learning, as TD-Gammon), looking one roll
   ahead; the training program is in `tools/nn/`.
 - **History:** the chart button lists the matches played in this browser, with totals per opponent. Any match can be

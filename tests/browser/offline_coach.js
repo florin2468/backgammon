@@ -1,6 +1,7 @@
 // The Coach: after your turn against the computer, your move against the best one (verdict, why, top moves),
-// waiting after a mistake (show the best move with arrows, undo and try again, continue), the hint agreeing with it,
-// the switch remembered, the side panel on wide screens and the card on phones, and Romanian
+// waiting after a mistake (arrows for your move and the best one at once, preview the best move, undo and try again,
+// continue), the hint agreeing with it, the switch remembered, the side panel on wide screens, the folded card that keeps
+// clear of the arrows on a tablet and a phone, and Romanian
 const { chromium } = require('playwright'); require('./sandbox')(chromium);
 const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../index.html');
 (async () => {
@@ -49,15 +50,25 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
   ok(r.why.length >= 2 && r.why.some(t => /of 36 rolls/.test(t)) && /wins \d+% of the time, yours \d+%/.test(r.why[r.why.length - 1]), 'it explains why: ' + JSON.stringify(r.why));
   ok(r.rows.length >= 3 && /yours$/.test(r.rows[r.rows.length - 1]) && /^1\. /.test(r.rows[0]), 'top moves with yours marked: ' + JSON.stringify(r.rows));
   ok(r.hold && r.me && /Undo and try again, or continue/.test(r.status), 'after a mistake the game waits for you');
+  const arrows = pg => pg.evaluate(() => ({ best: document.querySelectorAll('#coach-arrows path[data-move="best"]').length, mine: document.querySelectorAll('#coach-arrows path[data-move="mine"]').length,
+    gold: [...document.querySelectorAll('#coach-arrows path[data-move="best"]')].every(e => e.getAttribute('stroke') === '#facc15'),
+    key: !document.getElementById('coach-key').classList.contains('hidden') && !document.getElementById('coach-key-mine').classList.contains('hidden'),
+    bottom: Math.max(...[...document.querySelectorAll('#coach-arrows path')].map(e => e.getBoundingClientRect().bottom)),
+    card: document.getElementById('coach-card').getBoundingClientRect().top, label: document.getElementById('coach-show').innerText }));
+  let a = await arrows(p);
+  ok(a.best === 2 && a.mine === 2 && a.gold && a.key && a.label === 'Preview best move', 'without a click, the board shows your move (blue) and the best one (gold) together, with a colour key');
   await p.waitForTimeout(1500);
   ok(await p.evaluate(() => currentPlayer === myColor && !isAITurn()), 'the computer has not moved meanwhile');
   // show the best move on the board, with arrows
   const before = await p.evaluate(() => fastSig());
   await p.click('#coach-show'); await p.waitForTimeout(900);
   let v = await p.evaluate(() => ({ view: coach.view, bv: !!boardView, arrows: document.querySelectorAll('#coach-arrows path').length, real: fastSig(), label: document.getElementById('coach-show').innerText }));
-  ok(v.view === 'best' && v.bv && v.arrows >= 2 && v.real === before && v.label === 'Show your move', 'Show best move: the board shows it with arrows (the real position is unchanged)');
+  ok(v.view === 'best' && v.bv && v.arrows >= 2 && v.real === before && v.label === 'Show your move', 'Preview best move: the board shows it with arrows (the real position is unchanged)');
+  a = await arrows(p);
+  ok(a.best === 2 && a.mine === 0, 'and only the best move\'s arrows then');
   await p.click('#coach-show'); await p.waitForTimeout(300);
-  ok(await p.evaluate(() => !boardView && coach.view === 'mine'), 'and back to your move');
+  a = await arrows(p);
+  ok(await p.evaluate(() => !boardView && coach.view === 'mine') && a.best === 2 && a.mine === 2, 'and back to your move, with both again');
   // undo and try again, then play the best move: no waiting
   await p.click('#coach-retry'); await p.waitForTimeout(1200);
   v = await p.evaluate(() => ({ dice: diceValues.slice().sort().join(), hist: turnHistory.length, hold: coach.hold, hidden: document.getElementById('coach-card').getAttribute('data-verdict') }));
@@ -101,6 +112,18 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
   ok(!(await p.isVisible('#coach-toggle')) && !(await p.evaluate(() => document.documentElement.classList.contains('coach-dock'))), 'not in online games');
   await p.evaluate(() => { online.active = false; syncHintButtons(); });
 
+  // ---- tablet: the waiting card folds to one line below the arrows ----
+  const t = await open({ viewport: { width: 1024, height: 768 } });
+  await t.evaluate(() => { if (!coachOn) toggleCoach(); });
+  await sixFour(t);
+  await play(t, [[13, 6], [13, 4]]);
+  r = await result(t); await t.waitForTimeout(300);
+  a = await arrows(t);
+  const tc = await t.evaluate(() => { const c = document.getElementById('coach-card'), q = c.getBoundingClientRect(); return { h: q.height, open: c.classList.contains('cc-open'), go: !!document.getElementById('coach-go').offsetParent, retry: !!document.getElementById('coach-retry').offsetParent }; });
+  ok(!tc.open && tc.h < 80 && tc.go && tc.retry && a.best === 2 && a.mine === 2 && a.bottom <= a.card + 1,
+     'on a tablet the card waits on one line (' + Math.round(tc.h) + 'px) with Undo and Continue, below the arrows (' + Math.round(a.bottom) + ' <= ' + Math.round(a.card) + ')');
+  await t.context().close();
+
   // ---- phone, in Romanian ----
   const q = await open({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'ro-RO' });
   const misses = []; q.on('console', m => { if (m.text().startsWith('[i18n-miss] ')) misses.push(m.text().slice(12)); });
@@ -111,6 +134,11 @@ const PAGE = process.env.BG_PAGE || require('path').resolve(__dirname, '../../in
   ok(/^(Greșeală mică|Gafă) \(−0\.\d{3}\)$/.test(r.title) && r.why.every(t => /[ăâîșț]/.test(t) || /\d/.test(t)) && /a ta$/.test(r.rows[r.rows.length - 1]), 'in Romanian: "' + r.title + '" — ' + r.sub + ' / ' + r.why[0]);
   const box = await q.evaluate(() => { const c = document.getElementById('coach-card').getBoundingClientRect(); return { top: c.top, bottom: c.bottom, h: innerHeight }; });
   ok(box.bottom <= box.h && box.top > 100, 'on a phone the card sits at the bottom of the screen');
+  a = await arrows(q);
+  const pc = await q.evaluate(() => ({ open: document.getElementById('coach-card').classList.contains('cc-open'), go: !!document.getElementById('coach-go').offsetParent, show: !!document.getElementById('coach-show').offsetParent, key: document.getElementById('coach-key').innerText.replace(/\s+/g, ' ') }));
+  ok(!pc.open && pc.go && !pc.show && a.best === 2 && a.mine === 2 && a.bottom <= a.card + 1 && /Cea mai bună mutare/.test(pc.key),
+     'folded while it waits, both moves\' arrows in view above it (' + pc.key + ')');
+  await q.click('#coach-more'); await q.waitForTimeout(300);
   await q.click('#coach-show'); await q.waitForTimeout(600);
   ok(await q.evaluate(() => document.getElementById('coach-card').classList.contains('cc-mini') && document.getElementById('coach-mini-t').innerText === 'Cea mai bună mutare e arătată pe tablă'), 'showing the best move folds the card away');
   await q.click('#coach-mini button'); await q.waitForTimeout(300);
