@@ -22,6 +22,10 @@ A single-file backgammon game: play against the computer (Easy to Master), or on
   (Preview best move shows the board after the best move). On wide screens it is a panel beside the board. The judging
   comes from a small neural network trained for this game by self-play (TD learning, as TD-Gammon), looking one roll
   ahead; the training program is in `tools/nn/`.
+- **Giving up:** once no contact is left and one side will finish first whatever the dice show, the side that can't
+  win is offered to give the game up, at the best result it can still reach (a single game, a gammon or a backgammon),
+  and only when playing on can't do better. The computer gives up the same way at the start of its turn; when playing on
+  could still win you a backgammon (one of its checkers might not get out of your home board in time), you choose.
 - **History:** the chart button lists the matches played in this browser, with totals per opponent. Any match can be
   exported as a Jellyfish `.mat` file, which GNU Backgammon and other analysis programs open.
 - **Language:** English or Romanian (Settings). A browser set to Romanian starts in Romanian.

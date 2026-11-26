@@ -787,6 +787,18 @@
         </div>
     </div>
 
+    <div id="ai-giveup-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden cursor-default" role="dialog" aria-modal="true" aria-labelledby="ai-giveup-title">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 shadow-2xl text-slate-100 text-center">
+            <h3 id="ai-giveup-title" class="font-bold text-xl text-amber-400 mb-2">AI gives up</h3>
+            <p id="ai-giveup-text" class="text-sm text-slate-300 mb-2"></p>
+            <p id="ai-giveup-points" class="text-sm font-bold text-amber-200 mb-4"></p>
+            <div class="grid grid-cols-2 gap-2">
+                <button id="ai-giveup-yes" onclick="answerAiGiveUp(true)" class="py-2 bg-green-600 hover:bg-green-500 active:scale-95 text-white font-extrabold rounded-xl border border-green-400 transition cursor-pointer">Accept (2 points)</button>
+                <button id="ai-giveup-no" onclick="answerAiGiveUp(false)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-600 transition cursor-pointer">Play on</button>
+            </div>
+        </div>
+    </div>
+
     <div id="swap-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden cursor-default">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 shadow-2xl text-slate-100 text-center">
             <h3 class="font-bold text-xl text-amber-400 mb-2">Swap colours?</h3>
@@ -1019,7 +1031,7 @@
                 <p>• <strong>Online:</strong> Press Play Online, create a game and send the link (or the 6-character code) to a friend. Once you are connected you both choose the match length and turn timer, and the game starts when you confirm the same settings; colours are drawn at random. The dice are fair: before the match each browser locks in its own secret half of the dice with a code, and every roll combines both halves, so neither player can choose or change a roll. Everything sent between you is encrypted, also when the game runs through the backup relay. If the connection drops, the game pauses and reconnects by itself (you can even reload the page and resume). An optional turn timer skips the turn of a player who runs out of time, and when a match ends either player can ask for a rematch.</p>
                 <p>• <strong>Watching:</strong> Once both players have started an online game, anyone with the game code, or the spectator link from Settings, can press Watch and follow it live: the board, the dice and the score. Spectators can join at any time but can't play, and the players see how many people are watching. In Settings a spectator can choose whose side of the board is drawn at the bottom.</p>
                 <p>• <strong>After a match with spectators:</strong> Each player chooses Keep playing, Watch or Quit. If both keep playing, it's a rematch. If a player stops, the spectators can take the free seat; the new pair then chooses the settings for their match, and everyone else watches it. The player who created the game should stay on the page until the next game is set up, because the game room runs on that page.</p>
-                <p>• <strong>Giving up:</strong> Once no contact is left and your opponent will finish first whatever the dice show, you're offered to give the game up, but only when playing on can't get you a better result. It costs the best result you can still reach: a single game (1 point) once you've borne off a checker; a gammon (2) once you can no longer bear a checker off in time, even with a checker still in your opponent's home board as long as it could still get out; a backgammon (3) only when it can't. While you could still save the gammon there's no offer. The flag button lets you give up at any time while the offer stands.</p>
+                <p>• <strong>Giving up:</strong> Once no contact is left and your opponent will finish first whatever the dice show, you're offered to give the game up, but only when playing on can't get you a better result. It costs the best result you can still reach: a single game (1 point) once you've borne off a checker; a gammon (2) once you can no longer bear a checker off in time, even with a checker still in your opponent's home board as long as it could still get out; a backgammon (3) only when it can't. While you could still save the gammon there's no offer. The flag button lets you give up at any time while the offer stands. The computer gives up too, by the same rule, at the start of its turn; if one of its checkers is still in your home board and might not get out in time, you choose: accept the gammon or play on for a backgammon.</p>
                 <p>• <strong>Scoring:</strong> A win scores 1 point. A gammon (the loser has borne off no checkers) scores 2. A backgammon (a gammon where the loser still has a checker on the bar or in your home board) scores 3. The first player to reach the match target wins the match.</p>
                 <p>• <strong>Language:</strong> English or Romanian, in Settings.</p>
             </div>
@@ -2207,6 +2219,13 @@
             "ROLL": "DĂ CU",
             "DICE": "ZARUL",
             "Keep playing": "Joacă mai departe",
+            "Play on": "Joacă mai departe",
+            "Accept (2 points)": "Accept (2 puncte)",
+            "It can't win this game any more: you finish first whatever the dice show.": "Nu mai poate câștiga partida: tu termini primul orice ar arăta zarurile.",
+            "One of its checkers is still in your home board and might not get out in time, so playing on could still win you a backgammon (3 points).": "Una dintre piesele lui e încă în casa ta și s-ar putea să nu iasă la timp, așa că jucând mai departe ai putea câștiga un backgammon (3 puncte).",
+            "Some of its checkers are still in your home board and might not all get out in time, so playing on could still win you a backgammon (3 points).": "Unele dintre piesele lui sunt încă în casa ta și s-ar putea să nu iasă toate la timp, așa că jucând mai departe ai putea câștiga un backgammon (3 puncte).",
+            "Accepting counts as a gammon: you score 2 points.": "Dacă accepți, se socotește marț: primești 2 puncte.",
+            "Accept the gammon, or play on for a backgammon.": "Acceptă marțul sau joacă mai departe pentru backgammon.",
             "Watch": "Urmărește",
             "Quit": "Ieși",
             "Leave now": "Pleacă acum",
@@ -2421,7 +2440,7 @@
             "After a match with spectators:": "După un meci cu spectatori:",
             "Each player chooses Keep playing, Watch or Quit. If both keep playing, it's a rematch. If a player stops, the spectators can take the free seat; the new pair then chooses the settings for their match, and everyone else watches it. The player who created the game should stay on the page until the next game is set up, because the game room runs on that page.": "Fiecare jucător alege „Joacă mai departe”, „Urmărește” sau „Ieși”. Dacă amândoi joacă mai departe, e o revanșă. Dacă un jucător se oprește, spectatorii pot lua locul liber; noua pereche își alege apoi setările meciului, iar ceilalți îl urmăresc. Jucătorul care a creat jocul ar trebui să rămână pe pagină până se pregătește partida următoare, pentru că pe pagina lui rulează camera de joc.",
             "Giving up:": "Renunțare:",
-            "Once no contact is left and your opponent will finish first whatever the dice show, you're offered to give the game up, but only when playing on can't get you a better result. It costs the best result you can still reach: a single game (1 point) once you've borne off a checker; a gammon (2) once you can no longer bear a checker off in time, even with a checker still in your opponent's home board as long as it could still get out; a backgammon (3) only when it can't. While you could still save the gammon there's no offer. The flag button lets you give up at any time while the offer stands.": "Când piesele nu se mai întâlnesc și adversarul termină primul orice ar arăta zarurile, ți se propune să renunți la partidă, dar numai dacă jucând mai departe nu poți obține un rezultat mai bun. Renunțarea costă cel mai bun rezultat pe care îl mai poți atinge: o partidă simplă (1 punct) dacă ai scos deja o piesă; un marț (2) dacă nu mai poți scoate nicio piesă la timp, chiar dacă mai ai o piesă în casa adversarului, atâta timp cât ea mai poate ieși; un backgammon (3) doar când nu mai poate. Cât timp mai poți scăpa de marț, nu primești propunerea. Butonul cu steag îți permite să renunți oricând cât timp propunerea e valabilă.",
+            "Once no contact is left and your opponent will finish first whatever the dice show, you're offered to give the game up, but only when playing on can't get you a better result. It costs the best result you can still reach: a single game (1 point) once you've borne off a checker; a gammon (2) once you can no longer bear a checker off in time, even with a checker still in your opponent's home board as long as it could still get out; a backgammon (3) only when it can't. While you could still save the gammon there's no offer. The flag button lets you give up at any time while the offer stands. The computer gives up too, by the same rule, at the start of its turn; if one of its checkers is still in your home board and might not get out in time, you choose: accept the gammon or play on for a backgammon.": "Când piesele nu se mai întâlnesc și adversarul termină primul orice ar arăta zarurile, ți se propune să renunți la partidă, dar numai dacă jucând mai departe nu poți obține un rezultat mai bun. Renunțarea costă cel mai bun rezultat pe care îl mai poți atinge: o partidă simplă (1 punct) dacă ai scos deja o piesă; un marț (2) dacă nu mai poți scoate nicio piesă la timp, chiar dacă mai ai o piesă în casa adversarului, atâta timp cât ea mai poate ieși; un backgammon (3) doar când nu mai poate. Cât timp mai poți scăpa de marț, nu primești propunerea. Butonul cu steag îți permite să renunți oricând cât timp propunerea e valabilă. Și calculatorul renunță, după aceeași regulă, la începutul mutării lui; dacă una dintre piesele lui e încă în casa ta și s-ar putea să nu iasă la timp, alegi tu: accepți marțul sau joci mai departe pentru backgammon.",
             "Scoring:": "Punctaj:",
             "A win scores 1 point. A gammon (the loser has borne off no checkers) scores 2. A backgammon (a gammon where the loser still has a checker on the bar or in your home board) scores 3. The first player to reach the match target wins the match.": "O victorie aduce 1 punct. Un marț (învinsul nu a scos nicio piesă) aduce 2. Un backgammon (un marț în care învinsul mai are o piesă pe bară sau în casa câștigătorului) aduce 3. Primul jucător care atinge ținta meciului câștigă meciul.",
             "Language:": "Limba:",
@@ -2499,6 +2518,9 @@
             ["+{#0} point(s)", "+{p0:punct:puncte}"],
             ["{#0} point(s); only {#1} needed", "{p0:punct:puncte}; era nevoie doar de {1}"],
             ["{0} gave up.", "{n0} a renunțat."],
+            ["{0} gave up: you finish first whatever the dice show.", "{n0} a renunțat: tu termini primul orice ar arăta zarurile."],
+            ["{0} gives up.", "{n0} renunță."],
+            ["{0} gives up", "{n0} renunță"],
             ["YOU scored {t0} (+{t1}).", "Ai obținut {t0} (+{t1})."],
             ["{0} scored {t1} (+{t2}).", "{n0} a obținut {t1} (+{t2})."],
             ["{0} scored {t1} ({t2}).", "{n0} a obținut {t1} ({t2})."],
@@ -3121,7 +3143,7 @@
             openingTurn = -1;
             starterFlip = false;
             histNewGame();
-            concedeAskedAt = 0; hideConcede();
+            concedeAskedAt = 0; aiGiveUpDeclined = false; hideConcede();
             const fixedStarter = (starter === W || starter === R);
             currentPlayer = fixedStarter ? starter : myColor;   // (during the opening roll the Roll Dice button belongs to the player)
             openingRoll = !fixedStarter; openRolls = { w: null, r: null }; openRound = 0;
@@ -3236,7 +3258,8 @@
             updateUI();
 
             const who = nameOf(winner);
-            const gaveUp = conceded ? `${nameOf(other(winner))} gave up. ` : '';
+            const gaveUp = !conceded ? '' : (opponentKind === 'ai' && !online.active && winner === myColor)
+                ? `${opponentName} gave up: you finish first whatever the dice show. ` : `${nameOf(other(winner))} gave up. `;
             const pts = `${awarded} point${awarded > 1 ? 's' : ''}` + (awarded < result.points ? `; only ${awarded} needed` : '');
             const btn = document.getElementById('next-game-btn');
             if (!matchOver) {
@@ -3267,8 +3290,9 @@
         const offerLabel = pts => pts === 1 ? 'a win' : (pts === 2 ? 'a gammon' : 'a backgammon');
         function hideConcede() {
             concedeInfo = null;
-            const m = document.getElementById('concede-modal'), b = document.getElementById('concede-btn');
+            const m = document.getElementById('concede-modal'), b = document.getElementById('concede-btn'), a = document.getElementById('ai-giveup-modal');
             if (m) m.classList.add('hidden');
+            if (a) a.classList.add('hidden');
             if (b) b.classList.add('hidden');
         }
         function evalConcession() {
@@ -3314,7 +3338,7 @@
             document.getElementById('concede-modal').classList.add('hidden');
             if (yes) concedeGame(false);
         }
-        // fromPeer: the opponent gave up (online). Otherwise it is this player who gives up.
+        // fromPeer: the opponent gave up (online, or the computer). Otherwise it is this player who gives up.
         // The game is scored at the price that was offered: the best result the loser could still reach (see concessionInfo)
         function concedeGame(fromPeer, peerPts) {
             if (!gameActive || !matchActive) return;
@@ -3327,6 +3351,43 @@
             selectedSource = null; validTargets = []; updateHitboxCursors();
             if (online.active && !fromPeer) netSend({ t: 'resign', p: loser, pts: pts || undefined });
             handleGameEnd(winner, true, pts || 0);
+        }
+
+        // ---------- the computer giving up ----------
+        // At the start of its turn, before it rolls, the computer gives up a game it can no longer win, by the same rule as
+        // your offer: no contact left, you finish first whatever the dice show, and playing on can't get it a better result
+        // (see BGEngine.concessionInfo); it gives up at that price, and the game ends. The one case where playing on could
+        // still get you more is a gammon with one of its checkers still in your home board, which might not get out in time
+        // (a backgammon): then you choose, accept the gammon or play on for the backgammon. It offers again only once the
+        // result is certain (that checker is out: a gammon; or it can't get out any more: a backgammon).
+        let aiGiveUpDeclined = false;
+        function aiGivesUp() {
+            if (opponentKind !== 'ai' || online.active || watch.on || !matchActive || !gameActive || openingRoll) return false;
+            const ai = oppColor();
+            if (currentPlayer !== ai || diceValues.length > 0 || rolledThisTurn || isRolling || isAnimating) return false;
+            const info = E.concessionInfo(state, ai, ai);
+            if (!info || !info.offer) return false;
+            const need = Math.max(1, matchLength - matchScore[myColor]);
+            const more = info.offer === 2 && info.inHome > 0 && need > 2;      // a backgammon could still come, and would count
+            if (!more) { concedeGame(true); return true; }
+            if (aiGiveUpDeclined) return false;
+            const one = info.inHome === 1;
+            document.getElementById('ai-giveup-title').innerText = `${opponentName} gives up`;
+            document.getElementById('ai-giveup-text').innerText = `It can't win this game any more: you finish first whatever the dice show. ` +
+                (one ? `One of its checkers is still in your home board and might not get out in time, so playing on could still win you a backgammon (3 points).`
+                     : `Some of its checkers are still in your home board and might not all get out in time, so playing on could still win you a backgammon (3 points).`);
+            document.getElementById('ai-giveup-points').innerText = `Accepting counts as a gammon: you score 2 points.`;
+            document.getElementById('ai-giveup-modal').classList.remove('hidden');
+            setStatus(`${opponentName} gives up. Accept the gammon, or play on for a backgammon.`);
+            return true;
+        }
+        function answerAiGiveUp(yes) {
+            document.getElementById('ai-giveup-modal').classList.add('hidden');
+            if (!gameActive || currentPlayer !== oppColor()) return;
+            if (yes) { concedeGame(true); return; }
+            aiGiveUpDeclined = true;
+            setStatus(`${opponentName} is rolling...`);
+            aiLater(aiRoll, 500);
         }
 
         // ---------- victory animation ----------
@@ -4097,6 +4158,7 @@
         // The AI rolling for itself (only if it really is the AI's turn)
         function aiRoll() {
             if (opponentKind !== 'ai' || currentPlayer !== oppColor()) return;
+            if (aiGivesUp()) return;         // a game it can't win any more: it gives up (or asks you, see aiGivesUp)
             handleRollDice();
         }
 
@@ -7832,7 +7894,7 @@
             const savedAI = loadAIMatch();   // read before the start screen is built
             enterStartScreen(); // board only, with a Start Match button; the match picker opens when it's pressed
 
-            const modalIds = ['settings-modal', 'help-modal', 'history-modal', 'match-modal', 'online-modal', 'resume-modal', 'ai-resume-modal'];
+            const modalIds = ['settings-modal', 'help-modal', 'history-modal', 'match-modal', 'online-modal', 'resume-modal', 'ai-resume-modal', 'ai-giveup-modal'];
             const modalOpen = () => modalIds.some(id => !document.getElementById(id).classList.contains('hidden'));
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') {
